@@ -1,4 +1,5 @@
 import ctypes
+import ctypes.wintypes as wintypes
 import queue
 import tkinter as tk
 
@@ -32,16 +33,25 @@ class Overlay:
         sw = self._root.winfo_screenwidth()
         sh = self._root.winfo_screenheight()
         self._root.geometry(f"{w}x{h}+{(sw - w) // 2}+{sh - 140}")
-        self._no_activate_applied = False
+        # Стиль WS_EX_NOACTIVATE должен стоять ДО первого показа окна,
+        # иначе первый deiconify() украдёт фокус у активного приложения.
+        self._root.update_idletasks()
+        self._apply_no_activate()
         self._root.after(50, self._poll)
 
     def _apply_no_activate(self):
-        hwnd = ctypes.windll.user32.GetParent(self._root.winfo_id()) or self._root.winfo_id()
-        style = ctypes.windll.user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-        ctypes.windll.user32.SetWindowLongPtrW(
+        user32 = ctypes.windll.user32
+        user32.GetParent.argtypes = [wintypes.HWND]
+        user32.GetParent.restype = wintypes.HWND
+        user32.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
+        user32.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+        user32.SetWindowLongPtrW.restype = ctypes.c_ssize_t
+        hwnd = user32.GetParent(self._root.winfo_id()) or self._root.winfo_id()
+        style = user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
+        user32.SetWindowLongPtrW(
             hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
         )
-        self._no_activate_applied = True
 
     def _poll(self):
         try:
@@ -56,8 +66,6 @@ class Overlay:
                     text, bg = _STATES[state]
                     self._label.config(text=text, bg=bg)
                     self._root.deiconify()
-                    if not self._no_activate_applied:
-                        self._apply_no_activate()
         except queue.Empty:
             pass
         self._root.after(50, self._poll)
