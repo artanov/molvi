@@ -105,12 +105,22 @@ class SettingsWindow:
 
         btns = ttk.Frame(frm)
         btns.grid(row=6, column=0, columnspan=3, pady=(12, 0))
-        ttk.Button(btns, text="Сохранить", command=self._save).grid(row=0, column=0, padx=4)
-        ttk.Button(btns, text="Отмена", command=self._win.destroy).grid(row=0, column=1, padx=4)
+        self._save_btn = ttk.Button(btns, text="Сохранить", command=self._save)
+        self._save_btn.grid(row=0, column=0, padx=4)
+        self._cancel_btn = ttk.Button(btns, text="Отмена", command=self._close)
+        self._cancel_btn.grid(row=0, column=1, padx=4)
+        self._win.protocol("WM_DELETE_WINDOW", self._close)
+
+    def _close(self):
+        if self._capture_result == "wait":
+            return  # идёт захват — сначала завершите комбинацию или нажмите Esc
+        self._win.destroy()
 
     # --- hotkey capture ---
     def _change_hotkey(self):
         self._hotkey_btn.config(state="disabled")
+        self._save_btn.config(state="disabled")
+        self._cancel_btn.config(state="disabled")
         self._hotkey_var.set("Нажмите комбинацию… (Esc — отмена)")
         self._capture_result = "wait"
         # колбэк придёт из потока хука — только записываем результат
@@ -132,9 +142,13 @@ class SettingsWindow:
         self._capture_result = "idle"
         self._hotkey_var.set(hk.human_label(self._hotkey_names))
         self._hotkey_btn.config(state="normal")
+        self._save_btn.config(state="normal")
+        self._cancel_btn.config(state="normal")
 
     # --- save ---
     def _save(self):
+        if self._capture_result == "wait":
+            return
         cfg = dict(self._cfg)
         cfg["hotkey"] = list(self._hotkey_names)
         mic = self._mic.get()
