@@ -1,4 +1,11 @@
-from voiceflow.hotkey import WM_KEYDOWN, WM_KEYUP, VK_RCONTROL, HotkeyListener
+from voiceflow.hotkey import (
+    WM_KEYDOWN,
+    WM_KEYUP,
+    WM_SYSKEYDOWN,
+    WM_SYSKEYUP,
+    VK_RCONTROL,
+    HotkeyListener,
+)
 
 
 def _make():
@@ -36,3 +43,11 @@ def test_release_without_press_ignored():
     hl, events = _make()
     hl._handle(WM_KEYUP, VK_RCONTROL)
     assert events == []
+
+
+def test_sys_key_messages_treated_as_down_up():
+    hl, events = _make()
+    hl._handle(WM_SYSKEYDOWN, VK_RCONTROL)
+    hl._handle(WM_SYSKEYDOWN, VK_RCONTROL)  # автоповтор SYS-варианта
+    hl._handle(WM_SYSKEYUP, VK_RCONTROL)
+    assert events == ["press", "release"]

@@ -19,6 +19,33 @@ _HOOKPROC = ctypes.CFUNCTYPE(
     ctypes.c_longlong, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
 )
 
+LRESULT = ctypes.c_ssize_t  # LONG_PTR: pointer-width, not c_int
+
+_user32.SetWindowsHookExW.argtypes = [
+    ctypes.c_int, _HOOKPROC, wintypes.HINSTANCE, wintypes.DWORD
+]
+_user32.SetWindowsHookExW.restype = wintypes.HHOOK
+_user32.CallNextHookEx.argtypes = [
+    wintypes.HHOOK, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
+]
+_user32.CallNextHookEx.restype = LRESULT
+_user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
+_user32.UnhookWindowsHookEx.restype = wintypes.BOOL
+_user32.GetMessageW.argtypes = [
+    ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT
+]
+_user32.GetMessageW.restype = ctypes.c_int
+_user32.TranslateMessage.argtypes = [ctypes.POINTER(wintypes.MSG)]
+_user32.TranslateMessage.restype = wintypes.BOOL
+_user32.DispatchMessageW.argtypes = [ctypes.POINTER(wintypes.MSG)]
+_user32.DispatchMessageW.restype = LRESULT
+_user32.PostThreadMessageW.argtypes = [
+    wintypes.DWORD, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM
+]
+_user32.PostThreadMessageW.restype = wintypes.BOOL
+_kernel32.GetCurrentThreadId.argtypes = []
+_kernel32.GetCurrentThreadId.restype = wintypes.DWORD
+
 
 class _KBDLLHOOKSTRUCT(ctypes.Structure):
     _fields_ = [
