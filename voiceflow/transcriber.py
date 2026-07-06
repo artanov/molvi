@@ -1,0 +1,50 @@
+import logging
+import os
+import sys
+from pathlib import Path
+
+log = logging.getLogger(__name__)
+
+
+def _add_cuda_dll_dirs():
+    """cuBLAS/cuDNN/NVRTC ставятся pip-пакетами nvidia-*; их DLL надо добавить в поиск.
+
+    os.add_dll_directory недостаточно: ctranslate2 подгружает cublas64_12.dll
+    лениво во время encode() через LoadLibrary, который ищет DLL по PATH,
+    поэтому каталоги надо добавить и туда.
+    """
+    for sub in ("nvidia/cublas/bin", "nvidia/cudnn/bin", "nvidia/cuda_nvrtc/bin"):
+        p = Path(sys.prefix) / "Lib" / "site-packages" / Path(sub)
+        if p.is_dir():
+            os.add_dll_directory(str(p))
+            os.environ["PATH"] = str(p) + os.pathsep + os.environ["PATH"]
+
+
+_add_cuda_dll_dirs()
+
+from faster_whisper import WhisperModel  # noqa: E402
+
+
+class Transcriber:
+    def __init__(self, model_name, device, compute_type, language):
+        self._language = None if language == "auto" else language
+        if device in ("auto", "cuda"):
+            try:
+                self._model = WhisperModel(model_name, device="cuda", compute_type=compute_type)
+                self.device = "cuda"
+                return
+            except Exception:
+                if device == "cuda":
+                    raise
+                log.warning("CUDA недоступна, откатываюсь на CPU", exc_info=True)
+        self._model = WhisperModel(model_name, device="cpu", compute_type="int8")
+        self.device = "cpu"
+
+    def transcribe(self, audio):
+        segments, _info = self._model.transcribe(
+            audio,
+            language=self._language,
+            beam_size=5,
+            vad_filter=True,
+        )
+        return " ".join(s.text.strip() for s in segments).strip()
