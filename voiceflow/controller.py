@@ -62,7 +62,13 @@ class Controller:
             if not self._recording:
                 return
             self._recording = False
-        audio = self._recorder.stop()
+        try:
+            audio = self._recorder.stop()
+        except Exception as exc:
+            log.exception("Не удалось остановить запись")
+            self._notify(f"Ошибка записи: {exc}")
+            self._ui.hide()
+            return
         if len(audio) < self._min_samples:
             self._ui.hide()
             return

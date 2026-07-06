@@ -10,9 +10,12 @@ class FakeRecorder:
     def __init__(self, audio):
         self.audio = audio
         self.started = 0
+        self.stop_error = None
     def start(self):
         self.started += 1
     def stop(self):
+        if self.stop_error is not None:
+            raise self.stop_error
         return self.audio
 
 
@@ -111,6 +114,24 @@ def test_transcribe_error_notifies_and_hides():
     ctl.shutdown()
     assert inserted == []
     assert "hide" in ui.events
+
+
+def test_recorder_stop_error_notifies_and_hides():
+    ctl, rec, tr, ui, inserted, notes = _make()
+    rec.stop_error = RuntimeError("device lost")
+    ctl.on_press()
+    ctl.on_release()
+    assert notes  # notify called synchronously from the hook thread
+    assert "hide" in ui.events
+    assert tr.calls == []
+    assert inserted == []
+    # Controller survives: a subsequent cycle with the error cleared works.
+    rec.stop_error = None
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("привет мир", "clipboard")]
 
 
 def test_release_without_press_is_noop():
