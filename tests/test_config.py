@@ -23,3 +23,11 @@ def test_unknown_keys_ignored(tmp_path):
     cfg = load_config(p)
     assert "bogus" not in cfg
     assert cfg["device"] == "cpu"
+
+
+def test_corrupt_file_returns_defaults(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text("{not json", encoding="utf-8")
+    cfg = load_config(p)
+    assert cfg == DEFAULTS
+    assert cfg is not DEFAULTS

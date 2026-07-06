@@ -20,6 +20,7 @@ class Controller:
         self._insert_fn = insert_fn
         self._ui = ui
         self._min_samples = int(min_duration_sec * samplerate)
+        self._samplerate = samplerate
         self._paste_mode = paste_mode
         self._notify = notify or (lambda msg: None)
         self._jobs = queue.Queue()
@@ -72,6 +73,7 @@ class Controller:
         if len(audio) < self._min_samples:
             self._ui.hide()
             return
+        log.info("Запись %.1f c", len(audio) / self._samplerate)
         self._ui.show_transcribing()
         self._jobs.put(audio)
 
@@ -82,10 +84,14 @@ class Controller:
                 return
             try:
                 text = self._transcriber.transcribe(audio)
+                log.info("Распознано %d символов", len(text))
                 if text:
                     self._insert_fn(text, self._paste_mode)
             except Exception as exc:
                 log.exception("Ошибка обработки диктовки")
                 self._notify(f"Ошибка: {exc}. Если текст распознан — он в буфере обмена (Ctrl+V).")
             finally:
-                self._ui.hide()
+                with self._lock:
+                    still_recording = self._recording
+                if not still_recording:
+                    self._ui.hide()

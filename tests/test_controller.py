@@ -20,12 +20,15 @@ class FakeRecorder:
 
 
 class FakeTranscriber:
-    def __init__(self, text="привет мир", error=None):
+    def __init__(self, text="привет мир", error=None, delay=0.0):
         self.text = text
         self.error = error
+        self.delay = delay
         self.calls = []
     def transcribe(self, audio):
         self.calls.append(audio)
+        if self.delay:
+            time.sleep(self.delay)
         if self.error:
             raise self.error
         return self.text
@@ -132,6 +135,29 @@ def test_recorder_stop_error_notifies_and_hides():
     assert _wait_until(lambda: inserted)
     ctl.shutdown()
     assert inserted == [("привет мир", "clipboard")]
+
+
+def test_overlay_not_hidden_while_next_recording_active():
+    audio = np.zeros(int(16000 * 1.0), dtype=np.float32)
+    rec, tr, ui = FakeRecorder(audio), FakeTranscriber(delay=0.2), FakeUI()
+    inserted = []
+    ctl = Controller(
+        rec, tr, lambda t, m: inserted.append((t, m)), ui,
+        min_duration_sec=0.3, samplerate=16000, paste_mode="clipboard",
+    )
+    ctl.start()
+    ctl.on_press()
+    ctl.on_release()  # job1 queued, worker sleeps ~0.2s inside transcribe()
+    time.sleep(0.05)  # worker is now mid-job on job1
+    ctl.on_press()  # user starts recording the next phrase before job1 finishes
+    assert _wait_until(lambda: len(inserted) == 1)
+    # job1's worker-loop finally ran while a new recording was active — it must
+    # not have hidden the "Запись…" indicator for the recording in progress.
+    assert ui.events == ["recording", "transcribing", "recording"]
+    ctl.on_release()  # job2 queued; nothing is recording anymore afterwards
+    assert _wait_until(lambda: len(inserted) == 2)
+    assert ui.events[-1] == "hide"
+    ctl.shutdown()
 
 
 def test_release_without_press_is_noop():

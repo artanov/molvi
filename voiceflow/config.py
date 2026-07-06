@@ -1,5 +1,8 @@
 import json
+import logging
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 DEFAULTS = {
     "model": "large-v3",
@@ -18,6 +21,10 @@ def load_config(path):
     cfg = dict(DEFAULTS)
     if not path.exists():
         return cfg
-    data = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        log.warning("config.json повреждён, использую настройки по умолчанию", exc_info=True)
+        return cfg
     cfg.update({k: v for k, v in data.items() if k in DEFAULTS})
     return cfg

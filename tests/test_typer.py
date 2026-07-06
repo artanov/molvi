@@ -1,3 +1,5 @@
+import ctypes
+
 import pytest
 
 import voiceflow.typer as typer
@@ -49,6 +51,11 @@ def test_paste_failure_keeps_text_in_clipboard(fake_env, monkeypatch):
     with pytest.raises(OSError):
         typer.paste_text("важный текст")
     assert clipboard["text"] == "важный текст"  # буфер НЕ восстановлен — текст не потерян
+
+
+def test_input_struct_size_matches_win32():
+    # Win32 требует cbSize == sizeof(INPUT) == 40 на x64; SendInput с другим размером возвращает 0/ERROR_INVALID_PARAMETER
+    assert ctypes.sizeof(typer._INPUT) == 40
 
 
 def test_insert_text_dispatch(fake_env, monkeypatch):

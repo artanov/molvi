@@ -53,9 +53,28 @@ class _KEYBDINPUT(ctypes.Structure):
     ]
 
 
+class _MOUSEINPUT(ctypes.Structure):
+    _fields_ = [
+        ("dx", ctypes.c_long),
+        ("dy", ctypes.c_long),
+        ("mouseData", ctypes.c_ulong),
+        ("dwFlags", ctypes.c_ulong),
+        ("time", ctypes.c_ulong),
+        ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)),
+    ]
+
+
+class _HARDWAREINPUT(ctypes.Structure):
+    _fields_ = [
+        ("uMsg", ctypes.c_ulong),
+        ("wParamL", ctypes.c_ushort),
+        ("wParamH", ctypes.c_ushort),
+    ]
+
+
 class _INPUT(ctypes.Structure):
     class _U(ctypes.Union):
-        _fields_ = [("ki", _KEYBDINPUT)]
+        _fields_ = [("ki", _KEYBDINPUT), ("mi", _MOUSEINPUT), ("hi", _HARDWAREINPUT)]
     _anonymous_ = ("u",)
     _fields_ = [("type", ctypes.c_ulong), ("u", _U)]
 
