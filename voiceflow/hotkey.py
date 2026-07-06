@@ -98,6 +98,9 @@ class HotkeyListener:
         if n_code >= 0:
             kb = ctypes.cast(l_param, ctypes.POINTER(_KBDLLHOOKSTRUCT)).contents
             try:
+                if kb.vkCode == self._vk:  # диагностика: LLKHF_INJECTED = 0x10
+                    log.info("hook: msg=0x%04X vk=0x%02X flags=0x%02X injected=%s",
+                             w_param, kb.vkCode, kb.flags, bool(kb.flags & 0x10))
                 self._handle(w_param, kb.vkCode)
             except Exception:
                 log.exception("Ошибка в обработчике hotkey")

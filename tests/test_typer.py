@@ -65,3 +65,14 @@ def test_insert_text_dispatch(fake_env, monkeypatch):
     typer.insert_text("a", "clipboard")
     typer.insert_text("b", "type")
     assert called == {"paste": "a", "type": "b"}
+
+
+def test_insert_text_auto_mode(monkeypatch):
+    called = {}
+    monkeypatch.setattr(typer, "paste_text", lambda t: called.setdefault("paste", t))
+    monkeypatch.setattr(typer, "type_text_direct", lambda t: called.setdefault("type", t))
+    monkeypatch.setattr(typer, "_foreground_is_console", lambda: True)
+    typer.insert_text("a", "auto")
+    monkeypatch.setattr(typer, "_foreground_is_console", lambda: False)
+    typer.insert_text("b", "auto")
+    assert called == {"type": "a", "paste": "b"}

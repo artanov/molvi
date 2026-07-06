@@ -32,7 +32,7 @@ Win+R → `shell:startup` → создать там ярлык на `voiceflow.b
 | compute_type | int8_float16 | float16, int8, … |
 | language | auto | auto / ru / en |
 | min_duration_sec | 0.3 | минимальная длительность записи |
-| paste_mode | clipboard | clipboard (Ctrl+V) / type (посимвольно) |
+| paste_mode | auto | auto (консоль → печать, иначе Ctrl+V) / clipboard / type |
 | hotkey | right_ctrl | right_ctrl / left_ctrl — клавиша push-to-talk |
 | input_device | null | имя или индекс микрофона (см. `python -m sounddevice`) |
 | samplerate | 16000 | не менять без необходимости |

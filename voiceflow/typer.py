@@ -1,8 +1,11 @@
 import ctypes
+import logging
 import time
 
 import win32clipboard
 import win32con
+
+log = logging.getLogger(__name__)
 
 _user32 = ctypes.windll.user32
 
@@ -95,12 +98,16 @@ def _press_ctrl_v():
 
 def paste_text(text, restore_delay=0.3):
     old = _get_clipboard_text()
+    log.info("paste: старый буфер %s, кладу %d симв",
+             "пуст/не-текст" if old is None else f"{len(old)} симв", len(text))
     _set_clipboard_text(text)
     _press_ctrl_v()
+    log.info("paste: Ctrl+V отправлен")
     # Пауза, чтобы целевое приложение успело прочитать буфер до восстановления.
     time.sleep(restore_delay)
     if old is not None:
         _set_clipboard_text(old)
+        log.info("paste: буфер восстановлен")
 
 
 def type_text_direct(text):
@@ -115,8 +122,18 @@ def type_text_direct(text):
         time.sleep(0.005)
 
 
+def _foreground_is_console():
+    """Классическая консоль (conhost) не превращает Ctrl+V во «вставить»,
+    когда TUI-приложение включило сырой режим ввода — туда надо печатать."""
+    hwnd = _user32.GetForegroundWindow()
+    buf = ctypes.create_unicode_buffer(64)
+    _user32.GetClassNameW(hwnd, buf, 64)
+    return buf.value == "ConsoleWindowClass"
+
+
 def insert_text(text, mode):
-    if mode == "type":
+    if mode == "type" or (mode == "auto" and _foreground_is_console()):
+        log.info("insert: печатаю посимвольно (%d симв)", len(text))
         type_text_direct(text)
     else:
         paste_text(text)

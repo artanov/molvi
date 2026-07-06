@@ -11,7 +11,7 @@ DEFAULTS = {
     "language": "auto",         # auto | ru | en
     "hotkey": "right_ctrl",     # right_ctrl | left_ctrl
     "min_duration_sec": 0.3,
-    "paste_mode": "clipboard",  # clipboard | type
+    "paste_mode": "auto",       # auto (консоль → печать, иначе Ctrl+V) | clipboard | type
     "input_device": None,       # имя/индекс устройства sounddevice; None = системное
     "samplerate": 16000,
 }
