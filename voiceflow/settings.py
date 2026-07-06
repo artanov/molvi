@@ -44,6 +44,21 @@ def dedupe_input_devices(devices):
     return out
 
 
+def device_choices(device_names, current):
+    """→ (values_list, initial_index, mapping) для комбобокса микрофона."""
+    values = [_DEFAULT_DEVICE_LABEL] + list(device_names)
+    mapping = {_DEFAULT_DEVICE_LABEL: None}
+    for name in device_names:
+        mapping[name] = name
+    if current is not None and current not in device_names:
+        label = f"Текущее: {current}"
+        values.insert(1, label)
+        mapping[label] = current
+        return values, 1, mapping
+    idx = values.index(current) if current in values else 0
+    return values, idx, mapping
+
+
 class SettingsWindow:
     """Окно настроек. Создавать и использовать только в tk-потоке."""
 
@@ -69,10 +84,10 @@ class SettingsWindow:
         self._hotkey_btn.grid(row=0, column=2, padx=(8, 0))
 
         ttk.Label(frm, text="Микрофон:").grid(row=1, column=0, sticky="w", pady=4)
-        devices = [_DEFAULT_DEVICE_LABEL] + dedupe_input_devices(sd.query_devices())
-        self._mic = ttk.Combobox(frm, values=devices, state="readonly", width=40)
-        cur = cfg["input_device"]
-        self._mic.current(devices.index(cur) if cur in devices else 0)
+        device_names = dedupe_input_devices(sd.query_devices())
+        values, idx, self._device_mapping = device_choices(device_names, cfg["input_device"])
+        self._mic = ttk.Combobox(frm, values=values, state="readonly", width=40)
+        self._mic.current(idx)
         self._mic.grid(row=1, column=1, columnspan=2, sticky="we")
 
         ttk.Label(frm, text="Язык:").grid(row=2, column=0, sticky="w", pady=4)
@@ -151,8 +166,7 @@ class SettingsWindow:
             return
         cfg = dict(self._cfg)
         cfg["hotkey"] = list(self._hotkey_names)
-        mic = self._mic.get()
-        cfg["input_device"] = None if mic == _DEFAULT_DEVICE_LABEL else mic
+        cfg["input_device"] = self._device_mapping[self._mic.get()]
         cfg["language"] = LANGUAGES[self._lang.current()][1]
         cfg["model"] = QUALITY_PRESETS[self._quality.current()][1]
         cfg["sounds"] = bool(self._sounds_var.get())

@@ -89,6 +89,23 @@ def test_set_combo_releases_active_recording():
     assert events == ["press", "release", "press"]
 
 
+def test_start_capture_releases_active_recording():
+    hl, events = _make(combo=("ctrl_left",))
+    hl._handle(WM_KEYDOWN, CTRL_L)  # active recording, key still held
+    assert events == ["press"]
+    captured = []
+    hl.start_capture(captured.append)
+    assert events == ["press", "release"]  # release fired exactly once
+    # capture still works normally afterwards
+    hl._handle(WM_KEYDOWN, X)
+    hl._handle(WM_KEYUP, X)
+    assert captured == [["x"]]
+    # ctrl_left key-up (still physically down from before) must not
+    # re-fire release or otherwise misbehave now that capture ended
+    hl._handle(WM_KEYUP, CTRL_L)
+    assert events == ["press", "release"]
+
+
 def test_capture_collects_names_modifiers_first():
     hl, events = _make()
     captured = []

@@ -29,6 +29,7 @@ class Controller:
         self._recording = False
         self._paused = False
         self._reloading = False
+        self._reload_token = 0
         self._lock = threading.Lock()
 
     def start(self):
@@ -51,12 +52,18 @@ class Controller:
     def begin_model_reload(self):
         with self._lock:
             self._reloading = True
+            self._reload_token += 1
+            return self._reload_token
 
-    def finish_model_reload(self, transcriber=None):
+    def finish_model_reload(self, transcriber=None, token=None):
+        """Возвращает True, если применено; False — если поток устарел (проигнорирован)."""
         with self._lock:
+            if token is not None and token != self._reload_token:
+                return False  # устаревший поток перезагрузки — игнорируем
             if transcriber is not None:
                 self._transcriber = transcriber
             self._reloading = False
+            return True
 
     def on_press(self):
         with self._lock:

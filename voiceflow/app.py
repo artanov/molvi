@@ -95,40 +95,63 @@ def main():
         hotkey_thread = threading.Thread(target=listener.run, daemon=True)
         hotkey_thread.start()
 
-        def _reload_model():
+        cfg_lock = threading.Lock()
+
+        def _reload_model(snapshot, token, old_model_lang):
             try:
                 new_tr = Transcriber(
-                    cfg["model"], cfg["device"], cfg["compute_type"], cfg["language"]
+                    snapshot["model"], snapshot["device"],
+                    snapshot["compute_type"], snapshot["language"],
                 )
-                controller.finish_model_reload(new_tr)
-                log.info("Модель %s загружена, устройство: %s", cfg["model"], new_tr.device)
-                tray.notify(f"Готов. Модель: {cfg['model']}")
+                applied = controller.finish_model_reload(new_tr, token)
+                log.info("Модель %s загружена, устройство: %s", snapshot["model"], new_tr.device)
+                if applied:
+                    tray.notify(f"Готов. Модель: {snapshot['model']}")
             except Exception as exc:
-                log.exception("Не удалось загрузить модель %s", cfg["model"])
-                controller.finish_model_reload(None)
-                tray.notify(f"Не удалось загрузить модель: {exc}. Работает прежняя.")
+                log.exception("Не удалось загрузить модель %s", snapshot["model"])
+                applied = controller.finish_model_reload(None, token)
+                if applied:
+                    with cfg_lock:
+                        cfg["model"], cfg["language"] = old_model_lang
+                        save_config(ROOT / "config.json", cfg)
+                    tray.notify(
+                        f"Не удалось загрузить модель: {exc}. Возвращены прежние настройки."
+                    )
 
         def apply_settings(new_cfg, autostart_on):
             # вызывается в tk-потоке из SettingsWindow
-            old_model = (cfg["model"], cfg["language"])
-            cfg.update(new_cfg)
-            save_config(ROOT / "config.json", cfg)
-            listener.set_combo(_combo_from_cfg())
-            sounds.set_enabled(cfg["sounds"])
-            controller.set_device(cfg["input_device"])
             try:
-                if autostart_on:
-                    autostart.enable(str(ROOT / "voiceflow.bat"))
-                else:
-                    autostart.disable()
-            except OSError as exc:
-                log.exception("Автозапуск: ошибка реестра")
-                tray.notify(f"Не удалось изменить автозапуск: {exc}")
-            if (cfg["model"], cfg["language"]) != old_model:
-                controller.begin_model_reload()
-                tray.notify("Загружаю модель… Диктовка временно недоступна.")
-                threading.Thread(target=_reload_model, daemon=True).start()
-            log.info("Настройки применены: hotkey=%s", cfg["hotkey"])
+                with cfg_lock:
+                    old_model_lang = (cfg["model"], cfg["language"])
+                    cfg.update(new_cfg)
+                    save_config(ROOT / "config.json", cfg)
+                listener.set_combo(_combo_from_cfg())
+                sounds.set_enabled(cfg["sounds"])
+                controller.set_device(cfg["input_device"])
+                try:
+                    if autostart_on:
+                        autostart.enable(str(ROOT / "voiceflow.bat"))
+                    else:
+                        autostart.disable()
+                except OSError as exc:
+                    log.exception("Автозапуск: ошибка реестра")
+                    tray.notify(f"Не удалось изменить автозапуск: {exc}")
+                if (cfg["model"], cfg["language"]) != old_model_lang:
+                    token = controller.begin_model_reload()
+                    snapshot = {
+                        "model": cfg["model"],
+                        "device": cfg["device"],
+                        "compute_type": cfg["compute_type"],
+                        "language": cfg["language"],
+                    }
+                    tray.notify("Загружаю модель… Диктовка временно недоступна.")
+                    threading.Thread(
+                        target=_reload_model, args=(snapshot, token, old_model_lang), daemon=True
+                    ).start()
+                log.info("Настройки применены: hotkey=%s", cfg["hotkey"])
+            except Exception as exc:
+                log.exception("Не удалось применить настройки")
+                tray.notify(f"Не удалось применить настройки: {exc}")
 
         settings_ref = {"win": None}
 

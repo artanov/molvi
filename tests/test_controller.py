@@ -199,12 +199,12 @@ def test_short_recording_plays_no_stop_sound():
 
 def test_model_reload_blocks_dictation_and_swaps_transcriber():
     ctl, rec, tr, ui, inserted, notes, _ = _make()
-    ctl.begin_model_reload()
+    token = ctl.begin_model_reload()
     ctl.on_press()
     ctl.on_release()
     assert rec.started == 0
     new_tr = FakeTranscriber(text="новая модель")
-    ctl.finish_model_reload(new_tr)
+    ctl.finish_model_reload(new_tr, token)
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: inserted)
@@ -214,13 +214,31 @@ def test_model_reload_blocks_dictation_and_swaps_transcriber():
 
 def test_model_reload_failure_keeps_old_transcriber():
     ctl, rec, tr, ui, inserted, notes, _ = _make(text="старая модель")
-    ctl.begin_model_reload()
-    ctl.finish_model_reload(None)   # загрузка не удалась — откат
+    token = ctl.begin_model_reload()
+    ctl.finish_model_reload(None, token)   # загрузка не удалась — откат
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: inserted)
     ctl.shutdown()
     assert inserted == [("старая модель", "clipboard")]
+
+
+def test_stale_reload_ignored():
+    ctl, rec, tr, ui, inserted, notes, _ = _make(text="исходная модель")
+    t1 = ctl.begin_model_reload()
+    t2 = ctl.begin_model_reload()
+    tr_a = FakeTranscriber(text="модель A")
+    ctl.finish_model_reload(tr_a, t1)  # устаревший — должен быть проигнорирован
+    ctl.on_press()
+    ctl.on_release()
+    assert rec.started == 0  # всё ещё считается идущей перезагрузка t2
+    tr_b = FakeTranscriber(text="модель B")
+    ctl.finish_model_reload(tr_b, t2)  # актуальный — применяется
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("модель B", "clipboard")]
 
 
 def test_set_device_applies_to_recorder():

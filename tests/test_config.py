@@ -7,6 +7,7 @@ def test_missing_file_returns_defaults(tmp_path):
     cfg = load_config(tmp_path / "nope.json")
     assert cfg == DEFAULTS
     assert cfg is not DEFAULTS  # копия, а не ссылка
+    assert cfg["hotkey"] is not DEFAULTS["hotkey"]  # и hotkey — не общий список
 
 
 def test_partial_file_merges_over_defaults(tmp_path):

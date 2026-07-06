@@ -28,7 +28,7 @@ def _migrate_hotkey(value):
             return ["ctrl_right"]
         return list(migrated)
     if isinstance(value, list) and value and all(isinstance(x, str) for x in value):
-        return value
+        return list(value)
     log.warning("Некорректный hotkey %r, использую значение по умолчанию", value)
     return list(DEFAULTS["hotkey"])
 
@@ -37,17 +37,21 @@ def load_config(path):
     path = Path(path)
     cfg = dict(DEFAULTS)
     if not path.exists():
+        cfg["hotkey"] = list(cfg["hotkey"])
         return cfg
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (ValueError, OSError):
         log.warning("config.json повреждён, использую настройки по умолчанию", exc_info=True)
+        cfg["hotkey"] = list(cfg["hotkey"])
         return cfg
     if not isinstance(data, dict):
         log.warning("config.json не является объектом, использую настройки по умолчанию")
+        cfg["hotkey"] = list(cfg["hotkey"])
         return cfg
     cfg.update({k: v for k, v in data.items() if k in DEFAULTS})
     cfg["hotkey"] = _migrate_hotkey(cfg["hotkey"])
+    cfg["hotkey"] = list(cfg["hotkey"])
     return cfg
 
 
