@@ -14,7 +14,7 @@ class Controller:
 
     def __init__(self, recorder, transcriber, insert_fn, ui, *,
                  min_duration_sec=0.3, samplerate=16000,
-                 paste_mode="clipboard", notify=None):
+                 paste_mode="clipboard", notify=None, sounds=None):
         self._recorder = recorder
         self._transcriber = transcriber
         self._insert_fn = insert_fn
@@ -23,10 +23,12 @@ class Controller:
         self._samplerate = samplerate
         self._paste_mode = paste_mode
         self._notify = notify or (lambda msg: None)
+        self._sounds = sounds
         self._jobs = queue.Queue()
         self._worker = None
         self._recording = False
         self._paused = False
+        self._reloading = False
         self._lock = threading.Lock()
 
     def start(self):
@@ -43,14 +45,29 @@ class Controller:
             self._paused = not self._paused
             return self._paused
 
+    def set_device(self, device):
+        self._recorder.device = device
+
+    def begin_model_reload(self):
+        with self._lock:
+            self._reloading = True
+
+    def finish_model_reload(self, transcriber=None):
+        with self._lock:
+            if transcriber is not None:
+                self._transcriber = transcriber
+            self._reloading = False
+
     def on_press(self):
         with self._lock:
-            if self._paused or self._recording:
+            if self._paused or self._recording or self._reloading:
                 return
             self._recording = True
         try:
             self._recorder.start()
             self._ui.show_recording()
+            if self._sounds is not None:
+                self._sounds.play_start()
         except Exception as exc:
             with self._lock:
                 self._recording = False
@@ -76,6 +93,8 @@ class Controller:
         log.info("Запись %.1f c", len(audio) / self._samplerate)
         self._ui.show_transcribing()
         self._jobs.put(audio)
+        if self._sounds is not None:
+            self._sounds.play_stop()
 
     def _run(self):
         while True:

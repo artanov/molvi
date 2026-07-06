@@ -11,6 +11,7 @@ class FakeRecorder:
         self.audio = audio
         self.started = 0
         self.stop_error = None
+        self.device = None
     def start(self):
         self.started += 1
     def stop(self):
@@ -54,7 +55,16 @@ def _wait_until(cond, timeout=2.0):
     return False
 
 
-def _make(audio_sec=1.0, text="привет мир", error=None):
+class FakeSounds:
+    def __init__(self):
+        self.events = []
+    def play_start(self):
+        self.events.append("start")
+    def play_stop(self):
+        self.events.append("stop")
+
+
+def _make(audio_sec=1.0, text="привет мир", error=None, sounds=None):
     audio = np.zeros(int(16000 * audio_sec), dtype=np.float32)
     rec, tr, ui = FakeRecorder(audio), FakeTranscriber(text, error), FakeUI()
     inserted = []
@@ -62,14 +72,14 @@ def _make(audio_sec=1.0, text="привет мир", error=None):
     ctl = Controller(
         rec, tr, lambda t, m: inserted.append((t, m)), ui,
         min_duration_sec=0.3, samplerate=16000, paste_mode="clipboard",
-        notify=notes.append,
+        notify=notes.append, sounds=sounds,
     )
     ctl.start()
-    return ctl, rec, tr, ui, inserted, notes
+    return ctl, rec, tr, ui, inserted, notes, sounds
 
 
 def test_full_cycle_inserts_text():
-    ctl, rec, tr, ui, inserted, _ = _make()
+    ctl, rec, tr, ui, inserted, *_ = _make()
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: inserted)
@@ -79,7 +89,7 @@ def test_full_cycle_inserts_text():
 
 
 def test_short_recording_ignored():
-    ctl, rec, tr, ui, inserted, _ = _make(audio_sec=0.1)
+    ctl, rec, tr, ui, inserted, *_ = _make(audio_sec=0.1)
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: "hide" in ui.events)
@@ -89,7 +99,7 @@ def test_short_recording_ignored():
 
 
 def test_empty_transcription_not_inserted():
-    ctl, rec, tr, ui, inserted, _ = _make(text="")
+    ctl, rec, tr, ui, inserted, *_ = _make(text="")
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: ui.events.count("hide") >= 1)
@@ -98,7 +108,7 @@ def test_empty_transcription_not_inserted():
 
 
 def test_paused_ignores_hotkey():
-    ctl, rec, tr, ui, inserted, _ = _make()
+    ctl, rec, tr, ui, inserted, *_ = _make()
     assert ctl.toggle_pause() is True
     ctl.on_press()
     ctl.on_release()
@@ -110,7 +120,7 @@ def test_paused_ignores_hotkey():
 
 
 def test_transcribe_error_notifies_and_hides():
-    ctl, rec, tr, ui, inserted, notes = _make(error=RuntimeError("boom"))
+    ctl, rec, tr, ui, inserted, notes, _ = _make(error=RuntimeError("boom"))
     ctl.on_press()
     ctl.on_release()
     assert _wait_until(lambda: notes)
@@ -120,7 +130,7 @@ def test_transcribe_error_notifies_and_hides():
 
 
 def test_recorder_stop_error_notifies_and_hides():
-    ctl, rec, tr, ui, inserted, notes = _make()
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
     rec.stop_error = RuntimeError("device lost")
     ctl.on_press()
     ctl.on_release()
@@ -161,8 +171,60 @@ def test_overlay_not_hidden_while_next_recording_active():
 
 
 def test_release_without_press_is_noop():
-    ctl, rec, tr, ui, inserted, _ = _make()
+    ctl, rec, tr, ui, inserted, *_ = _make()
     ctl.on_release()
     time.sleep(0.05)
     ctl.shutdown()
     assert tr.calls == []
+
+
+def test_sounds_played_on_start_and_enqueue():
+    sounds = FakeSounds()
+    ctl, rec, tr, ui, inserted, notes, snd = _make(sounds=sounds)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert snd.events == ["start", "stop"]
+
+
+def test_short_recording_plays_no_stop_sound():
+    sounds = FakeSounds()
+    ctl, rec, tr, ui, inserted, notes, snd = _make(audio_sec=0.1, sounds=sounds)
+    ctl.on_press()
+    ctl.on_release()
+    ctl.shutdown()
+    assert snd.events == ["start"]
+
+
+def test_model_reload_blocks_dictation_and_swaps_transcriber():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.begin_model_reload()
+    ctl.on_press()
+    ctl.on_release()
+    assert rec.started == 0
+    new_tr = FakeTranscriber(text="новая модель")
+    ctl.finish_model_reload(new_tr)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("новая модель", "clipboard")]
+
+
+def test_model_reload_failure_keeps_old_transcriber():
+    ctl, rec, tr, ui, inserted, notes, _ = _make(text="старая модель")
+    ctl.begin_model_reload()
+    ctl.finish_model_reload(None)   # загрузка не удалась — откат
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("старая модель", "clipboard")]
+
+
+def test_set_device_applies_to_recorder():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.set_device("Mic B")
+    ctl.shutdown()
+    assert rec.device == "Mic B"
