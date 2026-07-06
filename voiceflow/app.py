@@ -68,6 +68,7 @@ def main():
         log.info("Загрузка модели %s (%s)", cfg["model"], cfg["device"])
         transcriber = Transcriber(cfg["model"], cfg["device"], cfg["compute_type"], cfg["language"])
         log.info("Модель загружена, устройство: %s", transcriber.device)
+        last_good = {"model": cfg["model"], "language": cfg["language"]}
 
         recorder = Recorder(samplerate=cfg["samplerate"], device=cfg["input_device"])
         controller = Controller(
@@ -97,7 +98,7 @@ def main():
 
         cfg_lock = threading.Lock()
 
-        def _reload_model(snapshot, token, old_model_lang):
+        def _reload_model(snapshot, token):
             try:
                 new_tr = Transcriber(
                     snapshot["model"], snapshot["device"],
@@ -106,13 +107,15 @@ def main():
                 applied = controller.finish_model_reload(new_tr, token)
                 log.info("Модель %s загружена, устройство: %s", snapshot["model"], new_tr.device)
                 if applied:
+                    last_good["model"] = snapshot["model"]
+                    last_good["language"] = snapshot["language"]
                     tray.notify(f"Готов. Модель: {snapshot['model']}")
             except Exception as exc:
                 log.exception("Не удалось загрузить модель %s", snapshot["model"])
                 applied = controller.finish_model_reload(None, token)
                 if applied:
                     with cfg_lock:
-                        cfg["model"], cfg["language"] = old_model_lang
+                        cfg["model"], cfg["language"] = last_good["model"], last_good["language"]
                         save_config(ROOT / "config.json", cfg)
                     tray.notify(
                         f"Не удалось загрузить модель: {exc}. Возвращены прежние настройки."
@@ -121,10 +124,24 @@ def main():
         def apply_settings(new_cfg, autostart_on):
             # вызывается в tk-потоке из SettingsWindow
             try:
+                # Смена модели/языка детектируется и begin_model_reload()
+                # вызывается в той же критической секции, что и cfg.update(),
+                # иначе restore упавшей перезагрузки может проскочить между
+                # release cfg_lock и begin_model_reload и затереть свежий выбор.
+                reload_args = None
                 with cfg_lock:
                     old_model_lang = (cfg["model"], cfg["language"])
                     cfg.update(new_cfg)
                     save_config(ROOT / "config.json", cfg)
+                    if (cfg["model"], cfg["language"]) != old_model_lang:
+                        token = controller.begin_model_reload()
+                        snapshot = {
+                            "model": cfg["model"],
+                            "device": cfg["device"],
+                            "compute_type": cfg["compute_type"],
+                            "language": cfg["language"],
+                        }
+                        reload_args = (snapshot, token)
                 listener.set_combo(_combo_from_cfg())
                 sounds.set_enabled(cfg["sounds"])
                 controller.set_device(cfg["input_device"])
@@ -136,17 +153,10 @@ def main():
                 except OSError as exc:
                     log.exception("Автозапуск: ошибка реестра")
                     tray.notify(f"Не удалось изменить автозапуск: {exc}")
-                if (cfg["model"], cfg["language"]) != old_model_lang:
-                    token = controller.begin_model_reload()
-                    snapshot = {
-                        "model": cfg["model"],
-                        "device": cfg["device"],
-                        "compute_type": cfg["compute_type"],
-                        "language": cfg["language"],
-                    }
+                if reload_args is not None:
                     tray.notify("Загружаю модель… Диктовка временно недоступна.")
                     threading.Thread(
-                        target=_reload_model, args=(snapshot, token, old_model_lang), daemon=True
+                        target=_reload_model, args=reload_args, daemon=True
                     ).start()
                 log.info("Настройки применены: hotkey=%s", cfg["hotkey"])
             except Exception as exc:

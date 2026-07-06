@@ -158,6 +158,7 @@ class HotkeyListener:
             self._on_release()
         self._down = set()
         self._released = set()
+        self._armed = True
         self._cap_peak = set()
         self._cap_down = set()
         self._capture_cb = callback

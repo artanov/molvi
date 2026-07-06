@@ -132,6 +132,26 @@ def test_capture_escape_cancels():
     hl._handle(WM_KEYUP, CTRL_L)
 
 
+def test_capture_cancel_after_active_then_key_recaptured():
+    # single-key combo активна, отменяем захват после отпускания ключа
+    # PTT мид-захвате — следующее нажатие не должно проглатываться.
+    hl, events = _make(combo=("ctrl_left",))
+    hl._handle(WM_KEYDOWN, CTRL_L)  # active recording
+    assert events == ["press"]
+    captured = []
+    hl.start_capture(captured.append)
+    assert events == ["press", "release"]  # start_capture released active
+    hl._handle(WM_KEYUP, CTRL_L)  # key released mid-capture
+    hl._handle(WM_KEYDOWN, VK_ESCAPE)  # cancel
+    assert captured == [None]
+    # next press+release of the combo key must fire normally, not be
+    # swallowed as an already-armed/never-released leftover.
+    hl._handle(WM_KEYDOWN, CTRL_L)
+    assert events == ["press", "release", "press"]
+    hl._handle(WM_KEYUP, CTRL_L)
+    assert events == ["press", "release", "press", "release"]
+
+
 def test_capture_ignores_unknown_keys():
     hl, _ = _make()
     captured = []
