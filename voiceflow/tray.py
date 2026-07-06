@@ -14,13 +14,15 @@ def _make_icon_image(color="#27ae60"):
 
 
 class Tray:
-    def __init__(self, on_toggle_pause, on_exit):
+    def __init__(self, on_toggle_pause, on_exit, on_settings=None):
         self._on_toggle_pause = on_toggle_pause
         self._on_exit = on_exit
+        self._on_settings = on_settings or (lambda: None)
         self._paused = False
         self._icon = pystray.Icon(
             "VoiceFlow", _make_icon_image(), "VoiceFlow",
             menu=pystray.Menu(
+                pystray.MenuItem("Настройки…", self._settings),
                 pystray.MenuItem(
                     lambda item: "Возобновить" if self._paused else "Пауза",
                     self._toggle,
@@ -28,6 +30,9 @@ class Tray:
                 pystray.MenuItem("Выход", self._exit),
             ),
         )
+
+    def _settings(self, icon, item):
+        self._on_settings()
 
     def _toggle(self, icon, item):
         self._paused = self._on_toggle_pause()
