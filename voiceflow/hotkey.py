@@ -16,19 +16,65 @@ WM_QUIT = 0x0012
 VK_RCONTROL = 0xA3
 VK_LCONTROL = 0xA2
 
-HOTKEY_VKS = {
-    "right_ctrl": VK_RCONTROL,
-    "left_ctrl": VK_LCONTROL,
+VK_ESCAPE = 0x1B
+LLKHF_INJECTED = 0x10
+
+VK_NAMES = {}
+for _i in range(26):
+    VK_NAMES[chr(ord("a") + _i)] = 0x41 + _i
+for _i in range(10):
+    VK_NAMES[str(_i)] = 0x30 + _i
+for _i in range(24):
+    VK_NAMES[f"f{_i + 1}"] = 0x70 + _i
+VK_NAMES.update({
+    "ctrl_left": 0xA2, "ctrl_right": 0xA3,
+    "shift_left": 0xA0, "shift_right": 0xA1,
+    "alt_left": 0xA4, "alt_right": 0xA5,
+    "win_left": 0x5B, "win_right": 0x5C,
+    "space": 0x20, "capslock": 0x14, "tab": 0x09, "backquote": 0xC0,
+    "left": 0x25, "up": 0x26, "right": 0x27, "down": 0x28,
+    "insert": 0x2D, "delete": 0x2E, "home": 0x24, "end": 0x23,
+    "pageup": 0x21, "pagedown": 0x22,
+})
+VK_TO_NAME = {v: k for k, v in VK_NAMES.items()}
+
+MODIFIER_NAMES = {
+    "ctrl_left", "ctrl_right", "shift_left", "shift_right",
+    "alt_left", "alt_right", "win_left", "win_right",
+}
+
+_DISPLAY = {
+    "ctrl_left": "Ctrl слева", "ctrl_right": "Ctrl справа",
+    "shift_left": "Shift слева", "shift_right": "Shift справа",
+    "alt_left": "Alt слева", "alt_right": "Alt справа",
+    "win_left": "Win слева", "win_right": "Win справа",
+    "space": "Пробел", "capslock": "CapsLock", "tab": "Tab",
+    "backquote": "`", "left": "←", "up": "↑", "right": "→", "down": "↓",
+    "insert": "Insert", "delete": "Delete", "home": "Home", "end": "End",
+    "pageup": "PageUp", "pagedown": "PageDown",
 }
 
 
-def resolve_hotkey(name):
-    """Имя клавиши из config.json → виртуальный код; неизвестное имя → правый Ctrl."""
-    vk = HOTKEY_VKS.get(name)
-    if vk is None:
-        log.warning("Неизвестный hotkey %r, использую right_ctrl", name)
-        return VK_RCONTROL
-    return vk
+def names_to_vks(names):
+    vks = []
+    for name in names:
+        vk = VK_NAMES.get(name)
+        if vk is None:
+            raise ValueError(f"Неизвестное имя клавиши: {name!r}")
+        vks.append(vk)
+    return vks
+
+
+def human_label(names):
+    return " + ".join(_DISPLAY.get(n, n.upper()) for n in names)
+
+
+def normalize_capture(vks):
+    names = [VK_TO_NAME[vk] for vk in vks if vk in VK_TO_NAME]
+    mods = sorted((n for n in names if n in MODIFIER_NAMES), key=lambda n: VK_NAMES[n])
+    rest = sorted((n for n in names if n not in MODIFIER_NAMES), key=lambda n: VK_NAMES[n])
+    return mods + rest
+
 
 _HOOKPROC = ctypes.CFUNCTYPE(
     ctypes.c_longlong, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
@@ -73,35 +119,91 @@ class _KBDLLHOOKSTRUCT(ctypes.Structure):
 
 
 class HotkeyListener:
-    def __init__(self, on_press, on_release, vk=VK_RCONTROL):
+    """Push-to-talk по комбинации клавиш.
+
+    Все клавиши комбо зажаты → on_press; любая отпущена → on_release;
+    повторный on_press — только после полного отпускания всех клавиш.
+    Инжектированные события игнорируются: иначе собственная эмуляция
+    Ctrl+V дёргала бы hotkey, содержащий Ctrl.
+    """
+
+    def __init__(self, on_press, on_release, combo):
         self._on_press = on_press
         self._on_release = on_release
-        self._vk = vk
-        self._is_down = False
+        self._combo = frozenset(combo)
+        self._down = set()
+        self._released = set()
+        self._active = False
+        self._armed = True
+        self._capture_cb = None
+        self._cap_peak = set()
+        self._cap_down = set()
         self._hook = None
         self._thread_id = None
         self._proc = _HOOKPROC(self._low_level_proc)  # держим ссылку от GC
 
-    def _handle(self, msg, vk):
-        if vk != self._vk:
+    def set_combo(self, vks):
+        if self._active:
+            self._active = False
+            self._on_release()
+        self._combo = frozenset(vks)
+        self._down = set()
+        self._released = set()
+        self._armed = True
+
+    def start_capture(self, callback):
+        """Копит зажатые клавиши; все отпущены → callback(имена), Esc → callback(None)."""
+        self._cap_peak = set()
+        self._cap_down = set()
+        self._capture_cb = callback
+
+    def _handle(self, msg, vk, injected=False):
+        if injected:
+            return
+        if self._capture_cb is not None:
+            self._handle_capture(msg, vk)
+            return
+        if vk not in self._combo:
             return
         if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
-            if not self._is_down:  # подавляем автоповтор Windows
-                self._is_down = True
+            self._down.add(vk)
+            if self._armed and self._down == self._combo:
+                self._armed = False
+                self._released = set()
+                self._active = True
                 self._on_press()
         elif msg in (WM_KEYUP, WM_SYSKEYUP):
-            if self._is_down:
-                self._is_down = False
+            self._down.discard(vk)
+            if self._active:
+                self._active = False
                 self._on_release()
+            # "Полное отпускание" — каждая клавиша комбо хоть раз была
+            # отпущена по отдельности с последнего срабатывания (не
+            # обязательно все одновременно, см. test_no_refire_until_full_release).
+            self._released.add(vk)
+            if self._released >= self._combo:
+                self._armed = True
+
+    def _handle_capture(self, msg, vk):
+        if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
+            if vk == VK_ESCAPE:
+                cb, self._capture_cb = self._capture_cb, None
+                cb(None)
+                return
+            if vk in VK_TO_NAME:
+                self._cap_down.add(vk)
+                self._cap_peak.add(vk)
+        elif msg in (WM_KEYUP, WM_SYSKEYUP):
+            self._cap_down.discard(vk)
+            if not self._cap_down and self._cap_peak:
+                cb, self._capture_cb = self._capture_cb, None
+                cb(normalize_capture(self._cap_peak))
 
     def _low_level_proc(self, n_code, w_param, l_param):
         if n_code >= 0:
             kb = ctypes.cast(l_param, ctypes.POINTER(_KBDLLHOOKSTRUCT)).contents
             try:
-                if kb.vkCode == self._vk:  # LLKHF_INJECTED = 0x10
-                    log.debug("hook: msg=0x%04X vk=0x%02X flags=0x%02X injected=%s",
-                              w_param, kb.vkCode, kb.flags, bool(kb.flags & 0x10))
-                self._handle(w_param, kb.vkCode)
+                self._handle(w_param, kb.vkCode, bool(kb.flags & LLKHF_INJECTED))
             except Exception:
                 log.exception("Ошибка в обработчике hotkey")
         return _user32.CallNextHookEx(None, n_code, w_param, l_param)

@@ -1,61 +1,132 @@
+import pytest
+
 from voiceflow.hotkey import (
-    WM_KEYDOWN,
-    WM_KEYUP,
-    WM_SYSKEYDOWN,
-    WM_SYSKEYUP,
-    VK_RCONTROL,
-    HotkeyListener,
+    WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
+    VK_ESCAPE, VK_NAMES, HotkeyListener,
+    human_label, names_to_vks, normalize_capture,
 )
 
+CTRL_L = VK_NAMES["ctrl_left"]
+ALT_L = VK_NAMES["alt_left"]
+X = VK_NAMES["x"]
 
-def _make():
+
+def _make(combo=("ctrl_left", "alt_left", "x")):
     events = []
     hl = HotkeyListener(
         on_press=lambda: events.append("press"),
         on_release=lambda: events.append("release"),
+        combo=names_to_vks(list(combo)),
     )
     return hl, events
 
 
-def test_press_release_cycle():
+def test_names_to_vks_and_unknown():
+    assert names_to_vks(["ctrl_left", "x"]) == [0xA2, 0x58]
+    with pytest.raises(ValueError):
+        names_to_vks(["nosuchkey"])
+
+
+def test_human_label():
+    assert human_label(["ctrl_left", "alt_left", "x"]) == "Ctrl слева + Alt слева + X"
+
+
+def test_combo_fires_when_all_down_releases_on_any_up():
     hl, events = _make()
-    hl._handle(WM_KEYDOWN, VK_RCONTROL)
-    hl._handle(WM_KEYUP, VK_RCONTROL)
+    hl._handle(WM_KEYDOWN, CTRL_L)
+    hl._handle(WM_KEYDOWN, ALT_L)
+    assert events == []
+    hl._handle(WM_KEYDOWN, X)
+    assert events == ["press"]
+    hl._handle(WM_KEYUP, ALT_L)
     assert events == ["press", "release"]
+
+
+def test_no_refire_until_full_release():
+    hl, events = _make()
+    for vk in (CTRL_L, ALT_L, X):
+        hl._handle(WM_KEYDOWN, vk)
+    hl._handle(WM_KEYUP, X)
+    hl._handle(WM_KEYDOWN, X)  # дожатие без полного отпускания
+    assert events == ["press", "release"]
+    hl._handle(WM_KEYUP, CTRL_L)
+    hl._handle(WM_KEYUP, ALT_L)
+    for vk in (CTRL_L, ALT_L, X):
+        hl._handle(WM_KEYDOWN, vk)
+    assert events == ["press", "release", "press"]
 
 
 def test_autorepeat_suppressed():
-    hl, events = _make()
+    hl, events = _make(combo=("ctrl_right",))
+    vk = VK_NAMES["ctrl_right"]
     for _ in range(5):
-        hl._handle(WM_KEYDOWN, VK_RCONTROL)  # Windows шлёт KEYDOWN каждые ~30 мс
-    hl._handle(WM_KEYUP, VK_RCONTROL)
+        hl._handle(WM_KEYDOWN, vk)
+    hl._handle(WM_KEYUP, vk)
     assert events == ["press", "release"]
 
 
-def test_other_keys_ignored():
-    hl, events = _make()
-    hl._handle(WM_KEYDOWN, 0x41)  # 'A'
-    hl._handle(WM_KEYUP, 0x41)
-    assert events == []
-
-
-def test_release_without_press_ignored():
-    hl, events = _make()
-    hl._handle(WM_KEYUP, VK_RCONTROL)
-    assert events == []
-
-
-def test_sys_key_messages_treated_as_down_up():
-    hl, events = _make()
-    hl._handle(WM_SYSKEYDOWN, VK_RCONTROL)
-    hl._handle(WM_SYSKEYDOWN, VK_RCONTROL)  # автоповтор SYS-варианта
-    hl._handle(WM_SYSKEYUP, VK_RCONTROL)
+def test_sys_messages_and_other_keys():
+    hl, events = _make(combo=("alt_left",))
+    hl._handle(WM_KEYDOWN, 0x41)  # 'A' — не из комбо
+    hl._handle(WM_SYSKEYDOWN, ALT_L)
+    hl._handle(WM_SYSKEYUP, ALT_L)
     assert events == ["press", "release"]
 
 
-def test_resolve_hotkey_known_and_unknown():
-    from voiceflow.hotkey import VK_LCONTROL, resolve_hotkey
+def test_injected_events_ignored():
+    hl, events = _make(combo=("ctrl_left",))
+    hl._handle(WM_KEYDOWN, CTRL_L, injected=True)
+    hl._handle(WM_KEYUP, CTRL_L, injected=True)
+    assert events == []
 
-    assert resolve_hotkey("right_ctrl") == VK_RCONTROL
-    assert resolve_hotkey("left_ctrl") == VK_LCONTROL
-    assert resolve_hotkey("bogus") == VK_RCONTROL  # фолбэк
+
+def test_set_combo_releases_active_recording():
+    hl, events = _make(combo=("ctrl_left",))
+    hl._handle(WM_KEYDOWN, CTRL_L)
+    hl.set_combo([X])
+    assert events == ["press", "release"]
+    hl._handle(WM_KEYDOWN, X)
+    assert events == ["press", "release", "press"]
+
+
+def test_capture_collects_names_modifiers_first():
+    hl, events = _make()
+    captured = []
+    hl.start_capture(captured.append)
+    hl._handle(WM_KEYDOWN, X)       # порядок нажатия не важен
+    hl._handle(WM_KEYDOWN, CTRL_L)
+    hl._handle(WM_KEYDOWN, ALT_L)
+    hl._handle(WM_KEYUP, X)
+    hl._handle(WM_KEYUP, CTRL_L)
+    assert captured == []           # ещё не всё отпущено
+    hl._handle(WM_KEYUP, ALT_L)
+    assert captured == [["ctrl_left", "alt_left", "x"]]
+    assert events == []             # диктовка в захвате не дёргается
+
+
+def test_capture_escape_cancels():
+    hl, _ = _make()
+    captured = []
+    hl.start_capture(captured.append)
+    hl._handle(WM_KEYDOWN, CTRL_L)
+    hl._handle(WM_KEYDOWN, VK_ESCAPE)
+    assert captured == [None]
+    # после отмены обычная работа восстановлена
+    hl._handle(WM_KEYUP, CTRL_L)
+
+
+def test_capture_ignores_unknown_keys():
+    hl, _ = _make()
+    captured = []
+    hl.start_capture(captured.append)
+    hl._handle(WM_KEYDOWN, 0xFF)    # нет в таблице
+    hl._handle(WM_KEYDOWN, X)
+    hl._handle(WM_KEYUP, 0xFF)
+    hl._handle(WM_KEYUP, X)
+    assert captured == [["x"]]
+
+
+def test_normalize_capture_orders_by_vk_within_groups():
+    assert normalize_capture({VK_NAMES["x"], VK_NAMES["alt_left"], VK_NAMES["ctrl_right"]}) == [
+        "ctrl_right", "alt_left", "x"
+    ]

@@ -72,16 +72,22 @@ def main():
         )
         controller.start()
 
-        from voiceflow.hotkey import resolve_hotkey
+        from voiceflow.hotkey import VK_LCONTROL, names_to_vks
+        try:
+            combo = names_to_vks(cfg["hotkey"])
+        except ValueError:
+            log.warning("Некорректный hotkey %r, использую ctrl_left", cfg["hotkey"])
+            combo = [VK_LCONTROL]
         listener = HotkeyListener(
             on_press=controller.on_press,
             on_release=controller.on_release,
-            vk=resolve_hotkey(cfg["hotkey"]),
+            combo=combo,
         )
         hotkey_thread = threading.Thread(target=listener.run, daemon=True)
         hotkey_thread.start()
 
-        key_name = "левый Ctrl" if cfg["hotkey"] == "left_ctrl" else "правый Ctrl"
+        from voiceflow.hotkey import human_label
+        key_name = human_label(cfg["hotkey"])
         suffix = "" if transcriber.device == "cuda" else " (CPU — медленный режим!)"
         tray.notify(f"Готов. Зажмите {key_name} и говорите{suffix}")
         overlay.run()  # блокирует главный поток до schedule_quit()
