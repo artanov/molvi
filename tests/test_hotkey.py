@@ -51,3 +51,11 @@ def test_sys_key_messages_treated_as_down_up():
     hl._handle(WM_SYSKEYDOWN, VK_RCONTROL)  # автоповтор SYS-варианта
     hl._handle(WM_SYSKEYUP, VK_RCONTROL)
     assert events == ["press", "release"]
+
+
+def test_resolve_hotkey_known_and_unknown():
+    from voiceflow.hotkey import VK_LCONTROL, resolve_hotkey
+
+    assert resolve_hotkey("right_ctrl") == VK_RCONTROL
+    assert resolve_hotkey("left_ctrl") == VK_LCONTROL
+    assert resolve_hotkey("bogus") == VK_RCONTROL  # фолбэк

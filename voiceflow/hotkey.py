@@ -14,6 +14,21 @@ WM_SYSKEYDOWN = 0x0104
 WM_SYSKEYUP = 0x0105
 WM_QUIT = 0x0012
 VK_RCONTROL = 0xA3
+VK_LCONTROL = 0xA2
+
+HOTKEY_VKS = {
+    "right_ctrl": VK_RCONTROL,
+    "left_ctrl": VK_LCONTROL,
+}
+
+
+def resolve_hotkey(name):
+    """Имя клавиши из config.json → виртуальный код; неизвестное имя → правый Ctrl."""
+    vk = HOTKEY_VKS.get(name)
+    if vk is None:
+        log.warning("Неизвестный hotkey %r, использую right_ctrl", name)
+        return VK_RCONTROL
+    return vk
 
 _HOOKPROC = ctypes.CFUNCTYPE(
     ctypes.c_longlong, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM

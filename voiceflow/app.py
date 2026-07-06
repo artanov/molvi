@@ -72,12 +72,18 @@ def main():
         )
         controller.start()
 
-        listener = HotkeyListener(on_press=controller.on_press, on_release=controller.on_release)
+        from voiceflow.hotkey import resolve_hotkey
+        listener = HotkeyListener(
+            on_press=controller.on_press,
+            on_release=controller.on_release,
+            vk=resolve_hotkey(cfg["hotkey"]),
+        )
         hotkey_thread = threading.Thread(target=listener.run, daemon=True)
         hotkey_thread.start()
 
+        key_name = "левый Ctrl" if cfg["hotkey"] == "left_ctrl" else "правый Ctrl"
         suffix = "" if transcriber.device == "cuda" else " (CPU — медленный режим!)"
-        tray.notify(f"Готов. Зажмите правый Ctrl и говорите{suffix}")
+        tray.notify(f"Готов. Зажмите {key_name} и говорите{suffix}")
         overlay.run()  # блокирует главный поток до schedule_quit()
         log.info("Остановлен")
     except Exception:
