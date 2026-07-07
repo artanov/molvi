@@ -47,6 +47,7 @@ py -3.13 -m venv .venv
 | hotkey | ["ctrl_left"] | список клавиш (см. Настройки → Изменить); напр. ["ctrl_left","alt_left","x"] |
 | input_device | null | имя или индекс микрофона (см. `python -m sounddevice`) |
 | samplerate | 16000 | не менять без необходимости |
+| overlay_scale | 0.6 | размер пилюли-оверлея (0.4–1.5) |
 | sounds | true | звуковые сигналы начала/конца записи |
 
 ## Диагностика

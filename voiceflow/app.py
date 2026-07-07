@@ -40,7 +40,7 @@ def main():
         from voiceflow.tray import Tray
         from voiceflow.typer import insert_text
 
-        overlay = Overlay()
+        overlay = Overlay(scale=cfg["overlay_scale"])
         sounds = Sounds(cfg["sounds"])
 
         # Коллбэки трея могут сработать до конца загрузки модели —

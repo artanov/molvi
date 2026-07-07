@@ -26,7 +26,8 @@ class Overlay:
     """Мини-окно поверх всех окон. Не забирает фокус (WS_EX_NOACTIVATE) —
     иначе вставка ушла бы в оверлей, а не в активное приложение."""
 
-    def __init__(self):
+    def __init__(self, scale=1.0):
+        self._scale = scale
         self._queue = queue.Queue()
         self._on_open_settings = None
         self._root = tk.Tk()
@@ -91,7 +92,7 @@ class Overlay:
         """PNG → PhotoImage, скомпонованные на ключевой цвет; None при любой проблеме."""
         try:
             from PIL import Image, ImageTk
-            scale = self._dpi() / 192
+            scale = self._dpi() / 192 * self._scale
             size = (max(1, int(_BASE_SIZE[0] * scale)), max(1, int(_BASE_SIZE[1] * scale)))
             images = {}
             for state, fname in _IMAGE_FILES.items():

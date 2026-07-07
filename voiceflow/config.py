@@ -11,6 +11,7 @@ DEFAULTS = {
     "language": "auto",         # auto | ru | en
     "hotkey": ["ctrl_left"],    # список имён клавиш (см. hotkey.VK_NAMES)
     "sounds": True,
+    "overlay_scale": 0.6,       # размер пилюли-оверлея (1.0 = 200×64 лог. пикселей)
     "min_duration_sec": 0.3,
     "paste_mode": "auto",       # auto (консоль → печать, иначе Ctrl+V) | clipboard | type
     "input_device": None,       # имя/индекс устройства sounddevice; None = системное
