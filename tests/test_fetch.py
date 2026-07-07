@@ -1,4 +1,3 @@
-import io
 import zipfile
 
 import voiceflow.fetch as fetch
@@ -36,6 +35,37 @@ def test_extract_dlls(tmp_path):
     assert names == ["cublas64_12.dll"]
     assert (out / "cublas64_12.dll").read_bytes() == b"DLL1"
     assert not (out / "readme.txt").exists()
+
+
+def test_extract_dlls_rejects_zip_slip(monkeypatch, tmp_path):
+    # Настоящий zipfile на Windows нормализует "\" в "/" при чтении архива
+    # (ZipInfo.__init__ заменяет os.sep), поэтому вредоносное имя с бэкслешами
+    # подсовываем через фейковый ZipFile — так проверяется сама защита.
+    class FakeInfo:
+        filename = "nvidia/bin/..\\..\\evil.dll"
+
+    class FakeZip:
+        def __init__(self, path):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def infolist(self):
+            return [FakeInfo()]
+
+        def read(self, info):
+            return b"BAD"
+
+    monkeypatch.setattr(fetch.zipfile, "ZipFile", FakeZip)
+    out = tmp_path / "deep" / "cuda"
+    names = fetch.extract_dlls(tmp_path / "evil.whl", out)
+    assert names == []
+    assert list(out.iterdir()) == []
+    assert not list(tmp_path.rglob("evil.dll"))
 
 
 def test_download_reports_progress(monkeypatch, tmp_path):

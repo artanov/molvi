@@ -71,8 +71,12 @@ def extract_dlls(wheel_path, target_dir):
         for info in z.infolist():
             p = PurePosixPath(info.filename)
             if p.suffix.lower() == ".dll" and p.parent.name == "bin":
-                (target / p.name).write_bytes(z.read(info))
-                names.append(p.name)
+                name = p.name
+                if "\\" in name or "/" in name or name in (".", ".."):
+                    log.warning("Пропускаю подозрительное имя в wheel: %r", info.filename)
+                    continue
+                (target / name).write_bytes(z.read(info))
+                names.append(name)
     return sorted(names)
 
 
