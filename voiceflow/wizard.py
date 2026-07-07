@@ -149,10 +149,19 @@ class Wizard:
         ttk.Label(self._body, foreground="#666", wraplength=500, justify="left", text=(
             "Можно нажать «Далее» и пропустить — тогда всё скачается при первом "
             "распознавании (придётся подождать).")).pack(anchor="w")
+        if self._download_thread is not None and self._download_thread.is_alive():
+            # Вернулись на шаг во время загрузки — показываем живой прогресс.
+            self._dl_btn.config(state="disabled")
+            self._next_btn.config(state="disabled")
+            self._back_btn.config(state="disabled")
+            self._poll_download()
 
     def _start_download(self, need_dlls):
+        if self._download_thread is not None and self._download_thread.is_alive():
+            return
         self._dl_btn.config(state="disabled")
         self._next_btn.config(state="disabled")
+        self._back_btn.config(state="disabled")
         self._download_error = None
         self._progress = {"text": "Готовлюсь…", "percent": 0.0, "done": False}
 
@@ -202,6 +211,7 @@ class Wizard:
             self._root.after(200, self._poll_download)
             return
         self._next_btn.config(state="normal")
+        self._back_btn.config(state="normal")
         if self._download_error is not None:
             self._status_var.set(f"Не получилось: {self._download_error}")
             self._dl_btn.config(text="Повторить", state="normal")
@@ -286,6 +296,8 @@ class Wizard:
         self._poll_capture()
 
     def _poll_capture(self):
+        if not self._hk_btn.winfo_exists():
+            return
         state = self._capture_state
         if state == "wait":
             self._root.after(100, self._poll_capture)
