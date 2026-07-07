@@ -1,0 +1,7 @@
+faster-whisper>=1.1
+sounddevice>=0.5
+numpy
+pystray>=0.19
+Pillow
+pywin32>=306
+pytest

@@ -1,0 +1,32 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-ci.txt "pyinstaller>=6"
+      - run: pytest -q
+      - run: python packaging/make_ico.py
+      - run: pyinstaller packaging/voiceflow.spec --noconfirm --distpath packaging/dist --workpath packaging/build
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $env:VF_VERSION = "${{ github.ref_name }}"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" packaging/installer.iss
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packaging/dist/VoiceFlow-Setup-*.exe
+          generate_release_notes: true
