@@ -1,14 +1,13 @@
 import logging
 import logging.handlers
 import threading
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from voiceflow import paths
 
 
 def _setup_logging():
     handler = logging.handlers.RotatingFileHandler(
-        ROOT / "voiceflow.log", maxBytes=1_000_000, backupCount=1, encoding="utf-8"
+        paths.log_path(), maxBytes=1_000_000, backupCount=1, encoding="utf-8"
     )
     logging.basicConfig(
         level=logging.INFO,
@@ -24,7 +23,7 @@ def main():
         log.info("Запуск VoiceFlow")
 
         from voiceflow.config import load_config, save_config
-        cfg = load_config(ROOT / "config.json")
+        cfg = load_config(paths.config_path())
 
         # Тяжёлые импорты — после логирования, чтобы ошибки попали в лог.
         from voiceflow import autostart
@@ -116,7 +115,7 @@ def main():
                 if applied:
                     with cfg_lock:
                         cfg["model"], cfg["language"] = last_good["model"], last_good["language"]
-                        save_config(ROOT / "config.json", cfg)
+                        save_config(paths.config_path(), cfg)
                     tray.notify(
                         f"Не удалось загрузить модель: {exc}. Возвращены прежние настройки."
                     )
@@ -132,7 +131,7 @@ def main():
                 with cfg_lock:
                     old_model_lang = (cfg["model"], cfg["language"])
                     cfg.update(new_cfg)
-                    save_config(ROOT / "config.json", cfg)
+                    save_config(paths.config_path(), cfg)
                     if (cfg["model"], cfg["language"]) != old_model_lang:
                         token = controller.begin_model_reload()
                         snapshot = {
@@ -147,7 +146,7 @@ def main():
                 controller.set_device(cfg["input_device"])
                 try:
                     if autostart_on:
-                        autostart.enable(str(ROOT / "voiceflow.bat"))
+                        autostart.enable(paths.autostart_command())
                     else:
                         autostart.disable()
                 except OSError as exc:
