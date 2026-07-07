@@ -100,9 +100,15 @@ class Overlay:
                     log.warning("Нет %s — оверлей в текстовом режиме", fname)
                     return None
                 img = Image.open(path).convert("RGBA").resize(size, Image.LANCZOS)
-                bg = Image.new("RGBA", size, KEY_COLOR)
-                bg.alpha_composite(img)
-                images[state] = ImageTk.PhotoImage(bg.convert("RGB"), master=self._root)
+                # Ключевой цвет прозрачен только при ТОЧНОМ совпадении, поэтому
+                # полупрозрачные пиксели сглаживания дали бы розовую кайму.
+                # Примешиваем края к тёмному матту и делаем альфу бинарной.
+                matte = Image.new("RGBA", size, "#232029")
+                matte.alpha_composite(img)
+                hard_alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
+                bg = Image.new("RGB", size, KEY_COLOR)
+                bg.paste(matte.convert("RGB"), mask=hard_alpha)
+                images[state] = ImageTk.PhotoImage(bg, master=self._root)
             return images
         except Exception:
             log.warning("Не удалось загрузить картинки оверлея", exc_info=True)
