@@ -23,7 +23,18 @@ def main():
         log.info("Запуск VoiceFlow")
 
         from voiceflow.config import load_config, save_config
-        cfg = load_config(paths.config_path())
+        cfg_file = paths.config_path()
+        if not cfg_file.exists():
+            log.info("config.json не найден — запускаю мастер первого запуска")
+            try:
+                from voiceflow.wizard import Wizard
+                cfg = Wizard().run()
+            except Exception:
+                log.exception("Мастер первого запуска упал — значения по умолчанию")
+                cfg = load_config(cfg_file)
+            save_config(cfg_file, cfg)
+        else:
+            cfg = load_config(cfg_file)
 
         # Тяжёлые импорты — после логирования, чтобы ошибки попали в лог.
         from voiceflow import autostart
