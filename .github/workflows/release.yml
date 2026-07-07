@@ -17,7 +17,7 @@ jobs:
       - run: pip install -r requirements-ci.txt "pyinstaller>=6"
       - run: python -m pytest -q
       - run: python packaging/make_ico.py
-      - run: pyinstaller packaging/voiceflow.spec --noconfirm --distpath packaging/dist --workpath packaging/build
+      - run: python -m PyInstaller packaging/voiceflow.spec --noconfirm --distpath packaging/dist --workpath packaging/build
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
       - name: Build installer

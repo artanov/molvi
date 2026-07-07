@@ -1,12 +1,19 @@
 # -*- mode: python -*-
 # Сборка: packaging/build.bat (или см. .github/workflows/release.yml)
+import os
+
 from PyInstaller.utils.hooks import collect_all, collect_data_files
+
+# Абсолютный путь к корню репозитория: относительный pathex („..“) находил пакет
+# voiceflow только при запуске через `python -m PyInstaller` (CWD в sys.path);
+# голый `pyinstaller` собирал exe без него → ModuleNotFoundError у пользователей.
+REPO_ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
 
 ct2_datas, ct2_binaries, ct2_hidden = collect_all("ctranslate2")
 
 a = Analysis(
     ["entry.py"],
-    pathex=[".."],
+    pathex=[REPO_ROOT],
     binaries=ct2_binaries,
     datas=[("../voiceflow/assets", "voiceflow/assets")]
           + collect_data_files("faster_whisper")
