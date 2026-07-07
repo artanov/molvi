@@ -7,7 +7,7 @@ import logging
 import tempfile
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 import numpy as np
 import sounddevice as sd
@@ -48,6 +48,7 @@ class Wizard:
         self._idx = 0
         self._download_thread = None
         self._download_error = None
+        self._cancel_download = False
         self._progress = {"text": "", "percent": 0.0, "done": False}
         self._mic_stream = None
         self._mic_level = 0.0
@@ -93,6 +94,10 @@ class Wizard:
             self._show_step()
 
     def _finish(self):
+        if self._download_thread is not None and self._download_thread.is_alive():
+            if not messagebox.askyesno("VoiceFlow", "Идёт загрузка. Прервать и выйти?"):
+                return
+            self._cancel_download = True
         self._close_mic()
         if self._listener is not None:
             self._listener.stop()
@@ -128,7 +133,13 @@ class Wizard:
                             value=i, command=self._on_quality).pack(anchor="w", pady=2)
 
     def _on_quality(self):
-        self._cfg["model"] = QUALITY_PRESETS[self._quality_var.get()][1]
+        model = QUALITY_PRESETS[self._quality_var.get()][1]
+        self._cfg["model"] = model
+        if model == "large-v3":
+            self._cfg["device"] = "auto"
+        elif self._gpu is None:
+            self._cfg["device"] = "cpu"
+        self._need_cuda = self._cfg["device"] == "auto"
 
     def _step_download(self):
         self._title("Загрузка компонентов")
@@ -167,6 +178,8 @@ class Wizard:
 
         def work():
             try:
+                if self._cancel_download:
+                    return
                 if need_dlls:
                     paths.cuda_dir().mkdir(parents=True, exist_ok=True)
                     with tempfile.TemporaryDirectory() as tmp:
@@ -175,6 +188,8 @@ class Wizard:
                             lambda pkg, d, t: self._progress.update(
                                 text=f"NVIDIA: {pkg} {d // 1048576} / {max(t, 1) // 1048576} МБ",
                                 percent=(d / t * 40) if t else 0.0))
+                if self._cancel_download:
+                    return
                 base = fetch.hf_cache_size()
                 total = fetch.MODEL_SIZES[self._cfg["model"]]
                 watcher_stop = threading.Event()

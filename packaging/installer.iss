@@ -5,7 +5,7 @@
 #endif
 
 [Setup]
-AppId={{7E4A2C31-9B0D-4F5E-8A67-C3D1E5F70012}}
+AppId={{7E4A2C31-9B0D-4F5E-8A67-C3D1E5F70012}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\{#MyAppName}

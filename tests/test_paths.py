@@ -26,4 +26,4 @@ def test_frozen_mode_uses_appdata(monkeypatch, tmp_path):
     assert paths.config_path() == d / "config.json"
     assert paths.cuda_dir() == d / "cuda"
     assert not paths.cuda_dir().exists()  # cuda_dir НЕ создаёт
-    assert paths.autostart_command() == r"C:\Apps\VoiceFlow\VoiceFlow.exe"
+    assert paths.autostart_command() == r'"C:\Apps\VoiceFlow\VoiceFlow.exe"'

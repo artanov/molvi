@@ -5,3 +5,4 @@ config.json
 packaging/build/
 packaging/dist/
 packaging/voiceflow.ico
+/cuda/

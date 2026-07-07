@@ -1,6 +1,7 @@
 """Докачка тяжёлых компонентов: CUDA-DLL (wheels с PyPI) и модели Whisper (HF-кэш)."""
 import json
 import logging
+import os
 import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -75,7 +76,9 @@ def extract_dlls(wheel_path, target_dir):
                 if "\\" in name or "/" in name or name in (".", ".."):
                     log.warning("Пропускаю подозрительное имя в wheel: %r", info.filename)
                     continue
-                (target / name).write_bytes(z.read(info))
+                tmp_path = target / (name + ".tmp")
+                tmp_path.write_bytes(z.read(info))
+                os.replace(tmp_path, target / name)
                 names.append(name)
     return sorted(names)
 

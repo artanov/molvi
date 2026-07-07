@@ -37,5 +37,5 @@ def cuda_dir():
 
 def autostart_command():
     if is_frozen():
-        return sys.executable
+        return f'"{sys.executable}"'
     return str(repo_root() / "voiceflow.bat")

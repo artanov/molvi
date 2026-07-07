@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements-ci.txt "pyinstaller>=6"
-      - run: pytest -q
+      - run: python -m pytest -q
       - run: python packaging/make_ico.py
       - run: pyinstaller packaging/voiceflow.spec --noconfirm --distpath packaging/dist --workpath packaging/build
       - name: Install Inno Setup

@@ -13,4 +13,4 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -r requirements-ci.txt
-      - run: pytest -q
+      - run: python -m pytest -q
