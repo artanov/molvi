@@ -1,0 +1,37 @@
+name: Deploy site
+on:
+  push:
+    branches: ["main"]
+    paths: ["docs/site/**"]
+  workflow_dispatch:  # ручной запуск из вкладки Actions
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true  # деплоим только самую свежую версию
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Пин host-ключа сервера: защита от MITM вместо StrictHostKeyChecking=no
+          echo "[185.233.184.123]:2000 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEzOAfDjRNCPaGar1q5SPKUUSPaW3uXYbJZJmnPkBpze" >> ~/.ssh/known_hosts
+      - name: Rsync site
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.DEPLOY_PORT }}" \
+            docs/site/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/molvi.tech/"
+      - name: Smoke check
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://molvi.tech/)
+          echo "https://molvi.tech → HTTP $code"
+          test "$code" = "200"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://molvi.tech/install.html)
+          echo "https://molvi.tech/install.html → HTTP $code"
+          test "$code" = "200"
