@@ -4,5 +4,5 @@ __pycache__/
 config.json
 packaging/build/
 packaging/dist/
-packaging/voiceflow.ico
+packaging/molvi.ico
 /cuda/
