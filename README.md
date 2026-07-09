@@ -1,5 +1,7 @@
 # Molvi
 
+**Сайт: [molvi.tech](https://molvi.tech)** · [инструкция по установке](https://molvi.tech/install.html)
+
 Локальный аналог Wispr Flow для Windows: зажмите клавишу диктовки (по умолчанию
 левый Ctrl, настраивается), говорите, отпустите — текст напечатается в активном
 окне. Распознавание — Whisper large-v3 локально на GPU (faster-whisper/CUDA),
