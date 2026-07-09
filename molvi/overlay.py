@@ -5,6 +5,8 @@ import queue
 import tkinter as tk
 from pathlib import Path
 
+from molvi import theme
+
 log = logging.getLogger(__name__)
 
 GWL_EXSTYLE = -20
@@ -17,8 +19,8 @@ _IMAGE_FILES = {"recording": "recording.png", "transcribing": "transcribing.png"
 _BASE_SIZE = (400, 128)   # размер PNG; соответствует 192 DPI (200%)
 
 _TEXT_STATES = {
-    "recording": ("●  Запись…", "#c0392b"),
-    "transcribing": ("⏳  Распознаю…", "#2c3e50"),
+    "recording": ("●  Запись…", theme.RECORDING),
+    "transcribing": ("⏳  Распознаю…", theme.TRANSCRIBING),
 }
 
 
@@ -48,7 +50,7 @@ class Overlay:
             self._root.attributes("-alpha", 0.92)
             self._label = tk.Label(
                 self._root, text="", font=("Segoe UI", 12, "bold"),
-                fg="white", bg="#c0392b", padx=18, pady=8,
+                fg=theme.CREAM, bg=theme.RECORDING, padx=18, pady=8,
             )
             w, h = 190, 44
         self._label.pack()
@@ -104,7 +106,7 @@ class Overlay:
                 # Ключевой цвет прозрачен только при ТОЧНОМ совпадении, поэтому
                 # полупрозрачные пиксели сглаживания дали бы розовую кайму.
                 # Примешиваем края к тёмному матту и делаем альфу бинарной.
-                matte = Image.new("RGBA", size, "#232029")
+                matte = Image.new("RGBA", size, theme.INK_800)
                 matte.alpha_composite(img)
                 hard_alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
                 bg = Image.new("RGB", size, KEY_COLOR)

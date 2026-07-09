@@ -11,6 +11,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from molvi import theme
+
 ASSETS = Path(__file__).resolve().parents[1] / "molvi" / "assets"
 ASSETS.mkdir(exist_ok=True)
 
@@ -35,19 +37,19 @@ def make_png(path, bg, icon, text):
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((0, 0, 399, 127), radius=64, fill=bg)
     if icon == "dot":
-        d.ellipse((36, 44, 76, 84), fill="white")
+        d.ellipse((36, 44, 76, 84), fill=theme.CORAL)
     else:  # hourglass
-        d.polygon([(40, 40), (72, 40), (56, 64), (40, 88), (72, 88), (56, 64)], fill="white")
+        d.polygon([(40, 40), (72, 40), (56, 64), (40, 88), (72, 88), (56, 64)], fill=theme.CREAM)
     try:
         font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 40)
     except OSError:
         font = ImageFont.load_default()
-    d.text((100, 64), text, fill="white", font=font, anchor="lm")
+    d.text((100, 64), text, fill=theme.CREAM, font=font, anchor="lm")
     img.save(path)
     print(f"wrote {path}")
 
 
 make_wav(ASSETS / "start.wav", freq=880)
 make_wav(ASSETS / "stop.wav", freq=523)
-make_png(ASSETS / "recording.png", (192, 57, 43, 235), "dot", "Запись…")
-make_png(ASSETS / "transcribing.png", (44, 62, 80, 235), "hourglass", "Распознаю…")
+make_png(ASSETS / "recording.png", theme.rgba(theme.INK_800, 235), "dot", "Запись…")
+make_png(ASSETS / "transcribing.png", theme.rgba(theme.INK_800, 235), "hourglass", "Распознаю…")
