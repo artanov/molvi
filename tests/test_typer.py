@@ -67,6 +67,34 @@ def test_insert_text_dispatch(fake_env, monkeypatch):
     assert called == {"paste": "a", "type": "b"}
 
 
+def test_type_text_direct_sends_utf16_pairs(monkeypatch):
+    """Символы вне BMP (эмодзи) шлются суррогатной парой, а не обрезаются."""
+    sent = []
+    monkeypatch.setattr(
+        typer, "_send_key",
+        lambda vk=0, scan=0, flags=0: sent.append((vk, scan, flags)),
+    )
+    monkeypatch.setattr(typer.time, "sleep", lambda s: None)
+    typer.type_text_direct("a\U0001F600")  # 😀 = U+1F600 → D83D DE00
+    U, UP = typer.KEYEVENTF_UNICODE, typer.KEYEVENTF_KEYUP
+    assert sent == [
+        (0, ord("a"), U), (0, ord("a"), U | UP),
+        (0, 0xD83D, U), (0, 0xD83D, U | UP),
+        (0, 0xDE00, U), (0, 0xDE00, U | UP),
+    ]
+
+
+def test_insert_text_type_failure_puts_text_in_clipboard(fake_env, monkeypatch):
+    calls, clipboard = fake_env
+    monkeypatch.setattr(
+        typer, "type_text_direct",
+        lambda t: (_ for _ in ()).throw(OSError("SendInput failed")),
+    )
+    with pytest.raises(OSError):
+        typer.insert_text("важный текст", "type")
+    assert clipboard["text"] == "важный текст"  # текст не потерян
+
+
 def test_insert_text_auto_mode(monkeypatch):
     called = {}
     monkeypatch.setattr(typer, "paste_text", lambda t: called.setdefault("paste", t))

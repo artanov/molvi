@@ -45,6 +45,10 @@ class Transcriber:
         self._model = WhisperModel(model_name, device="cpu", compute_type="int8")
         self.device = "cpu"
 
+    def set_language(self, language):
+        """Язык — параметр transcribe(), а не модели: смена не требует перезагрузки."""
+        self._language = None if language == "auto" else language
+
     def transcribe(self, audio):
         segments, _info = self._model.transcribe(
             audio,

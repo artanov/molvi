@@ -42,8 +42,11 @@ def pick_wheel_url(pypi_json):
     raise LookupError("win_amd64 wheel не найден")
 
 
-def download(url, dest, progress_cb=None, chunk=1 << 18):
-    """Скачать url в dest; progress_cb(done_bytes, total_bytes). Частичный файл удаляется."""
+def download(url, dest, progress_cb=None, chunk=1 << 18, cancelled=None):
+    """Скачать url в dest; progress_cb(done_bytes, total_bytes). Частичный файл удаляется.
+
+    cancelled — колбэк «пора прекратить?»; True посреди загрузки → InterruptedError.
+    """
     dest = Path(dest)
     req = urllib.request.Request(url, headers={"User-Agent": "Molvi"})
     try:
@@ -51,6 +54,8 @@ def download(url, dest, progress_cb=None, chunk=1 << 18):
             total = int(resp.headers.get("Content-Length") or 0)
             done = 0
             while True:
+                if cancelled is not None and cancelled():
+                    raise InterruptedError("загрузка отменена")
                 block = resp.read(chunk)
                 if not block:
                     break
@@ -83,9 +88,11 @@ def extract_dlls(wheel_path, target_dir):
     return sorted(names)
 
 
-def fetch_cuda(target_dir, tmp_dir, progress_cb=None):
-    """Скачать оба nvidia-пакета и извлечь DLL; progress_cb(pkg, done, total)."""
-    for pkg in CUDA_PACKAGES:
+def fetch_cuda(target_dir, tmp_dir, progress_cb=None, cancelled=None):
+    """Скачать оба nvidia-пакета и извлечь DLL; progress_cb(pkg_index, pkg, done, total)."""
+    for i, pkg in enumerate(CUDA_PACKAGES):
+        if cancelled is not None and cancelled():
+            raise InterruptedError("загрузка отменена")
         with urllib.request.urlopen(
             f"https://pypi.org/pypi/{pkg}/json", timeout=30
         ) as resp:
@@ -94,7 +101,9 @@ def fetch_cuda(target_dir, tmp_dir, progress_cb=None):
         whl = Path(tmp_dir) / f"{pkg}.whl"
         try:
             download(url, whl,
-                     (lambda d, t: progress_cb(pkg, d, t)) if progress_cb else None)
+                     (lambda d, t, _i=i, _p=pkg: progress_cb(_i, _p, d, t))
+                     if progress_cb else None,
+                     cancelled=cancelled)
             extract_dlls(whl, target_dir)
         finally:
             whl.unlink(missing_ok=True)

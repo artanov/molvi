@@ -39,6 +39,46 @@ def test_defaults_have_v2_keys():
     assert DEFAULTS["sounds"] is True
 
 
+def test_invalid_types_fall_back_to_defaults(tmp_path):
+    """Конфиг редактируют руками: мусорные типы не должны ронять запуск."""
+    p = tmp_path / "config.json"
+    p.write_text(json.dumps({
+        "samplerate": "16000",     # строка вместо int
+        "overlay_scale": None,     # null
+        "min_duration_sec": [],    # список
+        "sounds": 1,               # int вместо bool
+        "language": "ru",          # корректное — применяется
+    }), encoding="utf-8")
+    cfg = load_config(p)
+    assert cfg["samplerate"] == DEFAULTS["samplerate"]
+    assert cfg["overlay_scale"] == DEFAULTS["overlay_scale"]
+    assert cfg["min_duration_sec"] == DEFAULTS["min_duration_sec"]
+    assert cfg["sounds"] is True
+    assert cfg["language"] == "ru"
+
+
+def test_float_field_accepts_int(tmp_path):
+    p = tmp_path / "config.json"
+    p.write_text(json.dumps({"min_duration_sec": 1}), encoding="utf-8")
+    assert load_config(p)["min_duration_sec"] == 1
+
+
+def test_input_device_accepts_str_int_none(tmp_path):
+    p = tmp_path / "config.json"
+    for val in ("Микрофон (USB)", 3, None):
+        p.write_text(json.dumps({"input_device": val}), encoding="utf-8")
+        assert load_config(p)["input_device"] == val
+    p.write_text(json.dumps({"input_device": [1]}), encoding="utf-8")
+    assert load_config(p)["input_device"] is None
+
+
+def test_save_config_atomic_leaves_no_tmp(tmp_path):
+    p = tmp_path / "config.json"
+    save_config(p, dict(DEFAULTS, hotkey=list(DEFAULTS["hotkey"])))
+    assert json.loads(p.read_text(encoding="utf-8"))["model"] == DEFAULTS["model"]
+    assert list(tmp_path.glob("*.tmp")) == []  # временный файл убран os.replace
+
+
 def test_hotkey_v1_strings_migrate(tmp_path):
     p = tmp_path / "config.json"
     p.write_text(json.dumps({"hotkey": "left_ctrl"}), encoding="utf-8")

@@ -38,4 +38,4 @@ def cuda_dir():
 def autostart_command():
     if is_frozen():
         return f'"{sys.executable}"'
-    return str(repo_root() / "molvi.bat")
+    return f'"{repo_root() / "molvi.bat"}"'  # путь с пробелом сломал бы автозапуск

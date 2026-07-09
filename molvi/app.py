@@ -121,7 +121,17 @@ def main():
             on_release=controller.on_release,
             combo=_combo_from_cfg(),
         )
-        hotkey_thread = threading.Thread(target=listener.run, daemon=True)
+
+        def _run_listener():
+            # Поток — daemon, его traceback в windowed-сборке ушёл бы в devnull:
+            # без уведомления пользователь видел бы «Готов», а диктовка молчала.
+            try:
+                listener.run()
+            except Exception as exc:
+                log.exception("Хук клавиатуры не запустился")
+                tray.notify(f"Клавиша диктовки не работает: {exc}. Подробности в molvi.log")
+
+        hotkey_thread = threading.Thread(target=_run_listener, daemon=True)
         hotkey_thread.start()
 
         cfg_lock = threading.Lock()
@@ -158,10 +168,11 @@ def main():
                 # release cfg_lock и begin_model_reload и затереть свежий выбор.
                 reload_args = None
                 with cfg_lock:
-                    old_model_lang = (cfg["model"], cfg["language"])
+                    old_model = cfg["model"]
+                    old_language = cfg["language"]
                     cfg.update(new_cfg)
                     save_config(paths.config_path(), cfg)
-                    if (cfg["model"], cfg["language"]) != old_model_lang:
+                    if cfg["model"] != old_model:
                         token = controller.begin_model_reload()
                         snapshot = {
                             "model": cfg["model"],
@@ -170,6 +181,12 @@ def main():
                             "language": cfg["language"],
                         }
                         reload_args = (snapshot, token)
+                    elif cfg["language"] != old_language:
+                        # Язык — параметр transcribe(), полная перезагрузка не
+                        # нужна (она держала бы 2 модели в VRAM и блокировала
+                        # диктовку на минуты).
+                        controller.set_language(cfg["language"])
+                        last_good["language"] = cfg["language"]
                 listener.set_combo(_combo_from_cfg())
                 sounds.set_enabled(cfg["sounds"])
                 controller.set_device(cfg["input_device"])
@@ -209,9 +226,30 @@ def main():
         tray.notify(f"Готов. Зажмите {human_label(cfg['hotkey'])} и говорите{suffix}")
         overlay.run()  # блокирует главный поток до schedule_quit()
         log.info("Остановлен")
-    except Exception:
+    except Exception as exc:
         log.exception("Фатальная ошибка")
+        _show_fatal_error(exc)
         raise
+
+
+def _show_fatal_error(exc):
+    """Best-effort окно с ошибкой: в windowed-сборке молчаливая смерть выглядит
+    как «приложение просто не запускается» — особенно в автозапуске."""
+    if os.environ.get("MOLVI_NO_ERROR_DIALOG"):
+        return  # smoke-тест в CI: модальное окно повесило бы процесс «живым»
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror(
+            "Molvi",
+            f"Molvi не запустился: {exc}\n\nПодробности в журнале:\n{paths.log_path()}",
+        )
+        root.destroy()
+    except Exception:
+        pass  # нет дисплея/tk — хотя бы лог остался
 
 
 if __name__ == "__main__":

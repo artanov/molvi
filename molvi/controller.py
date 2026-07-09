@@ -49,6 +49,11 @@ class Controller:
     def set_device(self, device):
         self._recorder.device = device
 
+    def set_language(self, language):
+        """Сменить язык распознавания на лету — без перезагрузки модели."""
+        with self._lock:
+            self._transcriber.set_language(language)
+
     def begin_model_reload(self):
         with self._lock:
             self._reloading = True
@@ -66,34 +71,37 @@ class Controller:
             return True
 
     def on_press(self):
+        # recorder.start() — внутри лока: иначе параллельный on_release
+        # (например, из set_combo при смене хоткея) мог бы проскочить между
+        # выставлением флага и стартом стрима — стрим остался бы открытым
+        # навсегда без записи.
         with self._lock:
             if self._paused or self._recording or self._reloading:
                 return
+            try:
+                self._recorder.start()
+            except Exception as exc:
+                log.exception("Не удалось начать запись")
+                self._notify(f"Микрофон недоступен: {exc}")
+                self._ui.hide()
+                return
             self._recording = True
-        try:
-            self._recorder.start()
-            self._ui.show_recording()
-            if self._sounds is not None:
-                self._sounds.play_start()
-        except Exception as exc:
-            with self._lock:
-                self._recording = False
-            log.exception("Не удалось начать запись")
-            self._notify(f"Микрофон недоступен: {exc}")
-            self._ui.hide()
+        self._ui.show_recording()
+        if self._sounds is not None:
+            self._sounds.play_start()
 
     def on_release(self):
         with self._lock:
             if not self._recording:
                 return
             self._recording = False
-        try:
-            audio = self._recorder.stop()
-        except Exception as exc:
-            log.exception("Не удалось остановить запись")
-            self._notify(f"Ошибка записи: {exc}")
-            self._ui.hide()
-            return
+            try:
+                audio = self._recorder.stop()
+            except Exception as exc:
+                log.exception("Не удалось остановить запись")
+                self._notify(f"Ошибка записи: {exc}")
+                self._ui.hide()
+                return
         if len(audio) < self._min_samples:
             self._ui.hide()
             return
@@ -110,14 +118,22 @@ class Controller:
                 return
             try:
                 text = self._transcriber.transcribe(audio)
-                log.info("Распознано %d символов", len(text))
-                if text:
-                    self._insert_fn(text, self._paste_mode)
             except Exception as exc:
-                log.exception("Ошибка обработки диктовки")
-                self._notify(f"Ошибка: {exc}. Если текст распознан — он в буфере обмена (Ctrl+V).")
-            finally:
-                with self._lock:
-                    still_recording = self._recording
-                if not still_recording:
-                    self._ui.hide()
+                log.exception("Ошибка распознавания")
+                self._notify(f"Ошибка распознавания: {exc}")
+                text = None
+            if text is not None:
+                log.info("Распознано %d символов", len(text))
+            if text:
+                try:
+                    self._insert_fn(text, self._paste_mode)
+                except Exception as exc:
+                    log.exception("Ошибка вставки текста")
+                    self._notify(
+                        f"Не удалось вставить текст: {exc}. "
+                        "Распознанный текст — в буфере обмена (Ctrl+V)."
+                    )
+            with self._lock:
+                still_recording = self._recording
+            if not still_recording:
+                self._ui.hide()

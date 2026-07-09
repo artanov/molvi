@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -50,13 +51,38 @@ def load_config(path):
         log.warning("config.json не является объектом, использую настройки по умолчанию")
         cfg["hotkey"] = list(cfg["hotkey"])
         return cfg
-    cfg.update({k: v for k, v in data.items() if k in DEFAULTS})
+    for k, v in data.items():
+        if k not in DEFAULTS:
+            continue
+        if k != "hotkey" and not _valid_type(k, v):
+            # Конфиг редактируют руками: "16000" вместо 16000 не должен
+            # ронять приложение на старте — берём дефолт и предупреждаем.
+            log.warning("config.json: %s=%r — неверный тип, использую %r",
+                        k, v, DEFAULTS[k])
+            continue
+        cfg[k] = v
     cfg["hotkey"] = _migrate_hotkey(cfg["hotkey"])
     cfg["hotkey"] = list(cfg["hotkey"])
     return cfg
 
 
+def _valid_type(key, value):
+    default = DEFAULTS[key]
+    if key == "input_device":            # имя, индекс или None (системный)
+        return value is None or isinstance(value, (str, int))
+    if isinstance(default, bool):
+        return isinstance(value, bool)
+    if isinstance(default, float):       # float принимает и int (0.3 ← 1)
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if isinstance(default, int):
+        return isinstance(value, int) and not isinstance(value, bool)
+    return isinstance(value, type(default))
+
+
 def save_config(path, cfg):
-    Path(path).write_text(
-        json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    # Атомарно: краш/выключение посреди записи не должны оставлять битый
+    # JSON (он молча откатил бы пользователя на дефолты при старте).
+    path = Path(path)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, path)

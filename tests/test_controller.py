@@ -246,3 +246,56 @@ def test_set_device_applies_to_recorder():
     ctl.set_device("Mic B")
     ctl.shutdown()
     assert rec.device == "Mic B"
+
+
+def test_set_language_forwarded_to_transcriber():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    tr.language = None
+    tr.set_language = lambda lang: setattr(tr, "language", lang)
+    ctl.set_language("ru")
+    ctl.shutdown()
+    assert tr.language == "ru"
+
+
+def test_transcribe_error_message_does_not_mention_clipboard():
+    # В буфере ничего нет — сообщение не должно врать про Ctrl+V.
+    ctl, rec, tr, ui, inserted, notes, _ = _make(error=RuntimeError("boom"))
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert "распознавания" in notes[0]
+    assert "буфер" not in notes[0]
+
+
+def test_insert_error_message_mentions_clipboard():
+    # Вставка сорвалась — текст в буфере (insert_fn кладёт его туда), говорим об этом.
+    audio = np.zeros(16000, dtype=np.float32)
+    rec, tr, ui = FakeRecorder(audio), FakeTranscriber("текст"), FakeUI()
+    notes = []
+
+    def failing_insert(t, m):
+        raise OSError("SendInput failed")
+
+    ctl = Controller(
+        rec, tr, failing_insert, ui, min_duration_sec=0.3,
+        samplerate=16000, paste_mode="clipboard", notify=notes.append,
+    )
+    ctl.start()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert "буфере обмена" in notes[0]
+
+
+def test_failed_recorder_start_leaves_not_recording():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    rec.start = lambda: (_ for _ in ()).throw(OSError("device busy"))
+    ctl.on_press()
+    assert notes  # пользователь уведомлён
+    # Флаг записи не выставлен: следующий on_release — no-op, а не фантомный стоп.
+    ctl.on_release()
+    ctl.shutdown()
+    assert tr.calls == []
+    assert ui.events[-1] == "hide"

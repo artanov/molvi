@@ -128,7 +128,10 @@ class SettingsWindow:
 
     def _close(self):
         if self._capture_result == "wait":
-            return  # идёт захват — сначала завершите комбинацию или нажмите Esc
+            # Идёт захват — отменяем его, а не блокируем закрытие: если поток
+            # хука мёртв, Esc никогда не придёт и окно осталось бы навсегда.
+            self._listener.cancel_capture()
+            self._capture_result = "idle"
         self._win.destroy()
 
     # --- hotkey capture ---

@@ -167,3 +167,17 @@ def test_normalize_capture_orders_by_vk_within_groups():
     assert normalize_capture({VK_NAMES["x"], VK_NAMES["alt_left"], VK_NAMES["ctrl_right"]}) == [
         "ctrl_right", "alt_left", "x"
     ]
+
+
+def test_cancel_capture_discards_callback_and_restores_hotkey():
+    hl, events = _make()
+    captured = []
+    hl.start_capture(captured.append)
+    hl._handle(WM_KEYDOWN, X)
+    hl.cancel_capture()
+    hl._handle(WM_KEYUP, X)  # завершение захвата после отмены — колбэк не зовётся
+    assert captured == []
+    # обычная работа хоткея восстановлена
+    for vk in (CTRL_L, ALT_L, X):
+        hl._handle(WM_KEYDOWN, vk)
+    assert events == ["press"]

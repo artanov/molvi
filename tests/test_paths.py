@@ -12,7 +12,8 @@ def test_dev_mode_uses_repo_root(monkeypatch):
     assert paths.config_path() == root / "config.json"
     assert paths.log_path() == root / "molvi.log"
     assert paths.cuda_dir() == root / "cuda"
-    assert paths.autostart_command() == str(root / "molvi.bat")
+    # В кавычках — как и frozen-ветка: путь с пробелом не должен ломать автозапуск.
+    assert paths.autostart_command() == f'"{root / "molvi.bat"}"'
 
 
 def test_frozen_mode_uses_appdata(monkeypatch, tmp_path):

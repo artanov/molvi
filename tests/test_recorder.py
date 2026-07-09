@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from molvi.recorder import Recorder
 
@@ -49,3 +50,27 @@ def test_start_opens_stream_and_resets_buffer(monkeypatch):
     assert created["channels"] == 1
     assert created["started"] is True
     assert rec._chunks == []
+
+
+def test_failed_stream_start_closes_stream(monkeypatch):
+    """stream.start() бросил (устройство занято) → стрим закрыт, хэндл не течёт."""
+    events = []
+
+    class FakeStream:
+        def __init__(self, **kwargs):
+            pass
+        def start(self):
+            events.append("start")
+            raise OSError("device busy")
+        def stop(self):
+            events.append("stop")
+        def close(self):
+            events.append("close")
+
+    import molvi.recorder as r
+    monkeypatch.setattr(r.sd, "InputStream", FakeStream)
+    rec = Recorder()
+    with pytest.raises(OSError):
+        rec.start()
+    assert events == ["start", "close"]
+    assert rec._stream is None

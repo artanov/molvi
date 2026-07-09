@@ -20,12 +20,26 @@ from molvi.settings import QUALITY_PRESETS, dedupe_input_devices, quality_index_
 log = logging.getLogger(__name__)
 
 
+def resolve_device(model, recommended_device):
+    """device для выбранной модели: large-v3 всегда пробует GPU (auto),
+    остальные — что рекомендовано для железа. Не зависит от порядка кликов."""
+    return "auto" if model == "large-v3" else recommended_device
+
+
+def vram_label(vram_mb):
+    """Человекочитаемый объём видеопамяти («8 ГБ», «512 МБ» — не «0 ГБ»)."""
+    if vram_mb >= 1024:
+        return f"{vram_mb // 1024} ГБ"
+    return f"{vram_mb} МБ"
+
+
 class Wizard:
     def __init__(self):
         self._cfg = dict(DEFAULTS)
         self._gpu = gpu.detect_nvidia()
         model, device = gpu.recommend(self._gpu)
         self._cfg["model"], self._cfg["device"] = model, device
+        self._rec_device = device      # рекомендация для железа — база resolve_device
         self._need_cuda = device == "auto"
 
         self._root = tk.Tk()
@@ -120,7 +134,7 @@ class Wizard:
         self._title("Оборудование")
         if self._gpu:
             found = (f"Найдена видеокарта {self._gpu['name']} "
-                     f"({self._gpu['vram_mb'] // 1024} ГБ) — рекомендуем "
+                     f"({vram_label(self._gpu['vram_mb'])}) — рекомендуем "
                      "максимальное качество.")
         else:
             found = ("Видеокарта NVIDIA не найдена — распознавание будет на "
@@ -135,10 +149,7 @@ class Wizard:
     def _on_quality(self):
         model = QUALITY_PRESETS[self._quality_var.get()][1]
         self._cfg["model"] = model
-        if model == "large-v3":
-            self._cfg["device"] = "auto"
-        elif self._gpu is None:
-            self._cfg["device"] = "cpu"
+        self._cfg["device"] = resolve_device(model, self._rec_device)
         self._need_cuda = self._cfg["device"] == "auto"
 
     def _step_download(self):
@@ -155,7 +166,7 @@ class Wizard:
         self._status_var = tk.StringVar(value="")
         ttk.Label(self._body, textvariable=self._status_var).pack(anchor="w")
         self._dl_btn = ttk.Button(self._body, text="Начать загрузку",
-                                  command=lambda: self._start_download(need_dlls))
+                                  command=self._start_download)
         self._dl_btn.pack(pady=8)
         ttk.Label(self._body, foreground="#666", wraplength=500, justify="left", text=(
             "Можно нажать «Далее» и пропустить — тогда всё скачается при первом "
@@ -167,7 +178,7 @@ class Wizard:
             self._back_btn.config(state="disabled")
             self._poll_download()
 
-    def _start_download(self, need_dlls):
+    def _start_download(self):
         if self._download_thread is not None and self._download_thread.is_alive():
             return
         self._dl_btn.config(state="disabled")
@@ -180,14 +191,21 @@ class Wizard:
             try:
                 if self._cancel_download:
                     return
+                # Пересчитываем на момент запуска, а не отрисовки шага:
+                # после «Повторить» уже распакованные DLL не качаются заново.
+                need_dlls = self._need_cuda and not any(paths.cuda_dir().glob("*.dll"))
                 if need_dlls:
                     paths.cuda_dir().mkdir(parents=True, exist_ok=True)
+                    n_pkgs = len(fetch.CUDA_PACKAGES)
                     with tempfile.TemporaryDirectory() as tmp:
                         fetch.fetch_cuda(
                             paths.cuda_dir(), tmp,
-                            lambda pkg, d, t: self._progress.update(
+                            # Прогресс кумулятивный по пакетам: полоска идёт
+                            # 0→40 % один раз, а не дважды.
+                            lambda i, pkg, d, t: self._progress.update(
                                 text=f"NVIDIA: {pkg} {d // 1048576} / {max(t, 1) // 1048576} МБ",
-                                percent=(d / t * 40) if t else 0.0))
+                                percent=(i + (d / t if t else 0.0)) / n_pkgs * 40),
+                            cancelled=lambda: self._cancel_download)
                 if self._cancel_download:
                     return
                 base = fetch.hf_cache_size()
@@ -242,6 +260,9 @@ class Wizard:
         ttk.Label(self._body, text="Скажите что-нибудь — полоска должна дёргаться:").pack(anchor="w")
         self._level_bar = ttk.Progressbar(self._body, maximum=100)
         self._level_bar.pack(fill="x", pady=8)
+        self._mic_status_var = tk.StringVar(value="")
+        ttk.Label(self._body, textvariable=self._mic_status_var,
+                  wraplength=500, justify="left").pack(anchor="w")
         self._open_mic()
         self._poll_mic()
 
@@ -251,17 +272,24 @@ class Wizard:
 
     def _open_mic(self):
         self._close_mic()
-        self._cfg["input_device"] = self._mic_device()
+        device = self._mic_device()
         try:
             def cb(indata, frames, t, status):
                 self._mic_level = float(np.sqrt((indata ** 2).mean()))
             self._mic_stream = sd.InputStream(
                 samplerate=16000, channels=1, dtype="float32",
-                device=self._cfg["input_device"], callback=cb)
+                device=device, callback=cb)
             self._mic_stream.start()
-        except Exception:
+        except Exception as exc:
             log.exception("Не удалось открыть микрофон в мастере")
             self._mic_stream = None
+            self._mic_level = 0.0
+            # Нерабочий выбор в конфиг не пишем — иначе пользователь молча
+            # унёс бы устройство, с которого запись не идёт.
+            self._mic_status_var.set(f"Не удалось открыть микрофон: {exc}")
+            return
+        self._cfg["input_device"] = device
+        self._mic_status_var.set("")
 
     def _close_mic(self):
         if self._mic_stream is not None:
@@ -292,11 +320,18 @@ class Wizard:
 
     def _ensure_listener(self):
         if self._listener is None:
-            self._listener = hk.HotkeyListener(
+            listener = hk.HotkeyListener(
                 on_press=lambda: None, on_release=lambda: None,
                 combo=hk.names_to_vks(self._cfg["hotkey"]))
-            self._listener_thread = threading.Thread(
-                target=self._listener.run, daemon=True)
+
+            def run():
+                try:
+                    listener.run()
+                except Exception:
+                    log.exception("Хук клавиатуры в мастере не запустился")
+
+            self._listener = listener
+            self._listener_thread = threading.Thread(target=run, daemon=True)
             self._listener_thread.start()
 
     def _capture(self):

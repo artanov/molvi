@@ -110,15 +110,22 @@ def paste_text(text, restore_delay=0.3):
         log.info("paste: буфер восстановлен")
 
 
+def _utf16_units(ch):
+    """Символ → его UTF-16 code units: wScan в KEYEVENTF_UNICODE 16-битный,
+    поэтому символы вне BMP (эмодзи) шлются суррогатной парой, а не обрезаются."""
+    data = ch.encode("utf-16-le")
+    return [int.from_bytes(data[i:i + 2], "little") for i in range(0, len(data), 2)]
+
+
 def type_text_direct(text):
     for ch in text:
         if ch == "\n":
             _send_key(vk=VK_RETURN)
             _send_key(vk=VK_RETURN, flags=KEYEVENTF_KEYUP)
             continue
-        code = ord(ch)
-        _send_key(scan=code, flags=KEYEVENTF_UNICODE)
-        _send_key(scan=code, flags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP)
+        for unit in _utf16_units(ch):
+            _send_key(scan=unit, flags=KEYEVENTF_UNICODE)
+            _send_key(scan=unit, flags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP)
         time.sleep(0.005)
 
 
@@ -134,6 +141,15 @@ def _foreground_is_console():
 def insert_text(text, mode):
     if mode == "type" or (mode == "auto" and _foreground_is_console()):
         log.info("insert: печатаю посимвольно (%d симв)", len(text))
-        type_text_direct(text)
+        try:
+            type_text_direct(text)
+        except Exception:
+            # Печать сорвалась посреди текста — кладём его в буфер, чтобы
+            # распознанное не пропало (paste-режим делает это сам).
+            try:
+                _set_clipboard_text(text)
+            except Exception:
+                log.exception("Не удалось положить текст в буфер обмена")
+            raise
     else:
         paste_text(text)

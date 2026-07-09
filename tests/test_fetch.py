@@ -1,5 +1,7 @@
 import zipfile
 
+import pytest
+
 import molvi.fetch as fetch
 
 
@@ -91,3 +93,24 @@ def test_download_reports_progress(monkeypatch, tmp_path):
 def test_model_constants():
     assert fetch.MODEL_REPOS["large-v3"] == "Systran/faster-whisper-large-v3"
     assert set(fetch.MODEL_REPOS) == set(fetch.MODEL_SIZES) == {"large-v3", "small", "base"}
+
+
+def test_download_cancelled_removes_partial(monkeypatch, tmp_path):
+    chunks = [b"aa", b"bb", b""]
+
+    class FakeResp:
+        headers = {"Content-Length": "4"}
+        def read(self, n):
+            return chunks.pop(0)
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr(fetch.urllib.request, "urlopen", lambda *a, **kw: FakeResp())
+    dest = tmp_path / "f.bin"
+    flags = iter([False, True])  # отмена после первого чанка
+
+    with pytest.raises(InterruptedError):
+        fetch.download("http://x", dest, cancelled=lambda: next(flags))
+    assert not dest.exists()  # частичный файл удалён

@@ -15,15 +15,22 @@ class Recorder:
         self._chunks.append(indata.copy())
 
     def start(self):
+        if self._stream is not None:  # незакрытый стрим от прошлой ошибки
+            self.stop()
         self._chunks = []
-        self._stream = sd.InputStream(
+        stream = sd.InputStream(
             samplerate=self.samplerate,
             channels=1,
             dtype="float32",
             device=self.device,
             callback=self._callback,
         )
-        self._stream.start()
+        try:
+            stream.start()
+        except Exception:
+            stream.close()  # иначе PortAudio-хэндл утёк бы до конца процесса
+            raise
+        self._stream = stream
 
     def stop(self):
         if self._stream is not None:

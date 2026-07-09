@@ -118,12 +118,18 @@ class Overlay:
             return None
 
     def _poll(self):
-        try:
-            while True:
+        while True:
+            try:
                 state = self._queue.get_nowait()
-                if state == "quit":
-                    self._root.destroy()
-                    return
+            except queue.Empty:
+                break
+            if state == "quit":
+                self._root.destroy()
+                return
+            # Ошибка обработки одного состояния (например, упавшее открытие
+            # настроек) не должна обрывать цикл: иначе перестал бы работать
+            # и "quit" — приложение зависало бы навсегда при выходе.
+            try:
                 if state == "settings":
                     if self._on_open_settings is not None:
                         self._on_open_settings()
@@ -136,8 +142,8 @@ class Overlay:
                     text, bg = _TEXT_STATES[state]
                     self._label.config(text=text, bg=bg)
                     self._root.deiconify()
-        except queue.Empty:
-            pass
+            except Exception:
+                log.exception("Оверлей: ошибка обработки состояния %r", state)
         self._root.after(50, self._poll)
 
     # --- потокобезопасный интерфейс (Controller, Tray) ---

@@ -1,6 +1,7 @@
 import ctypes
 import ctypes.wintypes as wintypes
 import logging
+import threading
 
 log = logging.getLogger(__name__)
 
@@ -76,11 +77,11 @@ def normalize_capture(vks):
     return mods + rest
 
 
-_HOOKPROC = ctypes.CFUNCTYPE(
-    ctypes.c_longlong, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
-)
-
 LRESULT = ctypes.c_ssize_t  # LONG_PTR: pointer-width, not c_int
+
+_HOOKPROC = ctypes.CFUNCTYPE(
+    LRESULT, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
+)
 
 _user32.SetWindowsHookExW.argtypes = [
     ctypes.c_int, _HOOKPROC, wintypes.HINSTANCE, wintypes.DWORD
@@ -141,54 +142,66 @@ class HotkeyListener:
         self._hook = None
         self._thread_id = None
         self._proc = _HOOKPROC(self._low_level_proc)  # держим ссылку от GC
+        # set_combo/start_capture зовутся из tk-потока, _handle — из потока
+        # хука; без лока сброс _active/_down может проскочить посреди
+        # обработки нажатия и оставить запись включённой навсегда.
+        self._lock = threading.Lock()
 
     def set_combo(self, vks):
-        if self._active:
-            self._active = False
+        with self._lock:
+            self._combo = frozenset(vks)
+            self._down = set()
+            self._released = set()
+            self._armed = True
+            was_active, self._active = self._active, False
+        if was_active:
             self._on_release()
-        self._combo = frozenset(vks)
-        self._down = set()
-        self._released = set()
-        self._armed = True
 
     def start_capture(self, callback):
         """Копит зажатые клавиши; все отпущены → callback(имена), Esc → callback(None)."""
-        if self._active:
-            self._active = False
+        with self._lock:
+            self._down = set()
+            self._released = set()
+            self._armed = True
+            self._cap_peak = set()
+            self._cap_down = set()
+            self._capture_cb = callback
+            was_active, self._active = self._active, False
+        if was_active:
             self._on_release()
-        self._down = set()
-        self._released = set()
-        self._armed = True
-        self._cap_peak = set()
-        self._cap_down = set()
-        self._capture_cb = callback
+
+    def cancel_capture(self):
+        """Прервать начатый start_capture, не дожидаясь клавиш (callback не зовётся)."""
+        with self._lock:
+            self._capture_cb = None
 
     def _handle(self, msg, vk, injected=False):
         if injected:
             return
-        if self._capture_cb is not None:
-            self._handle_capture(msg, vk)
-            return
-        if vk not in self._combo:
-            return
-        if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
-            self._down.add(vk)
-            if self._armed and self._down == self._combo:
-                self._armed = False
-                self._released = set()
-                self._active = True
-                self._on_press()
-        elif msg in (WM_KEYUP, WM_SYSKEYUP):
-            self._down.discard(vk)
-            if self._active:
-                self._active = False
-                self._on_release()
-            # "Полное отпускание" — каждая клавиша комбо хоть раз была
-            # отпущена по отдельности с последнего срабатывания (не
-            # обязательно все одновременно, см. test_no_refire_until_full_release).
-            self._released.add(vk)
-            if self._released >= self._combo:
-                self._armed = True
+        with self._lock:
+            if self._capture_cb is not None:
+                self._handle_capture(msg, vk)
+                return
+            if vk not in self._combo:
+                return
+            if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                self._down.add(vk)
+                if self._armed and self._down == self._combo:
+                    self._armed = False
+                    self._released = set()
+                    self._active = True
+                    self._on_press()
+            elif msg in (WM_KEYUP, WM_SYSKEYUP):
+                self._down.discard(vk)
+                if self._active:
+                    self._active = False
+                    self._on_release()
+                # "Полное отпускание" — каждая клавиша комбо хоть раз была
+                # отпущена по отдельности с последнего срабатывания (не
+                # обязательно все одновременно, см. test_no_refire_until_full_release).
+                self._released.add(vk)
+                if self._released >= self._combo:
+                    self._armed = True
 
     def _handle_capture(self, msg, vk):
         if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
