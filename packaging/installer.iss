@@ -1,5 +1,5 @@
 #define MyAppName "Molvi"
-#define MyAppVersion GetEnv("VF_VERSION")
+#define MyAppVersion GetEnv("MOLVI_VERSION")
 #if MyAppVersion == ""
   #define MyAppVersion "0.0-dev"
 #endif

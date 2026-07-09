@@ -14,3 +14,33 @@ jobs:
           python-version: "3.13"
       - run: pip install -r requirements-ci.txt
       - run: python -m pytest -q
+
+  # Frozen-сборка проверяется на каждом изменении, а не только в релизе:
+  # битый spec / потерянный hiddenimport уже уезжали к пользователям
+  # (ModuleNotFoundError, см. историю) — ловим до тега.
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-ci.txt "pyinstaller==6.21.0"
+      - run: python packaging/make_ico.py
+      - run: python -m PyInstaller packaging/molvi.spec --noconfirm --distpath packaging/dist --workpath packaging/build
+      - name: Smoke-run frozen exe
+        shell: pwsh
+        run: |
+          # Конфига нет → должен открыться мастер первого запуска и жить.
+          # Мгновенная смерть процесса = сломанный бандл (ошибки импорта и т.п.).
+          $env:MOLVI_NO_ERROR_DIALOG = "1"
+          $p = Start-Process -FilePath "packaging\dist\Molvi\Molvi.exe" -PassThru
+          Start-Sleep -Seconds 15
+          if ($p.HasExited) {
+            Write-Host "::error::Molvi.exe завершился сразу, код $($p.ExitCode)"
+            $log = Join-Path $env:APPDATA "Molvi\molvi.log"
+            if (Test-Path $log) { Get-Content $log }
+            exit 1
+          }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "Molvi.exe прожил 15 секунд — бандл работоспособен"

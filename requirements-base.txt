@@ -1,0 +1,10 @@
+# Рантайм-ядро Molvi. Версии запинены: незапиненный numpy/ctranslate2 уже
+# ломали ABI-совместимость faster-whisper между сборками без единого коммита.
+# Обновлять осознанно: поднять версию → прогнать pytest → собрать exe → проверить.
+faster-whisper==1.2.1
+ctranslate2==4.8.1
+numpy==2.5.1
+sounddevice==0.5.5
+pystray==0.19.5
+Pillow==12.3.0
+pywin32==312

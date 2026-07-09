@@ -6,6 +6,11 @@ on:
 permissions:
   contents: write
 
+# Два тега подряд не должны собирать релизы параллельно (гонка загрузки ассетов).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: windows-latest
@@ -14,16 +19,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: pip install -r requirements-ci.txt "pyinstaller>=6"
+      - run: pip install -r requirements-ci.txt "pyinstaller==6.21.0"
       - run: python -m pytest -q
       - run: python packaging/make_ico.py
       - run: python -m PyInstaller packaging/molvi.spec --noconfirm --distpath packaging/dist --workpath packaging/build
       - name: Install Inno Setup
-        run: choco install innosetup -y --no-progress
+        run: choco install innosetup --version=6.7.1 -y --no-progress
       - name: Build installer
         shell: pwsh
         run: |
-          $env:VF_VERSION = "${{ github.ref_name }}"
+          $env:MOLVI_VERSION = "${{ github.ref_name }}"
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" packaging/installer.iss
       - name: Create release
         uses: softprops/action-gh-release@v2

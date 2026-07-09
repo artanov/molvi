@@ -1,8 +1,5 @@
-faster-whisper>=1.1
-sounddevice>=0.5
-numpy
-pystray>=0.19
-Pillow
-pywin32>=306
+# Полная установка для разработки (README): ядро + CUDA-библиотеки для GPU.
+# (В установленной сборке CUDA-DLL докачиваются мастером — см. molvi/fetch.py.)
+-r requirements-base.txt
 nvidia-cublas-cu12
 nvidia-cudnn-cu12>=9
