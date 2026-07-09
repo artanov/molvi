@@ -10,9 +10,14 @@ class Recorder:
         self.device = device
         self._chunks = []
         self._stream = None
+        # Текущая громкость (RMS последнего чанка, 0..1). Пишется из
+        # аудио-потока PortAudio, читается из tk-потока (оверлей-эквалайзер);
+        # присваивание float атомарно — лок не нужен.
+        self.level = 0.0
 
     def _callback(self, indata, frames, time_info, status):
         self._chunks.append(indata.copy())
+        self.level = float(np.sqrt((indata ** 2).mean()))
 
     def start(self):
         if self._stream is not None:  # незакрытый стрим от прошлой ошибки
@@ -33,6 +38,7 @@ class Recorder:
         self._stream = stream
 
     def stop(self):
+        self.level = 0.0
         if self._stream is not None:
             self._stream.stop()
             self._stream.close()

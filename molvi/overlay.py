@@ -1,9 +1,9 @@
 import ctypes
 import ctypes.wintypes as wintypes
 import logging
+import math
 import queue
 import tkinter as tk
-from pathlib import Path
 
 from molvi import theme
 
@@ -14,14 +14,38 @@ WS_EX_NOACTIVATE = 0x08000000
 WS_EX_TOOLWINDOW = 0x00000080
 
 KEY_COLOR = "#ff00fe"
-ASSETS = Path(__file__).parent / "assets"
-_IMAGE_FILES = {"recording": "recording.png", "transcribing": "transcribing.png"}
-_BASE_SIZE = (400, 128)   # размер PNG; соответствует 192 DPI (200%)
+_BASE_SIZE = (400, 128)   # логический размер пилюли; соответствует 192 DPI (200%)
 
 _TEXT_STATES = {
     "recording": ("●  Запись…", theme.RECORDING),
     "transcribing": ("⏳  Распознаю…", theme.TRANSCRIBING),
 }
+
+N_BARS = 17
+_FRAME_MS = 33           # ~30 кадров/с
+_MIN_BAR = 0.08          # доля высоты: «плоская» тишина всё же видна
+
+# Цвета эквалайзера и точки-индикатора по состояниям
+_STATE_COLORS = {
+    "recording": {"bars": theme.CREAM, "dot": theme.CORAL},
+    "transcribing": {"bars": theme.WARN, "dot": theme.WARN},
+}
+# Автономная «волна обработки»: уровень для состояний без микрофона
+_IDLE_LEVELS = {"recording": None, "transcribing": 0.35}
+
+
+def bar_heights(level, t, n=N_BARS):
+    """Высоты баров (0..1): бегущая волна, дышащая от громкости голоса.
+
+    level — огибающая громкости 0..1, t — счётчик кадров. Колокол к центру
+    плюс разбегающиеся фазы дают «ходьбу волнами», а не дёргание поодиночке.
+    """
+    heights = []
+    for i in range(n):
+        bell = 0.35 + 0.65 * math.sin(math.pi * (i + 0.5) / n)
+        wave = 0.55 + 0.45 * math.sin(t * 0.22 + i * 0.9)
+        heights.append(min(1.0, _MIN_BAR + min(level, 1.0) * bell * wave))
+    return heights
 
 
 class Overlay:
@@ -32,6 +56,11 @@ class Overlay:
         self._scale = scale
         self._queue = queue.Queue()
         self._on_open_settings = None
+        self._level_source = None      # callable → громкость 0..1 (Recorder.level)
+        self._anim_state = None        # None | "recording" | "transcribing"
+        self._anim_running = False
+        self._env = 0.0                # огибающая громкости (атака/спад)
+        self._t = 0                    # счётчик кадров
         self._root = tk.Tk()
         self._root.withdraw()
         self._root.overrideredirect(True)
@@ -40,20 +69,26 @@ class Overlay:
         # иначе первый deiconify() украдёт фокус у активного приложения.
         self._root.update_idletasks()
         self._apply_no_activate()
-        self._images = self._load_images()
-        if self._images:
+        self._canvas = None
+        pill = self._make_pill_image()
+        if pill is not None:
+            w, h = pill.width(), pill.height()
             self._root.configure(bg=KEY_COLOR)
             self._root.attributes("-transparentcolor", KEY_COLOR)
-            self._label = tk.Label(self._root, bg=KEY_COLOR, bd=0)
-            w, h = self._images["recording"].width(), self._images["recording"].height()
+            self._canvas = tk.Canvas(self._root, width=w, height=h,
+                                     bg=KEY_COLOR, highlightthickness=0, bd=0)
+            self._canvas.create_image(0, 0, image=pill, anchor="nw")
+            self._pill = pill  # держим ссылку от GC
+            self._build_scene(w, h)
+            self._canvas.pack()
         else:
             self._root.attributes("-alpha", 0.92)
             self._label = tk.Label(
                 self._root, text="", font=("Segoe UI", 12, "bold"),
                 fg=theme.CREAM, bg=theme.RECORDING, padx=18, pady=8,
             )
+            self._label.pack()
             w, h = 190, 44
-        self._label.pack()
         sw = self._root.winfo_screenwidth()
         sh = self._root.winfo_screenheight()
         self._root.geometry(f"{w}x{h}+{(sw - w) // 2}+{sh - 140 - h + 44}")
@@ -90,32 +125,98 @@ class Overlay:
         except Exception:
             return 96
 
-    def _load_images(self):
-        """PNG → PhotoImage, скомпонованные на ключевой цвет; None при любой проблеме."""
+    def _make_pill_image(self):
+        """Фон-пилюля, отрисованная на лету; None → текстовый fallback.
+
+        Ключевой цвет прозрачен только при ТОЧНОМ совпадении, поэтому края
+        рисуем с суперсэмплингом и делаем альфу бинарной, примешав
+        полупрозрачные пиксели к тёмному матту (иначе — розовая кайма)."""
         try:
-            from PIL import Image, ImageTk
+            from PIL import Image, ImageDraw, ImageTk
             scale = self._dpi() / 192 * self._scale
             size = (max(1, int(_BASE_SIZE[0] * scale)), max(1, int(_BASE_SIZE[1] * scale)))
-            images = {}
-            for state, fname in _IMAGE_FILES.items():
-                path = ASSETS / fname
-                if not path.is_file():
-                    log.warning("Нет %s — оверлей в текстовом режиме", fname)
-                    return None
-                img = Image.open(path).convert("RGBA").resize(size, Image.LANCZOS)
-                # Ключевой цвет прозрачен только при ТОЧНОМ совпадении, поэтому
-                # полупрозрачные пиксели сглаживания дали бы розовую кайму.
-                # Примешиваем края к тёмному матту и делаем альфу бинарной.
-                matte = Image.new("RGBA", size, theme.INK_800)
-                matte.alpha_composite(img)
-                hard_alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
-                bg = Image.new("RGB", size, KEY_COLOR)
-                bg.paste(matte.convert("RGB"), mask=hard_alpha)
-                images[state] = ImageTk.PhotoImage(bg, master=self._root)
-            return images
+            ss = 4
+            big = Image.new("RGBA", (size[0] * ss, size[1] * ss), (0, 0, 0, 0))
+            d = ImageDraw.Draw(big)
+            d.rounded_rectangle(
+                (0, 0, size[0] * ss - 1, size[1] * ss - 1),
+                radius=size[1] * ss // 2,
+                fill=theme.rgba(theme.INK_800, 255),
+                outline=theme.rgba(theme.INK_600, 255),
+                width=2 * ss,
+            )
+            img = big.resize(size, Image.LANCZOS)
+            matte = Image.new("RGBA", size, theme.INK_800)
+            matte.alpha_composite(img)
+            hard_alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
+            bg = Image.new("RGB", size, KEY_COLOR)
+            bg.paste(matte.convert("RGB"), mask=hard_alpha)
+            return ImageTk.PhotoImage(bg, master=self._root)
         except Exception:
-            log.warning("Не удалось загрузить картинки оверлея", exc_info=True)
+            log.warning("Не удалось отрисовать пилюлю оверлея", exc_info=True)
             return None
+
+    def _build_scene(self, w, h):
+        """Точка-индикатор слева + бары эквалайзера. Геометрия — от пилюли."""
+        self._dot_r = h * 0.09
+        self._dot_cx = h * 0.52
+        self._cy = h / 2
+        self._dot = self._canvas.create_oval(0, 0, 0, 0, width=0,
+                                             fill=theme.CORAL)
+        x0 = h * 0.92
+        x1 = w - h * 0.42
+        step = (x1 - x0) / N_BARS
+        bar_w = step * 0.52
+        self._max_half = h * 0.30
+        self._bars = []
+        self._bar_x = []
+        for i in range(N_BARS):
+            bx = x0 + i * step + (step - bar_w) / 2
+            self._bar_x.append((bx, bx + bar_w))
+            self._bars.append(self._canvas.create_rectangle(
+                bx, self._cy - 2, bx + bar_w, self._cy + 2,
+                width=0, fill=theme.CREAM))
+
+    def _apply_state_colors(self, state):
+        colors = _STATE_COLORS[state]
+        for bar in self._bars:
+            self._canvas.itemconfigure(bar, fill=colors["bars"])
+        self._canvas.itemconfigure(self._dot, fill=colors["dot"])
+
+    def _animate(self):
+        state = self._anim_state
+        if state is None or self._canvas is None:
+            self._anim_running = False
+            return
+        self._t += 1
+        level = _IDLE_LEVELS[state]
+        if level is None:  # запись: живой уровень с микрофона
+            raw = 0.0
+            if self._level_source is not None:
+                try:
+                    raw = min(1.0, float(self._level_source()) * 9.0)
+                except Exception:
+                    raw = 0.0
+            # Быстрая атака, плавный спад — волна не дёргается на паузах речи.
+            self._env = raw if raw > self._env else self._env * 0.82
+            level = self._env
+        for bar, (bx0, bx1), h in zip(self._bars, self._bar_x,
+                                      bar_heights(level, self._t)):
+            half = max(2.0, h * self._max_half)
+            self._canvas.coords(bar, bx0, self._cy - half, bx1, self._cy + half)
+        pulse = 1.0 + (0.18 * math.sin(self._t * 0.16) if state == "recording" else 0.0)
+        r = self._dot_r * pulse
+        self._canvas.coords(self._dot, self._dot_cx - r, self._cy - r,
+                            self._dot_cx + r, self._cy + r)
+        self._root.after(_FRAME_MS, self._animate)
+
+    def _start_anim(self, state):
+        self._anim_state = state
+        self._env = 0.0
+        self._apply_state_colors(state)
+        if not self._anim_running:
+            self._anim_running = True
+            self._animate()
 
     def _poll(self):
         while True:
@@ -134,9 +235,10 @@ class Overlay:
                     if self._on_open_settings is not None:
                         self._on_open_settings()
                 elif state == "hide":
+                    self._anim_state = None
                     self._root.withdraw()
-                elif self._images:
-                    self._label.config(image=self._images[state])
+                elif self._canvas is not None:
+                    self._start_anim(state)
                     self._root.deiconify()
                 else:
                     text, bg = _TEXT_STATES[state]
@@ -161,6 +263,10 @@ class Overlay:
 
     def set_settings_opener(self, fn):
         self._on_open_settings = fn
+
+    def set_level_source(self, fn):
+        """fn() → текущая громкость микрофона 0..1 (читается в tk-потоке)."""
+        self._level_source = fn
 
     def schedule_quit(self):
         self._queue.put("quit")

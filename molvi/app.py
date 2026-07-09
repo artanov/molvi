@@ -124,6 +124,7 @@ def main():
         last_good = {"model": cfg["model"], "language": cfg["language"]}
 
         recorder = Recorder(samplerate=cfg["samplerate"], device=cfg["input_device"])
+        overlay.set_level_source(lambda: recorder.level)  # эквалайзер дышит голосом
         controller = Controller(
             recorder, transcriber, insert_text, overlay,
             min_duration_sec=cfg["min_duration_sec"],

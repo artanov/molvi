@@ -52,6 +52,19 @@ def test_start_opens_stream_and_resets_buffer(monkeypatch):
     assert rec._chunks == []
 
 
+def test_callback_updates_level_and_stop_resets():
+    rec = Recorder()
+    assert rec.level == 0.0
+    loud = np.full((160, 1), 0.5, dtype=np.float32)
+    rec._callback(loud, 160, None, None)
+    assert rec.level == pytest.approx(0.5, rel=1e-3)  # RMS константы = её модуль
+    quiet = np.full((160, 1), 0.01, dtype=np.float32)
+    rec._callback(quiet, 160, None, None)
+    assert rec.level == pytest.approx(0.01, rel=1e-3)  # уровень следует за звуком
+    rec.stop()
+    assert rec.level == 0.0  # после остановки индикатору нечего показывать
+
+
 def test_failed_stream_start_closes_stream(monkeypatch):
     """stream.start() бросил (устройство занято) → стрим закрыт, хэндл не течёт."""
     events = []

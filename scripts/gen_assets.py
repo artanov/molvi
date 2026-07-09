@@ -1,17 +1,12 @@
-"""Генерирует ассеты: start.wav/stop.wav (синус-тики) и PNG-плейсхолдеры оверлея.
+"""Генерирует звуковые ассеты: start.wav/stop.wav (синус-тики).
 
-PNG — временные заглушки; пользователь заменит их картинками из Gemini
-(400x128, RGBA, те же имена). Запуск: .venv/Scripts/python scripts/gen_assets.py
+Пилюля оверлея с v1.2 рисуется на лету (molvi/overlay.py) — PNG не нужны.
+Запуск: .venv/Scripts/python scripts/gen_assets.py
 """
 import math
 import struct
-import sys
 import wave
 from pathlib import Path
-
-from PIL import Image, ImageDraw, ImageFont
-
-from molvi import theme
 
 ASSETS = Path(__file__).resolve().parents[1] / "molvi" / "assets"
 ASSETS.mkdir(exist_ok=True)
@@ -32,24 +27,5 @@ def make_wav(path, freq, ms=70, rate=22050, volume=0.35):
     print(f"wrote {path}")
 
 
-def make_png(path, bg, icon, text):
-    img = Image.new("RGBA", (400, 128), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, 399, 127), radius=64, fill=bg)
-    if icon == "dot":
-        d.ellipse((36, 44, 76, 84), fill=theme.CORAL)
-    else:  # hourglass
-        d.polygon([(40, 40), (72, 40), (56, 64), (40, 88), (72, 88), (56, 64)], fill=theme.CREAM)
-    try:
-        font = ImageFont.truetype("C:/Windows/Fonts/segoeuib.ttf", 40)
-    except OSError:
-        font = ImageFont.load_default()
-    d.text((100, 64), text, fill=theme.CREAM, font=font, anchor="lm")
-    img.save(path)
-    print(f"wrote {path}")
-
-
 make_wav(ASSETS / "start.wav", freq=880)
 make_wav(ASSETS / "stop.wav", freq=523)
-make_png(ASSETS / "recording.png", theme.rgba(theme.INK_800, 235), "dot", "Запись…")
-make_png(ASSETS / "transcribing.png", theme.rgba(theme.INK_800, 235), "hourglass", "Распознаю…")
