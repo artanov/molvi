@@ -92,6 +92,17 @@
   .kbd{font-size:13.5px; font-weight:600; color:var(--cream); background:var(--ink-800);
     border:1px solid var(--ink-600); border-bottom-width:2px; border-radius:7px; padding:2px 9px}
 
+  /* Список загружаемых компонентов с прямыми ссылками на источники */
+  .dl-list{list-style:none; margin:16px 0 0; padding:0; max-width:640px}
+  .dl-list li{padding:14px 16px; border:1px solid var(--ink-600); border-radius:12px;
+    margin-top:10px; color:var(--cream-dim); font-size:15.5px}
+  .dl-list b{color:var(--cream); font-weight:600}
+  .dl-list a{color:var(--coral); text-decoration:underline; text-underline-offset:3px}
+  .dl-list a:hover{color:var(--coral-hover)}
+  .dl-list .src{display:block; margin-top:6px; font-size:14px; color:var(--cream-faint)}
+  .dl-list code{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:6px;
+    padding:1px 7px; font-size:13.5px}
+
   /* SmartScreen: стилизованная иллюстрация системного окна */
   .ss{max-width:520px; margin:22px 0 4px; border-radius:10px; overflow:hidden;
     border:1px solid var(--ink-600); box-shadow:0 18px 44px -20px rgba(0,0,0,.7);
@@ -261,6 +272,25 @@
       <div class="shot"><img src="./assets/install/wizard-3-download.png"
         alt="Экран «Загрузка компонентов»: что будет скачано, полоса прогресса и кнопка «Начать загрузку»" loading="lazy" width="562" height="403"></div>
       <p class="caption">Нажмите «Начать загрузку» и дождитесь надписи «Готово!».</p>
+      <p style="margin-top:18px"><b style="color:var(--cream)">Что именно скачивается</b> —
+        только открытые компоненты из официальных источников:</p>
+      <ul class="dl-list">
+        <li><b>Модель распознавания речи</b> — faster-whisper от Systran
+          (конвертация открытой модели Whisper от OpenAI), скачивается с Hugging Face
+          в зависимости от выбранного качества:
+          <a href="https://huggingface.co/Systran/faster-whisper-large-v3">large-v3</a> (~3 ГБ),
+          <a href="https://huggingface.co/Systran/faster-whisper-small">small</a> (~500 МБ) или
+          <a href="https://huggingface.co/Systran/faster-whisper-base">base</a> (~150 МБ).
+          <span class="src">Сохраняется в кэш Hugging Face:
+            <code>%USERPROFILE%\.cache\huggingface</code></span></li>
+        <li><b>Библиотеки NVIDIA</b> (только если есть подходящая видеокарта) —
+          официальные пакеты
+          <a href="https://pypi.org/project/nvidia-cublas-cu12/">cuBLAS</a> и
+          <a href="https://pypi.org/project/nvidia-cudnn-cu12/">cuDNN</a> с PyPI
+          (~0.6 ГБ суммарно) — на них работает распознавание на GPU.
+          <span class="src">Распаковываются в
+            <code>%APPDATA%\Molvi\cuda</code></span></li>
+      </ul>
       <div class="why">
         <div class="t">Почему это лучше не пропускать</div>
         <p>Пропустить можно — но тогда всё скачается при первой диктовке, и первая фраза
