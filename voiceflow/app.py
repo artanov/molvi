@@ -1,8 +1,23 @@
 import logging
 import logging.handlers
+import os
+import sys
 import threading
 
 from voiceflow import paths
+
+
+def _ensure_std_streams():
+    """В windowed-сборке (PyInstaller console=False) sys.stdout/stderr == None;
+    любая библиотека, пишущая в консоль (tqdm внутри huggingface_hub при докачке
+    модели), падает с 'NoneType object has no attribute write'. Подменяем на
+    devnull, чтобы такой вывод молча уходил в никуда."""
+    devnull = None
+    for name in ("stdout", "stderr"):
+        if getattr(sys, name) is None:
+            if devnull is None:
+                devnull = open(os.devnull, "w", encoding="utf-8")
+            setattr(sys, name, devnull)
 
 
 def _setup_logging():
@@ -17,6 +32,7 @@ def _setup_logging():
 
 
 def main():
+    _ensure_std_streams()
     _setup_logging()
     log = logging.getLogger("voiceflow")
     try:
