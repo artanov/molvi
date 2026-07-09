@@ -24,10 +24,12 @@ def _fake_model_factory(calls, fail_on_cuda=False, segments=()):
 
 @pytest.fixture
 def patch_model(monkeypatch):
-    def _patch(**kw):
+    def _patch(cuda_libs=True, **kw):
         calls = []
         import molvi.transcriber as t
         monkeypatch.setattr(t, "WhisperModel", _fake_model_factory(calls, **kw))
+        # В тестах наличие cuBLAS/cuDNN на машине не должно влиять на результат.
+        monkeypatch.setattr(t, "_cuda_libs_loadable", lambda: cuda_libs)
         return calls
     return _patch
 
@@ -71,3 +73,33 @@ def test_cuda_failure_falls_back_to_cpu(patch_model):
     assert tr.device == "cpu"
     assert calls[0]["device"] == "cuda"
     assert calls[1] == {"device": "cpu", "compute_type": "int8"}
+
+
+def test_missing_cuda_libs_auto_falls_back_to_cpu_before_model(patch_model):
+    """cuBLAS грузится лениво при первом encode: без библиотек cuda-модель
+    «успешно» создаётся, а первая диктовка падает (и ctranslate2 виснет на
+    повторных вызовах). Поэтому при device=auto без библиотек cuda не пробуем."""
+    from molvi.transcriber import Transcriber
+    calls = patch_model(cuda_libs=False)
+    tr = Transcriber("large-v3", "auto", "int8_float16", "auto")
+    assert tr.device == "cpu"
+    assert calls[0]["device"] == "cpu"  # попытки cuda не было вовсе
+
+
+def test_missing_cuda_libs_explicit_cuda_raises(patch_model):
+    from molvi.transcriber import Transcriber
+    patch_model(cuda_libs=False)
+    with pytest.raises(RuntimeError, match="cublas"):
+        Transcriber("large-v3", "cuda", "int8_float16", "auto")
+
+
+def test_set_language_changes_transcribe_param(patch_model):
+    from molvi.transcriber import Transcriber
+    calls = patch_model(segments=[])
+    tr = Transcriber("large-v3", "cpu", "int8", "auto")
+    tr.set_language("ru")
+    tr.transcribe(np.zeros(16000, dtype=np.float32))
+    assert calls[-1]["transcribe_kwargs"]["language"] == "ru"
+    tr.set_language("auto")
+    tr.transcribe(np.zeros(16000, dtype=np.float32))
+    assert calls[-1]["transcribe_kwargs"]["language"] is None

@@ -55,6 +55,9 @@ def main():
             cfg = load_config(cfg_file)
 
         # Тяжёлые импорты — после логирования, чтобы ошибки попали в лог.
+        # transcriber импортируется НИЖЕ — после докачки CUDA-DLL: его
+        # _add_cuda_dll_dirs() добавляет каталог в поиск только если тот
+        # уже существует и наполнен.
         from molvi import autostart
         from molvi.controller import Controller
         from molvi.hotkey import (
@@ -64,7 +67,6 @@ def main():
         from molvi.recorder import Recorder
         from molvi.settings import SettingsWindow
         from molvi.sounds import Sounds
-        from molvi.transcriber import Transcriber
         from molvi.tray import Tray
         from molvi.typer import insert_text
 
@@ -91,7 +93,30 @@ def main():
             on_settings=overlay.open_settings,
         )
         tray.start()
+
+        # Если шаг загрузки в мастере пропустили, CUDA-DLL иначе не появятся
+        # никогда: cuda-модель «успешно» создаётся без них, а первая диктовка
+        # падает. Докачиваем при старте (только frozen: в dev DLL из venv).
+        if (paths.is_frozen() and cfg["device"] in ("auto", "cuda")
+                and not any(paths.cuda_dir().glob("*.dll"))):
+            from molvi import fetch, gpu
+            if gpu.detect_nvidia() is not None:
+                tray.notify("Скачиваю библиотеки NVIDIA (~0.6 ГБ) — разовая загрузка…")
+                try:
+                    import tempfile
+                    paths.cuda_dir().mkdir(parents=True, exist_ok=True)
+                    with tempfile.TemporaryDirectory() as tmp:
+                        fetch.fetch_cuda(paths.cuda_dir(), tmp)
+                    log.info("CUDA-библиотеки докачаны")
+                except Exception:
+                    log.exception("Не удалось скачать библиотеки NVIDIA")
+                    tray.notify(
+                        "Не удалось скачать библиотеки NVIDIA — "
+                        "распознавание будет на процессоре."
+                    )
+
         tray.notify("Загружаю модель распознавания…")
+        from molvi.transcriber import Transcriber
 
         log.info("Загрузка модели %s (%s)", cfg["model"], cfg["device"])
         transcriber = Transcriber(cfg["model"], cfg["device"], cfg["compute_type"], cfg["language"])

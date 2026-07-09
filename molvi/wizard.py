@@ -169,8 +169,8 @@ class Wizard:
                                   command=self._start_download)
         self._dl_btn.pack(pady=8)
         ttk.Label(self._body, foreground="#666", wraplength=500, justify="left", text=(
-            "Можно нажать «Далее» и пропустить — тогда всё скачается при первом "
-            "распознавании (придётся подождать).")).pack(anchor="w")
+            "Можно нажать «Далее» и пропустить — тогда недостающее докачается "
+            "само при следующем запуске Molvi (придётся подождать).")).pack(anchor="w")
         if self._download_thread is not None and self._download_thread.is_alive():
             # Вернулись на шаг во время загрузки — показываем живой прогресс.
             self._dl_btn.config(state="disabled")

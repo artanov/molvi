@@ -1,3 +1,4 @@
+import ctypes
 import logging
 import os
 import sys
@@ -30,9 +31,30 @@ _add_cuda_dll_dirs()
 from faster_whisper import WhisperModel  # noqa: E402
 
 
+def _cuda_libs_loadable():
+    """cuBLAS/cuDNN грузятся ctranslate2 лениво при первом encode(): без них
+    cuda-модель «успешно» создаётся, а первая диктовка падает — и повторный
+    encode после сбоя зависает внутри ctranslate2. Проверяем заранее."""
+    try:
+        ctypes.WinDLL("cublas64_12.dll")
+        ctypes.WinDLL("cudnn64_9.dll")
+        return True
+    except OSError:
+        return False
+
+
 class Transcriber:
     def __init__(self, model_name, device, compute_type, language):
         self._language = None if language == "auto" else language
+        if device in ("auto", "cuda") and not _cuda_libs_loadable():
+            if device == "cuda":
+                raise RuntimeError(
+                    "Библиотеки NVIDIA (cublas64_12.dll/cudnn64_9.dll) не найдены — "
+                    "device=cuda невозможен. Пройдите загрузку в мастере или "
+                    "поставьте device=auto."
+                )
+            log.warning("Библиотеки NVIDIA не найдены — распознавание на CPU")
+            device = "cpu"
         if device in ("auto", "cuda"):
             try:
                 self._model = WhisperModel(model_name, device="cuda", compute_type=compute_type)
