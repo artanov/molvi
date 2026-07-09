@@ -1,4 +1,4 @@
-from voiceflow.app import main
+from molvi.app import main
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ import os
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 # Абсолютный путь к корню репозитория: относительный pathex („..“) находил пакет
-# voiceflow только при запуске через `python -m PyInstaller` (CWD в sys.path);
+# molvi только при запуске через `python -m PyInstaller` (CWD в sys.path);
 # голый `pyinstaller` собирал exe без него → ModuleNotFoundError у пользователей.
 REPO_ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
 
@@ -15,7 +15,7 @@ a = Analysis(
     ["entry.py"],
     pathex=[REPO_ROOT],
     binaries=ct2_binaries,
-    datas=[("../voiceflow/assets", "voiceflow/assets")]
+    datas=[("../molvi/assets", "molvi/assets")]
           + collect_data_files("faster_whisper")
           + ct2_datas,
     hiddenimports=["pystray._win32", "PIL.ImageTk", "sounddevice"] + ct2_hidden,
@@ -26,8 +26,8 @@ exe = EXE(
     pyz,
     a.scripts,
     exclude_binaries=True,
-    name="VoiceFlow",
+    name="Molvi",
     console=False,
-    icon="voiceflow.ico",
+    icon="molvi.ico",
 )
-coll = COLLECT(exe, a.binaries, a.datas, name="VoiceFlow")
+coll = COLLECT(exe, a.binaries, a.datas, name="Molvi")

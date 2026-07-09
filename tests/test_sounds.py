@@ -1,5 +1,5 @@
-import voiceflow.sounds as sounds_mod
-from voiceflow.sounds import Sounds
+import molvi.sounds as sounds_mod
+from molvi.sounds import Sounds
 
 
 def test_play_calls_winsound_async(monkeypatch, tmp_path):

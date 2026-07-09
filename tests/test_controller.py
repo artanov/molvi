@@ -3,7 +3,7 @@ import time
 import numpy as np
 import pytest
 
-from voiceflow.controller import Controller
+from molvi.controller import Controller
 
 
 class FakeRecorder:

@@ -1,6 +1,6 @@
 import numpy as np
 
-from voiceflow.recorder import Recorder
+from molvi.recorder import Recorder
 
 
 def _feed(rec, n_chunks, chunk_len=160):
@@ -40,7 +40,7 @@ def test_start_opens_stream_and_resets_buffer(monkeypatch):
         def close(self):
             pass
 
-    import voiceflow.recorder as r
+    import molvi.recorder as r
     monkeypatch.setattr(r.sd, "InputStream", FakeStream)
     rec = Recorder(samplerate=16000, device=None)
     rec._chunks = [np.zeros((10, 1), dtype=np.float32)]  # мусор от прошлой записи

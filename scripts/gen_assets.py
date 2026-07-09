@@ -11,7 +11,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-ASSETS = Path(__file__).resolve().parents[1] / "voiceflow" / "assets"
+ASSETS = Path(__file__).resolve().parents[1] / "molvi" / "assets"
 ASSETS.mkdir(exist_ok=True)
 
 

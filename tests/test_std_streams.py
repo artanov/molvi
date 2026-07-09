@@ -1,6 +1,6 @@
 import sys
 
-from voiceflow.app import _ensure_std_streams
+from molvi.app import _ensure_std_streams
 
 
 def test_ensure_std_streams_replaces_none(monkeypatch):

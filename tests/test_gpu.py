@@ -1,7 +1,7 @@
 import subprocess
 from types import SimpleNamespace
 
-import voiceflow.gpu as gpu
+import molvi.gpu as gpu
 
 
 def _fake_run(stdout, returncode=0):

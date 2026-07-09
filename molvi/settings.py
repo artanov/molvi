@@ -4,8 +4,8 @@ from tkinter import ttk
 
 import sounddevice as sd
 
-from voiceflow import autostart
-from voiceflow import hotkey as hk
+from molvi import autostart
+from molvi import hotkey as hk
 
 log = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class SettingsWindow:
         self._capture_result = "idle"
 
         win = self._win = tk.Toplevel(root)
-        win.title("VoiceFlow — настройки")
+        win.title("Molvi — настройки")
         win.resizable(False, False)
         win.attributes("-topmost", True)
         frm = ttk.Frame(win, padding=16)

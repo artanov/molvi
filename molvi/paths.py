@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-APP_NAME = "VoiceFlow"
+APP_NAME = "Molvi"
 
 
 def is_frozen():
@@ -28,7 +28,7 @@ def config_path():
 
 
 def log_path():
-    return data_dir() / "voiceflow.log"
+    return data_dir() / "molvi.log"
 
 
 def cuda_dir():
@@ -38,4 +38,4 @@ def cuda_dir():
 def autostart_command():
     if is_frozen():
         return f'"{sys.executable}"'
-    return str(repo_root() / "voiceflow.bat")
+    return str(repo_root() / "molvi.bat")

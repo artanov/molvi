@@ -18,7 +18,7 @@ def _add_cuda_dll_dirs():
         if p.is_dir():
             os.add_dll_directory(str(p))
             os.environ["PATH"] = str(p) + os.pathsep + os.environ["PATH"]
-    from voiceflow import paths
+    from molvi import paths
     app_cuda = paths.cuda_dir()
     if app_cuda.is_dir():
         os.add_dll_directory(str(app_cuda))

@@ -1,6 +1,6 @@
 import json
 
-from voiceflow.config import DEFAULTS, load_config, save_config
+from molvi.config import DEFAULTS, load_config, save_config
 
 
 def test_missing_file_returns_defaults(tmp_path):

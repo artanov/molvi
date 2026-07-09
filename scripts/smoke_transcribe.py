@@ -11,8 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import sounddevice as sd
 
-from voiceflow.recorder import Recorder
-from voiceflow.transcriber import Transcriber
+from molvi.recorder import Recorder
+from molvi.transcriber import Transcriber
 
 print("Загружаю модель (первый раз — скачивание ~3 ГБ)...")
 t0 = time.time()

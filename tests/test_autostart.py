@@ -1,6 +1,6 @@
 import winreg
 
-import voiceflow.autostart as autostart
+import molvi.autostart as autostart
 
 
 class FakeKey:
@@ -35,11 +35,11 @@ def test_enable_disable_cycle(monkeypatch):
     store = {}
     _patch_registry(monkeypatch, store)
     assert autostart.is_enabled() is False
-    autostart.enable(r"F:\voiceflow\voiceflow.bat")
-    assert store["VoiceFlow"] == r"F:\voiceflow\voiceflow.bat"
+    autostart.enable(r"F:\molvi\molvi.bat")
+    assert store["Molvi"] == r"F:\molvi\molvi.bat"
     assert autostart.is_enabled() is True
     autostart.disable()
-    assert "VoiceFlow" not in store
+    assert "Molvi" not in store
     assert autostart.is_enabled() is False
 
 

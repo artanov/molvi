@@ -20,7 +20,7 @@ class Tray:
         self._on_settings = on_settings or (lambda: None)
         self._paused = False
         self._icon = pystray.Icon(
-            "VoiceFlow", _make_icon_image(), "VoiceFlow",
+            "Molvi", _make_icon_image(), "Molvi",
             menu=pystray.Menu(
                 pystray.MenuItem("Настройки…", self._settings),
                 pystray.MenuItem(
@@ -47,7 +47,7 @@ class Tray:
 
     def notify(self, msg):
         try:
-            self._icon.notify(msg, "VoiceFlow")
+            self._icon.notify(msg, "Molvi")
         except Exception:
             pass  # уведомление — best effort, не роняем обработку
 

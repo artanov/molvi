@@ -12,10 +12,10 @@ from tkinter import messagebox, ttk
 import numpy as np
 import sounddevice as sd
 
-from voiceflow import fetch, gpu, paths
-from voiceflow import hotkey as hk
-from voiceflow.config import DEFAULTS
-from voiceflow.settings import QUALITY_PRESETS, dedupe_input_devices, quality_index_for_model
+from molvi import fetch, gpu, paths
+from molvi import hotkey as hk
+from molvi.config import DEFAULTS
+from molvi.settings import QUALITY_PRESETS, dedupe_input_devices, quality_index_for_model
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class Wizard:
         self._need_cuda = device == "auto"
 
         self._root = tk.Tk()
-        self._root.title("VoiceFlow — первый запуск")
+        self._root.title("Molvi — первый запуск")
         self._root.resizable(False, False)
         self._root.attributes("-topmost", True)
         self._body = ttk.Frame(self._root, padding=20, width=560, height=330)
@@ -95,7 +95,7 @@ class Wizard:
 
     def _finish(self):
         if self._download_thread is not None and self._download_thread.is_alive():
-            if not messagebox.askyesno("VoiceFlow", "Идёт загрузка. Прервать и выйти?"):
+            if not messagebox.askyesno("Molvi", "Идёт загрузка. Прервать и выйти?"):
                 return
             self._cancel_download = True
         self._close_mic()
@@ -109,9 +109,9 @@ class Wizard:
 
     # --- шаги ---
     def _step_welcome(self):
-        self._title("Добро пожаловать в VoiceFlow")
+        self._title("Добро пожаловать в Molvi")
         ttk.Label(self._body, wraplength=500, justify="left", text=(
-            "VoiceFlow печатает вашим голосом: зажмите клавишу, говорите, "
+            "Molvi печатает вашим голосом: зажмите клавишу, говорите, "
             "отпустите — текст появится там, где стоит курсор. Распознавание "
             "работает полностью на вашем компьютере, без интернета и подписок.\n\n"
             "Сейчас мы за пару минут всё настроим.")).pack(anchor="w")

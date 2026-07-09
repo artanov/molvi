@@ -1,4 +1,4 @@
-from voiceflow.settings import (
+from molvi.settings import (
     LANGUAGES, QUALITY_PRESETS, _DEFAULT_DEVICE_LABEL,
     dedupe_input_devices, device_choices, language_index, quality_index_for_model,
 )

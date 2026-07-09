@@ -1,6 +1,6 @@
 import pytest
 
-from voiceflow.hotkey import (
+from molvi.hotkey import (
     WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
     VK_ESCAPE, VK_NAMES, HotkeyListener,
     human_label, names_to_vks, normalize_capture,

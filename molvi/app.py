@@ -4,7 +4,7 @@ import os
 import sys
 import threading
 
-from voiceflow import paths
+from molvi import paths
 
 
 def _ensure_std_streams():
@@ -33,17 +33,19 @@ def _setup_logging():
 
 def main():
     _ensure_std_streams()
+    from molvi import migrate
+    migrate.run()
     _setup_logging()
-    log = logging.getLogger("voiceflow")
+    log = logging.getLogger("molvi")
     try:
-        log.info("Запуск VoiceFlow")
+        log.info("Запуск Molvi")
 
-        from voiceflow.config import load_config, save_config
+        from molvi.config import load_config, save_config
         cfg_file = paths.config_path()
         if not cfg_file.exists():
             log.info("config.json не найден — запускаю мастер первого запуска")
             try:
-                from voiceflow.wizard import Wizard
+                from molvi.wizard import Wizard
                 cfg = Wizard().run()
             except Exception:
                 log.exception("Мастер первого запуска упал — значения по умолчанию")
@@ -53,18 +55,18 @@ def main():
             cfg = load_config(cfg_file)
 
         # Тяжёлые импорты — после логирования, чтобы ошибки попали в лог.
-        from voiceflow import autostart
-        from voiceflow.controller import Controller
-        from voiceflow.hotkey import (
+        from molvi import autostart
+        from molvi.controller import Controller
+        from molvi.hotkey import (
             VK_LCONTROL, HotkeyListener, human_label, names_to_vks,
         )
-        from voiceflow.overlay import Overlay
-        from voiceflow.recorder import Recorder
-        from voiceflow.settings import SettingsWindow
-        from voiceflow.sounds import Sounds
-        from voiceflow.transcriber import Transcriber
-        from voiceflow.tray import Tray
-        from voiceflow.typer import insert_text
+        from molvi.overlay import Overlay
+        from molvi.recorder import Recorder
+        from molvi.settings import SettingsWindow
+        from molvi.sounds import Sounds
+        from molvi.transcriber import Transcriber
+        from molvi.tray import Tray
+        from molvi.typer import insert_text
 
         overlay = Overlay(scale=cfg["overlay_scale"])
         sounds = Sounds(cfg["sounds"])

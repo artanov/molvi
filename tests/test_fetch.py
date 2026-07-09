@@ -1,6 +1,6 @@
 import zipfile
 
-import voiceflow.fetch as fetch
+import molvi.fetch as fetch
 
 
 def test_pick_wheel_url_latest_win64():

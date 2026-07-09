@@ -1,7 +1,7 @@
 import winreg
 
 _RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-_VALUE_NAME = "VoiceFlow"
+_VALUE_NAME = "Molvi"
 
 
 def _open(access):

@@ -45,7 +45,7 @@ def pick_wheel_url(pypi_json):
 def download(url, dest, progress_cb=None, chunk=1 << 18):
     """Скачать url в dest; progress_cb(done_bytes, total_bytes). Частичный файл удаляется."""
     dest = Path(dest)
-    req = urllib.request.Request(url, headers={"User-Agent": "VoiceFlow"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Molvi"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp, open(dest, "wb") as f:
             total = int(resp.headers.get("Content-Length") or 0)

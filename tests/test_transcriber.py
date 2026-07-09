@@ -26,14 +26,14 @@ def _fake_model_factory(calls, fail_on_cuda=False, segments=()):
 def patch_model(monkeypatch):
     def _patch(**kw):
         calls = []
-        import voiceflow.transcriber as t
+        import molvi.transcriber as t
         monkeypatch.setattr(t, "WhisperModel", _fake_model_factory(calls, **kw))
         return calls
     return _patch
 
 
 def test_joins_segments_and_strips(patch_model):
-    from voiceflow.transcriber import Transcriber
+    from molvi.transcriber import Transcriber
     calls = patch_model(segments=[FakeSegment(" Привет,"), FakeSegment(" мир! ")])
     tr = Transcriber("large-v3", "cpu", "int8", "auto")
     text = tr.transcribe(np.zeros(16000, dtype=np.float32))
@@ -41,14 +41,14 @@ def test_joins_segments_and_strips(patch_model):
 
 
 def test_empty_segments_give_empty_string(patch_model):
-    from voiceflow.transcriber import Transcriber
+    from molvi.transcriber import Transcriber
     patch_model(segments=[])
     tr = Transcriber("large-v3", "cpu", "int8", "auto")
     assert tr.transcribe(np.zeros(16000, dtype=np.float32)) == ""
 
 
 def test_auto_language_passed_as_none(patch_model):
-    from voiceflow.transcriber import Transcriber
+    from molvi.transcriber import Transcriber
     calls = patch_model(segments=[])
     tr = Transcriber("large-v3", "cpu", "int8", "auto")
     tr.transcribe(np.zeros(16000, dtype=np.float32))
@@ -57,7 +57,7 @@ def test_auto_language_passed_as_none(patch_model):
 
 
 def test_fixed_language_passed_through(patch_model):
-    from voiceflow.transcriber import Transcriber
+    from molvi.transcriber import Transcriber
     calls = patch_model(segments=[])
     tr = Transcriber("large-v3", "cpu", "int8", "ru")
     tr.transcribe(np.zeros(16000, dtype=np.float32))
@@ -65,7 +65,7 @@ def test_fixed_language_passed_through(patch_model):
 
 
 def test_cuda_failure_falls_back_to_cpu(patch_model):
-    from voiceflow.transcriber import Transcriber
+    from molvi.transcriber import Transcriber
     calls = patch_model(fail_on_cuda=True)
     tr = Transcriber("large-v3", "auto", "int8_float16", "auto")
     assert tr.device == "cpu"

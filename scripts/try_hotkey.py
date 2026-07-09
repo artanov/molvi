@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from voiceflow.hotkey import HotkeyListener
+from molvi.hotkey import HotkeyListener
 
 hl = HotkeyListener(
     on_press=lambda: print("PRESS  (запись бы началась)"),

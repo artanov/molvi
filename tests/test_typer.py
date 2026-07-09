@@ -2,7 +2,7 @@ import ctypes
 
 import pytest
 
-import voiceflow.typer as typer
+import molvi.typer as typer
 
 
 @pytest.fixture
