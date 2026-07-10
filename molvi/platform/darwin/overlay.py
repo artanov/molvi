@@ -8,14 +8,36 @@ log = logging.getLogger(__name__)
 def apply_no_activate(root):
     """Molvi — приложение строки меню: без иконки в Dock и без Cmd+Tab.
 
-    Accessory-политика заодно решает «не красть фокус»: показ оверлея не
-    активирует приложение, вставка остаётся в активном окне пользователя.
-    Уровень окна не трогаем: tk -topmost на маке и так даёт floating-уровень
-    поверх обычных окон (winfo_id — не NSView, к NSWindow пути нет)."""
+    Accessory-политики мало: deiconify() Tk-окна всё равно делает его key
+    (терминал пользователя теряет фокус, и Cmd+V уходит в никуда, пока окно
+    не вернут кликом). Класс help + noActivates — mac-эквивалент
+    WS_EX_NOACTIVATE: окно показывается, не забирая активацию.
+    Уровень отдельно не трогаем: help-окна и так floating, поверх обычных
+    (winfo_id — не NSView, к NSWindow пути нет)."""
     from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
 
     NSApplication.sharedApplication().setActivationPolicy_(
         NSApplicationActivationPolicyAccessory)
+    root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w,
+                 "help", "noActivates")
+    # Tk deiconify() на маке активирует приложение (украл бы фокус у окна,
+    # куда пользователь диктует) — поэтому окно маппится ОДИН раз здесь,
+    # на старте, невидимым, а показ/скрытие дальше — только альфа+geometry
+    # (show_window/hide_window), которые активацию не трогают.
+    root.attributes("-alpha", 0.0)
+    root.geometry("+20000+20000")
+    root.deiconify()
+
+
+def show_window(root):
+    root.attributes("-alpha", 1.0)
+    root.lift()
+
+
+def hide_window(root):
+    # Альфа 0 не отменяет перехват кликов — уводим окно ещё и за экран.
+    root.attributes("-alpha", 0.0)
+    root.geometry("+20000+20000")
 
 
 def _frontmost_window_center():

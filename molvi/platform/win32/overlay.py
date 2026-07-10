@@ -76,6 +76,14 @@ def dpi(root):
         return 96
 
 
+def show_window(root):
+    root.deiconify()
+
+
+def hide_window(root):
+    root.withdraw()
+
+
 def enable_transparency(root):
     """→ цвет фона окна/канвы: всё, что им закрашено, становится прозрачным."""
     root.attributes("-transparentcolor", KEY_COLOR)

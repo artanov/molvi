@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 
 import pytest
@@ -7,6 +8,14 @@ from molvi.overlay import Overlay
 
 def _throw(exc):
     raise exc
+
+
+def _shown(ov):
+    """Видимость по-платформенному: на маке скрытие — альфа+увод за экран
+    (deiconify активировал бы приложение и крал фокус), на Windows — withdraw."""
+    if sys.platform == "darwin":
+        return float(ov.root.attributes("-alpha")) > 0
+    return ov.root.state() == "normal"
 
 
 @pytest.fixture
@@ -30,10 +39,10 @@ def test_poll_survives_failing_settings_opener(overlay):
     # Очередь жива: следующие состояния обрабатываются.
     overlay.show_recording()
     overlay._poll()
-    assert overlay.root.state() == "normal"
+    assert _shown(overlay)
     overlay.hide()
     overlay._poll()
-    assert overlay.root.state() == "withdrawn"
+    assert not _shown(overlay)
 
 
 def test_quit_processed_after_opener_failure(overlay):
@@ -50,7 +59,7 @@ def test_quit_processed_after_opener_failure(overlay):
 def test_state_protocol(overlay):
     overlay.show_transcribing()
     overlay._poll()
-    assert overlay.root.state() == "normal"
+    assert _shown(overlay)
     overlay.hide()
     overlay._poll()
-    assert overlay.root.state() == "withdrawn"
+    assert not _shown(overlay)

@@ -91,6 +91,9 @@ class Overlay:
             w, h = 190, 44
         self._w, self._h = w, h
         self._place()
+        # На маке окно уже размаплено невидимым (см. darwin.apply_no_activate) —
+        # возвращаем его в «скрытое» состояние после примерки геометрии.
+        _plat.hide_window(self._root)
         self._root.after(50, self._poll)
 
     @property
@@ -217,16 +220,16 @@ class Overlay:
                         self._on_open_settings()
                 elif state == "hide":
                     self._anim_state = None
-                    self._root.withdraw()
+                    _plat.hide_window(self._root)
                 elif self._canvas is not None:
                     self._start_anim(state)
                     self._place()  # монитор активного окна — куда и печатаем
-                    self._root.deiconify()
+                    _plat.show_window(self._root)
                 else:
                     text, bg = _TEXT_STATES[state]
                     self._label.config(text=text, bg=bg)
                     self._place()
-                    self._root.deiconify()
+                    _plat.show_window(self._root)
             except Exception:
                 log.exception("Оверлей: ошибка обработки состояния %r", state)
         self._root.after(50, self._poll)
