@@ -3,7 +3,10 @@
 # Обновлять осознанно: поднять версию → прогнать pytest → собрать exe → проверить.
 faster-whisper==1.2.1
 ctranslate2==4.8.1
-numpy==2.5.1
+numpy==2.5.1; sys_platform == "win32"
+# на маке numba (зависимость mlx-whisper) требует numpy<2.5 — иначе pip
+# откатывается к древним numba без поддержки Python 3.13 и падает
+numpy==2.4.6; sys_platform != "win32"
 sounddevice==0.5.5
 pystray==0.19.5
 Pillow==12.3.0
