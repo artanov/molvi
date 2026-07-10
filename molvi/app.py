@@ -114,7 +114,10 @@ def main():
                     )
 
         tray.notify("Загружаю модель распознавания…")
-        from molvi.transcriber import Transcriber
+        if sys.platform == "darwin":
+            from molvi.platform.darwin.transcriber import Transcriber
+        else:
+            from molvi.transcriber import Transcriber
 
         log.info("Загрузка модели %s (%s)", cfg["model"], cfg["device"])
         transcriber = Transcriber(cfg["model"], cfg["device"], cfg["compute_type"], cfg["language"])
@@ -247,7 +250,8 @@ def main():
 
         overlay.set_settings_opener(open_settings_window)
 
-        suffix = "" if transcriber.device == "cuda" else " (CPU — медленный режим!)"
+        suffix = ("" if transcriber.device in ("cuda", "mlx")
+                  else " (CPU — медленный режим!)")
         tray.notify(f"Готов. Зажмите {hk.human_label(cfg['hotkey'])} и говорите{suffix}")
         overlay.run()  # блокирует главный поток до schedule_quit()
         log.info("Остановлен")

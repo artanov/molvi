@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import sys
 import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -10,16 +11,29 @@ log = logging.getLogger(__name__)
 
 CUDA_PACKAGES = ("nvidia-cublas-cu12", "nvidia-cudnn-cu12")
 
-MODEL_REPOS = {
-    "large-v3": "Systran/faster-whisper-large-v3",
-    "small": "Systran/faster-whisper-small",
-    "base": "Systran/faster-whisper-base",
-}
-MODEL_SIZES = {  # примерный полный размер, байты — для прогресса по росту кэша
-    "large-v3": 3_100_000_000,
-    "small": 490_000_000,
-    "base": 150_000_000,
-}
+if sys.platform == "darwin":
+    # Репозитории должны совпадать с platform/darwin/transcriber.REPOS.
+    MODEL_REPOS = {
+        "large-v3-turbo": "mlx-community/whisper-large-v3-turbo",
+        "small": "mlx-community/whisper-small-mlx",
+        "base": "mlx-community/whisper-base-mlx",
+    }
+    MODEL_SIZES = {  # примерный полный размер, байты — для прогресса по росту кэша
+        "large-v3-turbo": 1_620_000_000,
+        "small": 500_000_000,
+        "base": 150_000_000,
+    }
+else:
+    MODEL_REPOS = {
+        "large-v3": "Systran/faster-whisper-large-v3",
+        "small": "Systran/faster-whisper-small",
+        "base": "Systran/faster-whisper-base",
+    }
+    MODEL_SIZES = {
+        "large-v3": 3_100_000_000,
+        "small": 490_000_000,
+        "base": 150_000_000,
+    }
 
 
 def _version_key(v):

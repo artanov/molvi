@@ -1,4 +1,5 @@
 import logging
+import sys
 import tkinter as tk
 from tkinter import ttk
 
@@ -9,11 +10,18 @@ from molvi.platform import hotkey as hk
 
 log = logging.getLogger(__name__)
 
-QUALITY_PRESETS = [
-    ("Максимальное — large-v3 (нужна NVIDIA, ~3 ГБ)", "large-v3"),
-    ("Среднее — small (~500 МБ)", "small"),
-    ("Быстрое — base (~150 МБ)", "base"),
-]
+if sys.platform == "darwin":
+    QUALITY_PRESETS = [
+        ("Максимальное — large-v3-turbo (~1.6 ГБ)", "large-v3-turbo"),
+        ("Среднее — small (~500 МБ)", "small"),
+        ("Быстрое — base (~150 МБ)", "base"),
+    ]
+else:
+    QUALITY_PRESETS = [
+        ("Максимальное — large-v3 (нужна NVIDIA, ~3 ГБ)", "large-v3"),
+        ("Среднее — small (~500 МБ)", "small"),
+        ("Быстрое — base (~150 МБ)", "base"),
+    ]
 LANGUAGES = [("Авто", "auto"), ("Русский", "ru"), ("English", "en")]
 _DEFAULT_DEVICE_LABEL = "Системный по умолчанию"
 

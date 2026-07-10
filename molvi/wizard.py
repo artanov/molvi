@@ -4,6 +4,7 @@
 Окно закрыто крестиком — возвращаются накопленные к этому моменту значения.
 """
 import logging
+import sys
 import tempfile
 import threading
 import tkinter as tk
@@ -40,7 +41,7 @@ class Wizard:
         model, device = gpu.recommend(self._gpu)
         self._cfg["model"], self._cfg["device"] = model, device
         self._rec_device = device      # рекомендация для железа — база resolve_device
-        self._need_cuda = device == "auto"
+        self._need_cuda = device == "auto" and sys.platform == "win32"
 
         self._root = tk.Tk()
         self._root.title("Molvi — первый запуск")
@@ -150,7 +151,7 @@ class Wizard:
         model = QUALITY_PRESETS[self._quality_var.get()][1]
         self._cfg["model"] = model
         self._cfg["device"] = resolve_device(model, self._rec_device)
-        self._need_cuda = self._cfg["device"] == "auto"
+        self._need_cuda = self._cfg["device"] == "auto" and sys.platform == "win32"
 
     def _step_download(self):
         self._title("Загрузка компонентов")

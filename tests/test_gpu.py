@@ -30,7 +30,14 @@ def test_detect_bad_output(monkeypatch):
     assert gpu.detect_nvidia() is None
 
 
-def test_recommend():
+def test_recommend_windows(monkeypatch):
+    monkeypatch.setattr(gpu.sys, "platform", "win32")
     assert gpu.recommend({"name": "RTX 4080", "vram_mb": 16376}) == ("large-v3", "auto")
     assert gpu.recommend({"name": "GT 1030", "vram_mb": 2048}) == ("base", "cpu")
     assert gpu.recommend(None) == ("base", "cpu")
+
+
+def test_recommend_darwin(monkeypatch):
+    # Metal/ANE через mlx тянет turbo даже на M1 8 ГБ — NVIDIA не при чём.
+    monkeypatch.setattr(gpu.sys, "platform", "darwin")
+    assert gpu.recommend(None) == ("large-v3-turbo", "auto")

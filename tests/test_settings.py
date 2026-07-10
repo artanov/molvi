@@ -5,7 +5,9 @@ from molvi.settings import (
 
 
 def test_quality_presets_models():
-    assert [m for _, m in QUALITY_PRESETS] == ["large-v3", "small", "base"]
+    import sys
+    top = "large-v3-turbo" if sys.platform == "darwin" else "large-v3"
+    assert [m for _, m in QUALITY_PRESETS] == [top, "small", "base"]
 
 
 def test_quality_index_for_model():

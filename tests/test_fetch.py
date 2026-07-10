@@ -91,8 +91,14 @@ def test_download_reports_progress(monkeypatch, tmp_path):
 
 
 def test_model_constants():
-    assert fetch.MODEL_REPOS["large-v3"] == "Systran/faster-whisper-large-v3"
-    assert set(fetch.MODEL_REPOS) == set(fetch.MODEL_SIZES) == {"large-v3", "small", "base"}
+    import sys
+    if sys.platform == "darwin":
+        assert fetch.MODEL_REPOS["large-v3-turbo"] == "mlx-community/whisper-large-v3-turbo"
+        expected = {"large-v3-turbo", "small", "base"}
+    else:
+        assert fetch.MODEL_REPOS["large-v3"] == "Systran/faster-whisper-large-v3"
+        expected = {"large-v3", "small", "base"}
+    assert set(fetch.MODEL_REPOS) == set(fetch.MODEL_SIZES) == expected
 
 
 def test_download_cancelled_removes_partial(monkeypatch, tmp_path):

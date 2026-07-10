@@ -1,6 +1,7 @@
 """Определение NVIDIA-GPU через nvidia-smi и рекомендация модели."""
 import logging
 import subprocess
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +32,12 @@ def detect_nvidia():
 
 
 def recommend(gpu):
-    """→ (model, device): NVIDIA с VRAM ≥ 6 ГБ → large-v3/auto, иначе base/cpu."""
+    """→ (model, device): NVIDIA с VRAM ≥ 6 ГБ → large-v3/auto, иначе base/cpu.
+
+    На маке — всегда large-v3-turbo: mlx-whisper через Metal тянет её даже
+    на M1 с 8 ГБ (RTF ~0.2, пик памяти 0.7 ГБ — бенчмарк в docs/macos-port.md)."""
+    if sys.platform == "darwin":
+        return "large-v3-turbo", "auto"
     if gpu and gpu.get("vram_mb", 0) >= MIN_VRAM_MB:
         return "large-v3", "auto"
     return "base", "cpu"

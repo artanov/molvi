@@ -7,8 +7,10 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 DEFAULTS = {
-    "model": "large-v3",
-    "device": "auto",           # auto | cuda | cpu
+    # На маке — large-v3-turbo: mlx-whisper на M1 даёт RTF ~0.2 при 0.7 ГБ
+    # памяти (см. docs/macos-port.md); large-v3 там втрое тяжелее без выигрыша.
+    "model": "large-v3-turbo" if sys.platform == "darwin" else "large-v3",
+    "device": "auto",           # auto | cuda | cpu (на маке игнорируется — mlx)
     "compute_type": "int8_float16",
     "language": "auto",         # auto | ru | en
     # Список имён клавиш (см. hotkey.VK_NAMES). На маке дефолт — правый Cmd:
