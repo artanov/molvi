@@ -30,12 +30,19 @@ a = Analysis(
               "molvi.platform.win32", "pytest", "tkinter.test"],
 )
 pyz = PYZ(a.pure)
+
+# Стабильная подпись (например, самоподписанный «Molvi Dev Signing»): TCC
+# привязывает разрешения к подписи, ad-hoc меняется каждой сборкой — и
+# «Мониторинг ввода»/«Универсальный доступ» слетали при каждом обновлении.
+_SIGN_IDENTITY = os.environ.get("MOLVI_CODESIGN_IDENTITY") or None
+
 exe = EXE(
     pyz,
     a.scripts,
     exclude_binaries=True,
     name="Molvi",
     console=False,
+    codesign_identity=_SIGN_IDENTITY,
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="Molvi")
 app = BUNDLE(

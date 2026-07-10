@@ -9,6 +9,15 @@ cd "$(dirname "$0")/.."
 export MOLVI_VERSION="${1:-0.0.0}"
 PY="${PYTHON:-.venv/bin/python}"
 
+# Подпись: без стабильной identity TCC-разрешения слетают при каждой
+# пересборке. Берём «Molvi Dev Signing» из keychain, если есть; иначе
+# PyInstaller подпишет ad-hoc (как в CI без сертификата).
+if [[ -z "${MOLVI_CODESIGN_IDENTITY:-}" ]] \
+   && security find-identity -v -p codesigning 2>/dev/null | grep -q "Molvi Dev Signing"; then
+  export MOLVI_CODESIGN_IDENTITY="Molvi Dev Signing"
+fi
+echo "Подпись: ${MOLVI_CODESIGN_IDENTITY:-ad-hoc}"
+
 $PY packaging/make_icns.py
 $PY -m PyInstaller packaging/molvi-mac.spec --noconfirm \
     --distpath packaging/dist --workpath packaging/build
