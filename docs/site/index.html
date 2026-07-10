@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Molvi — голосовой ввод для Windows, локально и бесплатно</title>
-<meta name="description" content="Molvi — локальный голосовой ввод для Windows. Зажмите клавишу, продиктуйте — текст появится там, где курсор. Whisper large-v3 на вашем ПК: без облака, без подписки.">
+<meta name="description" content="Molvi — локальный голосовой ввод для Windows и бесплатная альтернатива Wispr Flow и Aqua Voice. Диктуйте в любое окно и в терминал (Claude Code, Codex). Whisper large-v3 на вашем ПК: без облака и подписки.">
 <meta property="og:title" content="Molvi — говорите, а не печатайте">
 <meta property="og:description" content="Локальный голосовой ввод для Windows. Без облака, без подписки, с открытым кодом.">
 <meta property="og:type" content="website">
@@ -146,6 +146,32 @@
   .feature h3{font-size:18px}
   .feature p{color:var(--cream-dim); font-size:15px; margin-top:9px}
 
+  /* ai-coding: диктовка промптов в терминальные агенты */
+  .ai{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;
+    background:var(--ink-700); border:1px solid var(--ink-600); border-radius:22px;
+    padding:44px 46px}
+  .ai h2{font-size:clamp(26px,3.4vw,36px); margin-top:14px}
+  .ai .txt p{color:var(--cream-dim); margin-top:14px; font-size:16.5px}
+  .ai .txt p b{color:var(--cream); font-weight:600}
+  .term{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:14px;
+    overflow:hidden; font-family:Consolas,"Cascadia Mono",monospace; font-size:14.5px;
+    box-shadow:0 24px 60px -28px rgba(0,0,0,.8)}
+  .term-bar{display:flex; align-items:center; gap:7px; padding:10px 14px;
+    border-bottom:1px solid var(--ink-600)}
+  .term-bar .dot{width:10px; height:10px}
+  .term-bar .title{margin-left:auto; font-size:12px; color:var(--cream-faint);
+    font-family:var(--font)}
+  .term-body{padding:16px 18px 20px; line-height:1.7; color:var(--cream-dim)}
+  .term-body .p{color:var(--coral); user-select:none}
+  .term-body .said{color:var(--cream)}
+  .term-body .caret{display:inline-block; width:8px; height:16px; background:var(--coral);
+    vertical-align:text-bottom; animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .term-note{display:flex; align-items:center; gap:9px; padding:10px 18px 14px;
+    color:var(--cream-faint); font-size:12.5px; font-family:var(--font)}
+  .term-note .eq{height:16px}
+  .term-note .eq span{width:3px}
+
   /* comparison */
   .compare{max-width:760px; margin:0 auto; border:1px solid var(--ink-600); border-radius:var(--radius); overflow-x:auto}
   .compare table{width:100%; border-collapse:collapse; font-size:15.5px}
@@ -175,6 +201,7 @@
   @media(max-width:900px){
     .trust{grid-template-columns:repeat(2,1fr)}
     .steps,.features{grid-template-columns:1fr}
+    .ai{grid-template-columns:1fr; padding:32px 26px; gap:26px}
   }
   @media(max-width:640px){
     .nav-menu-links{display:none}
@@ -343,18 +370,51 @@
     </div>
   </section>
 
+  <!-- AI CODING -->
+  <section class="section">
+    <div class="wrap">
+      <div class="ai">
+        <div class="txt">
+          <span class="eyebrow">Вайб-кодинг</span>
+          <h2>Создан для Claude Code и Codex</h2>
+          <p>Длинные промпты быстрее наговорить, чем напечатать. Зажмите клавишу,
+            опишите задачу своими словами — Molvi напечатает её агенту.</p>
+          <p><b>Работает прямо в терминале:</b> Molvi распознаёт консольное окно
+            и печатает текст посимвольно — даже там, где обычная вставка
+            через Ctrl+V ломается.</p>
+        </div>
+        <div class="term" role="img" aria-label="Терминал с Claude Code: промпт надиктован голосом">
+          <div class="term-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="title">Claude Code</span>
+          </div>
+          <div class="term-body">
+            <span class="p">&gt;&nbsp;</span><span class="said">посмотри почему падает
+            тест авторизации, найди причину и почини, потом прогони весь сьют
+            и покажи что зелёное</span><span class="caret"></span>
+          </div>
+          <div class="term-note">
+            <span class="eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+            надиктовано за 6 секунд — вместо минуты печати
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- COMPARE -->
   <section class="section section-alt">
     <div class="wrap">
       <div class="section-head">
         <span class="eyebrow">Сравнение</span>
         <h2>Molvi против облачных диктовок</h2>
-        <p>Тот же результат, но данные остаются у вас и без ежемесячной платы.</p>
+        <p>Molvi делает то, за что Wispr Flow и Aqua Voice берут подписку, —
+          локально, приватно и бесплатно.</p>
       </div>
       <div class="compare">
         <table>
           <thead>
-            <tr><th>Что важно</th><th class="col-molvi">Molvi</th><th>Облачные сервисы</th></tr>
+            <tr><th>Что важно</th><th class="col-molvi">Molvi</th><th>Wispr Flow, Aqua Voice</th></tr>
           </thead>
           <tbody>
             <tr><td>Где обрабатывается голос</td><td class="col-molvi">На вашем ПК</td><td>На серверах компании</td></tr>
