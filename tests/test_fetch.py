@@ -94,7 +94,9 @@ def test_model_constants():
     import sys
     if sys.platform == "darwin":
         assert fetch.MODEL_REPOS["large-v3-turbo"] == "mlx-community/whisper-large-v3-turbo"
-        expected = {"large-v3-turbo", "small", "base"}
+        # Полный каталог (см. platform/darwin/models.py): виндовые имена
+        # моделей из переносимого конфига тоже должны качаться.
+        expected = {"large-v3-turbo", "large-v3", "medium", "small", "base"}
     else:
         assert fetch.MODEL_REPOS["large-v3"] == "Systran/faster-whisper-large-v3"
         expected = {"large-v3", "small", "base"}

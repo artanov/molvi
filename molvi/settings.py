@@ -161,8 +161,15 @@ class SettingsWindow:
             return
         result = self._capture_result
         if result == "wait":
-            self._win.after(100, self._poll_capture)
-            return
+            if self._listener.dead:
+                # Хук мёртв (например, на маке без «Мониторинга ввода») —
+                # колбэк не придёт; отменяем захват, иначе «Сохранить» и
+                # «Отмена» остались бы выключенными навсегда.
+                self._listener.cancel_capture()
+                result = self._capture_result = "cancel"
+            else:
+                self._win.after(100, self._poll_capture)
+                return
         if isinstance(result, list):
             self._hotkey_names = result
         self._capture_result = "idle"

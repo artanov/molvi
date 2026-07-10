@@ -157,6 +157,7 @@ def main():
             try:
                 listener.run()
             except Exception as exc:
+                listener.dead = True  # капчер в настройках не будет ждать вечно
                 log.exception("Хук клавиатуры не запустился")
                 tray.notify(f"Клавиша диктовки не работает: {exc}. Подробности в molvi.log")
 

@@ -35,3 +35,18 @@ def test_enable_splits_dev_command_into_argv(plist_in_tmp):
 
 def test_disable_when_absent_is_noop(plist_in_tmp):
     autostart.disable()  # не должно бросить
+
+
+def test_dev_plist_sets_working_directory(plist_in_tmp, monkeypatch):
+    # launchd стартует из «/»: без cwd python -m molvi.app не найдёт модуль.
+    monkeypatch.setattr(autostart.paths, "is_frozen", lambda: False)
+    autostart.enable('"/x/.venv/bin/python" -m molvi.app')
+    data = plistlib.loads(plist_in_tmp.read_bytes())
+    assert data["WorkingDirectory"] == str(autostart.paths.repo_root())
+
+
+def test_frozen_plist_has_no_working_directory(plist_in_tmp, monkeypatch):
+    monkeypatch.setattr(autostart.paths, "is_frozen", lambda: True)
+    autostart.enable('"/Applications/Molvi.app/Contents/MacOS/Molvi"')
+    data = plistlib.loads(plist_in_tmp.read_bytes())
+    assert "WorkingDirectory" not in data

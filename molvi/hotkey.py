@@ -114,6 +114,9 @@ class HotkeyListener:
         self._on_release = on_release
         self._combo = frozenset(combo)
         self._table = table
+        # Выставляется обвязкой, если run() умер (на маке — нет разрешения
+        # Input Monitoring): UI по флагу не ждёт колбэков от мёртвого хука.
+        self.dead = False
         self._down = set()
         self._released = set()
         self._active = False

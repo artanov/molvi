@@ -12,17 +12,11 @@ log = logging.getLogger(__name__)
 CUDA_PACKAGES = ("nvidia-cublas-cu12", "nvidia-cudnn-cu12")
 
 if sys.platform == "darwin":
-    # Репозитории должны совпадать с platform/darwin/transcriber.REPOS.
-    MODEL_REPOS = {
-        "large-v3-turbo": "mlx-community/whisper-large-v3-turbo",
-        "small": "mlx-community/whisper-small-mlx",
-        "base": "mlx-community/whisper-base-mlx",
-    }
-    MODEL_SIZES = {  # примерный полный размер, байты — для прогресса по росту кэша
-        "large-v3-turbo": 1_620_000_000,
-        "small": 500_000_000,
-        "base": 150_000_000,
-    }
+    # Единый каталог с transcriber'ом: полный, а не только пресеты мастера —
+    # конфиг переносим между ОС, и «виндовые» имена (large-v3, medium) тоже
+    # должны качаться и мериться, а не падать KeyError.
+    from molvi.platform.darwin.models import REPOS as MODEL_REPOS
+    from molvi.platform.darwin.models import SIZES as MODEL_SIZES
 else:
     MODEL_REPOS = {
         "large-v3": "Systran/faster-whisper-large-v3",

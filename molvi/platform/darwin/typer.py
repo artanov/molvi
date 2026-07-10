@@ -39,7 +39,19 @@ def _post(event):
     Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
 
 
+def _require_post_access():
+    """Без Accessibility CGEventPost НЕ бросает, а молча глотает события:
+    вставка «прошла бы», буфер восстановился и распознанный текст пропал бы
+    бесследно. Проверяем заранее и падаем громко — controller оставит текст
+    в буфере и скажет об этом."""
+    if not Quartz.CGPreflightPostEventAccess():
+        raise OSError(
+            "нет разрешения «Универсальный доступ» (System Settings → "
+            "Privacy & Security → Accessibility)")
+
+
 def _press_cmd_v():
+    _require_post_access()
     for down in (True, False):
         ev = Quartz.CGEventCreateKeyboardEvent(None, VK_V, down)
         # Флаг Cmd на самом событии — физическое нажатие Cmd не эмулируем.
@@ -62,6 +74,7 @@ def paste_text(text, restore_delay=0.3):
 
 
 def type_text_direct(text):
+    _require_post_access()
     for ch in text:
         if ch == "\n":
             for down in (True, False):

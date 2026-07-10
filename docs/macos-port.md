@@ -24,6 +24,25 @@ MacBook Pro M1, **8 ГБ RAM**, macOS 15.3.
   перезапускает весь бандл; torch исключён (нужен mlx_whisper только для
   конвертации весов).
 
+После мультиагентного ревью порта дочинено: импорт autostart в migrate.py
+(терялся автозапуск при миграции VoiceFlow на Windows), VAD-эквивалент для
+mlx (фильтр сегментов по no_speech_prob/avg_logprob — у mlx-whisper нет
+vad_filter), preflight Accessibility перед Cmd+V (иначе CGEventPost молча
+глотается и буфер затирает распознанное), анти-зависание захвата хоткея при
+мёртвом event tap (listener.dead), единый каталог моделей
+platform/darwin/models.py (fetch и transcriber больше не разъедутся),
+WorkingDirectory в dev-LaunchAgent, ленивый molvi.platform (Quartz не
+грузится ради звука).
+
+Известные компромиссы (сознательно не трогаем):
+- Смена модели на mlx кратко держит две модели в unified memory (как VRAM-
+  замечание в app.py) — на 8 ГБ при turbo+small это ок; ModelHolder mlx
+  кэширует одну модель, после отката первая диктовка перечитает веса с диска.
+- Звуки на маке — afplay-процесс (~100 мс задержки сигнала); NSSound
+  in-process — возможная полировка.
+- paste/insert-логика продублирована в win32/darwin typer (генерализация в
+  ядро — отдельная задача; поведение зафиксировано парными тестами).
+
 Осталось владельцу: живая проверка диктовки с реальными TCC-разрешениями,
 страница «Molvi для Mac» на сайте после первого релиза с DMG, решение о
 нотаризации (Apple Developer, $99/год).

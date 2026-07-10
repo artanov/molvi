@@ -42,7 +42,7 @@ def migrate_autostart():
             return False
         winreg.DeleteValue(key, _OLD_APP_NAME)
 
-    from molvi import autostart
+    from molvi.platform import autostart
     autostart.enable(paths.autostart_command())
     return True
 

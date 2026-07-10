@@ -127,8 +127,12 @@ class Overlay:
                 width=2 * ss,
             )
             img = big.resize(size, Image.LANCZOS)
+            # Прозрачность включаем ПОСЛЕ успешной конвертации картинки:
+            # упади она — текстовый fallback рисуется в обычном окне, а не
+            # в уже «продырявленном».
+            photo = _plat.pill_to_photoimage(self._root, img)
             bg = _plat.enable_transparency(self._root)
-            return _plat.pill_to_photoimage(self._root, img), bg
+            return photo, bg
         except Exception:
             log.warning("Не удалось отрисовать пилюлю оверлея", exc_info=True)
             return None, None

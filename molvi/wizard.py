@@ -76,6 +76,7 @@ class Wizard:
         self._capture_state = "idle"
         self._perm_probe = None
         self._perm_rows = []
+        self._perm_warned = False
 
         self._root.protocol("WM_DELETE_WINDOW", self._finish)
         self._show_step()
@@ -374,8 +375,11 @@ class Wizard:
             for kind, status in self._perm_rows:
                 status.set("✓" if self._permission_granted(kind) else "✗")
         except Exception:
-            log.exception("Не удалось проверить разрешения TCC")
-            return
+            # Разовый сбой Quartz не должен замораживать индикаторы: тогда
+            # выданное разрешение так и не отобразилось бы галочкой.
+            if not self._perm_warned:
+                self._perm_warned = True
+                log.exception("Не удалось проверить разрешения TCC")
         self._root.after(1000, self._poll_permissions)
 
     def _step_hotkey(self):
@@ -400,6 +404,7 @@ class Wizard:
                 try:
                     listener.run()
                 except Exception:
+                    listener.dead = True  # _poll_capture вернёт кнопки, а не зависнет
                     log.exception("Хук клавиатуры в мастере не запустился")
 
             self._listener = listener
@@ -422,6 +427,19 @@ class Wizard:
             return
         state = self._capture_state
         if state == "wait":
+            if self._listener is not None and self._listener.dead:
+                # Хук не запустился (нет «Мониторинга ввода») — колбэк не
+                # придёт никогда; без этого мастер зависал бы с выключенными
+                # кнопками навсегда.
+                self._listener.cancel_capture()
+                self._capture_state = "idle"
+                self._hotkey_var.set(
+                    "Клавиша недоступна: выдайте разрешение «Мониторинг "
+                    "ввода» и перезапустите Molvi")
+                self._hk_btn.config(state="normal")
+                self._next_btn.config(state="normal")
+                self._back_btn.config(state="normal")
+                return
             self._root.after(100, self._poll_capture)
             return
         if isinstance(state, list):

@@ -5,6 +5,8 @@ typer = pytest.importorskip(
     reason="вставка текста через Quartz/AppKit — только macOS",
 )
 
+_ORIG_PRESS_CMD_V = typer._press_cmd_v  # до подмен в fake_env
+
 
 @pytest.fixture
 def fake_env(monkeypatch):
@@ -92,6 +94,7 @@ def test_type_text_direct_posts_unicode_events(monkeypatch):
         lambda ev, n, s: ev.update(units=n, s=s))
     monkeypatch.setattr(typer, "_post", lambda ev: posted.append(ev))
     monkeypatch.setattr(typer.time, "sleep", lambda s: None)
+    monkeypatch.setattr(typer.Quartz, "CGPreflightPostEventAccess", lambda: True)
     typer.type_text_direct("a\U0001F600\n")  # 😀 = 2 UTF-16 юнита
     assert posted[0] == {"vk": 0, "down": True, "units": 1, "s": "a"}
     assert posted[1] == {"vk": 0, "down": False, "units": 1, "s": "a"}
@@ -110,3 +113,20 @@ def test_post_marks_events_as_injected(monkeypatch):
     typer._post(object())
     from molvi.platform.darwin.hotkey import INJECT_MAGIC
     assert marked == [(typer.Quartz.kCGEventSourceUserData, INJECT_MAGIC)]
+
+
+def test_paste_without_accessibility_raises_and_keeps_text(fake_env, monkeypatch):
+    """CGEventPost без Accessibility НЕ бросает, а молча глотает события —
+    без preflight-проверки буфер восстановился бы поверх распознанного текста."""
+    calls, clipboard = fake_env
+    monkeypatch.setattr(typer, "_press_cmd_v", _ORIG_PRESS_CMD_V)
+    monkeypatch.setattr(typer.Quartz, "CGPreflightPostEventAccess", lambda: False)
+    with pytest.raises(OSError, match="Универсальный доступ"):
+        typer.paste_text("важный текст")
+    assert clipboard["text"] == "важный текст"  # буфер НЕ восстановлен
+
+
+def test_type_text_requires_accessibility(monkeypatch):
+    monkeypatch.setattr(typer.Quartz, "CGPreflightPostEventAccess", lambda: False)
+    with pytest.raises(OSError, match="Универсальный доступ"):
+        typer.type_text_direct("a")

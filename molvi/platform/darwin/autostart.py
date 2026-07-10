@@ -8,6 +8,8 @@ import plistlib
 import shlex
 from pathlib import Path
 
+from molvi import paths
+
 log = logging.getLogger(__name__)
 
 LABEL = "Запускать при входе в систему"
@@ -32,6 +34,10 @@ def enable(command):
         "RunAtLoad": True,
         "LimitLoadToSessionType": "Aqua",  # только GUI-сессия, не ssh
     }
+    if not paths.is_frozen():
+        # dev-команда — «python -m molvi.app»: launchd стартует из «/»,
+        # без cwd в корне репозитория модуль molvi не найдётся.
+        plist["WorkingDirectory"] = str(paths.repo_root())
     path = _plist_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as f:
