@@ -34,6 +34,12 @@ _STATE_COLORS = {
 _IDLE_LEVELS = {"recording": None, "transcribing": 0.35}
 
 
+def compute_position(workarea, w, h, bottom_margin=96):
+    """Позиция пилюли: низ-центр рабочей области монитора → (x, y)."""
+    left, _top, right, bottom = workarea
+    return left + (right - left - w) // 2, bottom - bottom_margin - h
+
+
 def bar_heights(level, t, n=N_BARS):
     """Высоты баров (0..1): бегущая волна, дышащая от громкости голоса.
 
@@ -89,9 +95,8 @@ class Overlay:
             )
             self._label.pack()
             w, h = 190, 44
-        sw = self._root.winfo_screenwidth()
-        sh = self._root.winfo_screenheight()
-        self._root.geometry(f"{w}x{h}+{(sw - w) // 2}+{sh - 140 - h + 44}")
+        self._w, self._h = w, h
+        self._place()
         self._root.after(50, self._poll)
 
     @property
@@ -115,6 +120,42 @@ class Overlay:
         user32.SetWindowLongPtrW(
             hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
         )
+
+    def _monitor_workarea(self):
+        """Рабочая область монитора с активным окном; None при ошибке.
+
+        Пилюля должна быть на том же мониторе, куда печатается текст, —
+        winfo_screenwidth() на нескольких мониторах давал центр всего
+        виртуального стола, и оверлей уезжал на соседний экран."""
+        try:
+            user32 = ctypes.windll.user32
+
+            class MONITORINFO(ctypes.Structure):
+                _fields_ = [("cbSize", wintypes.DWORD),
+                            ("rcMonitor", wintypes.RECT),
+                            ("rcWork", wintypes.RECT),
+                            ("dwFlags", wintypes.DWORD)]
+
+            MONITOR_DEFAULTTONEAREST = 2
+            monitor = user32.MonitorFromWindow(
+                user32.GetForegroundWindow(), MONITOR_DEFAULTTONEAREST)
+            info = MONITORINFO()
+            info.cbSize = ctypes.sizeof(MONITORINFO)
+            if not user32.GetMonitorInfoW(monitor, ctypes.byref(info)):
+                return None
+            r = info.rcWork
+            return r.left, r.top, r.right, r.bottom
+        except Exception:
+            log.warning("Не удалось определить монитор активного окна", exc_info=True)
+            return None
+
+    def _place(self):
+        area = self._monitor_workarea()
+        if area is None:  # запасной вариант: первичный экран по метрикам tk
+            area = (0, 0, self._root.winfo_screenwidth(),
+                    self._root.winfo_screenheight())
+        x, y = compute_position(area, self._w, self._h)
+        self._root.geometry(f"{self._w}x{self._h}+{x}+{y}")
 
     def _dpi(self):
         try:
@@ -239,10 +280,12 @@ class Overlay:
                     self._root.withdraw()
                 elif self._canvas is not None:
                     self._start_anim(state)
+                    self._place()  # монитор активного окна — куда и печатаем
                     self._root.deiconify()
                 else:
                     text, bg = _TEXT_STATES[state]
                     self._label.config(text=text, bg=bg)
+                    self._place()
                     self._root.deiconify()
             except Exception:
                 log.exception("Оверлей: ошибка обработки состояния %r", state)
