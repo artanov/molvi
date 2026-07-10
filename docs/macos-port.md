@@ -10,9 +10,23 @@ MacBook Pro M1, **8 ГБ RAM**, macOS 15.3.
   обёртка `molvi/platform/darwin/transcriber.py`, дефолты/пресеты/рекомендации
   обновлены. ВАЖНО: distil-large-v3 из первоначального плана не годится — он
   English-only, а нам нужен русский.
-- Фаза 2 — в работе: event tap, вставка, оверлей-полировка, LaunchAgent,
-  TCC-экраны мастера.
-- Фаза 3 — не начата.
+- Фаза 2 ✅ — event tap (ListenOnly; модификаторы из flagsChanged по
+  device-битам; свои Cmd+V метятся kCGEventSourceUserData=INJECT_MAGIC),
+  вставка NSPasteboard+CGEventPost, activationPolicy Accessory (фокус не
+  крадётся, Dock-иконки нет), LaunchAgent, TCC-шаг в мастере
+  (CGPreflight/CGRequest*Access). Грабли: winfo_id на маке — НЕ NSView,
+  оборачивать в objc нельзя (segfault); NSWindow.level не трогаем,
+  tk -topmost достаточно. capslock исключён из таблицы клавиш (toggle).
+- Фаза 3 ✅ — molvi-mac.spec (.app: LSUIElement, NSMicrophoneUsageDescription,
+  bundle id tech.molvi.app), build-mac.sh (DMG через hdiutil), CI-джобы
+  test-mac/build-mac (macos-14) + DMG в релизе. Грабли: в entry.py обязателен
+  multiprocessing.freeze_support() — иначе resource_tracker на маке
+  перезапускает весь бандл; torch исключён (нужен mlx_whisper только для
+  конвертации весов).
+
+Осталось владельцу: живая проверка диктовки с реальными TCC-разрешениями,
+страница «Molvi для Mac» на сайте после первого релиза с DMG, решение о
+нотаризации (Apple Developer, $99/год).
 
 ## Бенчмарк движков (M1 8 ГБ, русская фраза 10.9 с, TTS Milena)
 

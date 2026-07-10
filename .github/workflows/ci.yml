@@ -15,6 +15,16 @@ jobs:
       - run: pip install -r requirements-ci.txt
       - run: python -m pytest -q
 
+  test-mac:
+    runs-on: macos-14  # arm64: как у пользователей Apple Silicon (mlx)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-ci.txt
+      - run: python -m pytest -q
+
   # Frozen-сборка проверяется на каждом изменении, а не только в релизе:
   # битый spec / потерянный hiddenimport уже уезжали к пользователям
   # (ModuleNotFoundError, см. историю) — ловим до тега.
@@ -44,3 +54,28 @@ jobs:
           }
           Stop-Process -Id $p.Id -Force
           Write-Host "Molvi.exe прожил 15 секунд — бандл работоспособен"
+
+  build-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-ci.txt "pyinstaller==6.21.0"
+      - run: python packaging/make_icns.py
+      - run: python -m PyInstaller packaging/molvi-mac.spec --noconfirm --distpath packaging/dist --workpath packaging/build
+      - name: Smoke-run frozen app
+        run: |
+          # Конфига нет → мастер первого запуска; мгновенная смерть = битый бандл.
+          export MOLVI_NO_ERROR_DIALOG=1
+          ./packaging/dist/Molvi.app/Contents/MacOS/Molvi &
+          PID=$!
+          sleep 15
+          if ! kill -0 "$PID" 2>/dev/null; then
+            echo "::error::Molvi умер сразу после запуска"
+            cat "$HOME/Library/Application Support/Molvi/molvi.log" 2>/dev/null || true
+            exit 1
+          fi
+          kill "$PID"
+          echo "Molvi.app прожил 15 секунд — бандл работоспособен"

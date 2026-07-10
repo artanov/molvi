@@ -35,3 +35,23 @@ jobs:
         with:
           files: packaging/dist/Molvi-Setup-*.exe
           generate_release_notes: true
+
+  build-mac:
+    runs-on: macos-14  # arm64 — Apple Silicon
+    needs: build  # релиз уже создан win-джобой: только докладываем ассет
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements-ci.txt "pyinstaller==6.21.0"
+      - run: python -m pytest -q
+      - name: Build .app + DMG
+        env:
+          MOLVI_VERSION: ${{ github.ref_name }}
+          PYTHON: python
+        run: packaging/build-mac.sh "$MOLVI_VERSION"
+      - name: Upload DMG to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packaging/dist/Molvi-*.dmg
