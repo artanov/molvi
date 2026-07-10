@@ -14,7 +14,8 @@ class Controller:
 
     def __init__(self, recorder, transcriber, insert_fn, ui, *,
                  min_duration_sec=0.3, samplerate=16000,
-                 paste_mode="clipboard", notify=None, sounds=None):
+                 paste_mode="clipboard", notify=None, sounds=None,
+                 paste_hint="Ctrl+V"):
         self._recorder = recorder
         self._transcriber = transcriber
         self._insert_fn = insert_fn
@@ -24,6 +25,7 @@ class Controller:
         self._paste_mode = paste_mode
         self._notify = notify or (lambda msg: None)
         self._sounds = sounds
+        self._paste_hint = paste_hint  # подпись «вставить» на этой ОС (Ctrl+V/Cmd+V)
         self._jobs = queue.Queue()
         self._worker = None
         self._recording = False
@@ -130,8 +132,8 @@ class Controller:
                 except Exception as exc:
                     log.exception("Ошибка вставки текста")
                     self._notify(
-                        f"Не удалось вставить текст: {exc}. "
-                        "Распознанный текст — в буфере обмена (Ctrl+V)."
+                        f"Не удалось вставить текст: {exc}. Распознанный "
+                        f"текст — в буфере обмена ({self._paste_hint})."
                     )
             with self._lock:
                 still_recording = self._recording

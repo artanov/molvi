@@ -7,6 +7,8 @@ import win32con
 
 log = logging.getLogger(__name__)
 
+PASTE_HINT = "Ctrl+V"
+
 _user32 = ctypes.windll.user32
 
 VK_CONTROL = 0x11

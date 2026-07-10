@@ -1,22 +1,42 @@
 """Автозапуск на macOS: LaunchAgent plist в ~/Library/LaunchAgents.
 
-Пока не реализовано — фаза 2 порта (см. docs/macos-port.md). Заглушки
-безопасны для UI: настройки показывают выключенный чекбокс.
+launchctl не зовём: RunAtLoad сработает при следующем входе в систему,
+а немедленный запуск второй копии поверх работающей только мешал бы.
 """
 import logging
+import plistlib
+import shlex
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 LABEL = "Запускать при входе в систему"
 
+_PLIST_LABEL = "tech.molvi.app"
+
+
+def _plist_path():
+    return Path.home() / "Library" / "LaunchAgents" / f"{_PLIST_LABEL}.plist"
+
 
 def is_enabled():
-    return False
+    return _plist_path().is_file()
 
 
 def enable(command):
-    log.warning("Автозапуск на macOS ещё не реализован (фаза 2 порта)")
+    # command — строка из paths.autostart_command() (пути в кавычках);
+    # LaunchAgent ждёт argv-список.
+    plist = {
+        "Label": _PLIST_LABEL,
+        "ProgramArguments": shlex.split(command),
+        "RunAtLoad": True,
+        "LimitLoadToSessionType": "Aqua",  # только GUI-сессия, не ssh
+    }
+    path = _plist_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "wb") as f:
+        plistlib.dump(plist, f)
 
 
 def disable():
-    pass
+    _plist_path().unlink(missing_ok=True)

@@ -58,8 +58,12 @@ class Wizard:
         self._next_btn.pack(side="right")
 
         self._steps = [self._step_welcome, self._step_hardware,
-                       self._step_download, self._step_mic,
-                       self._step_hotkey, self._step_done]
+                       self._step_download, self._step_mic]
+        if sys.platform == "darwin":
+            # TCC: без Input Monitoring не работает клавиша, без
+            # Accessibility — вставка. Спрашиваем до шага с хоткеем.
+            self._steps.append(self._step_permissions)
+        self._steps += [self._step_hotkey, self._step_done]
         self._idx = 0
         self._download_thread = None
         self._download_error = None
@@ -70,6 +74,8 @@ class Wizard:
         self._listener = None
         self._listener_thread = None
         self._capture_state = "idle"
+        self._perm_probe = None
+        self._perm_rows = []
 
         self._root.protocol("WM_DELETE_WINDOW", self._finish)
         self._show_step()
@@ -133,7 +139,10 @@ class Wizard:
 
     def _step_hardware(self):
         self._title("Оборудование")
-        if self._gpu:
+        if sys.platform == "darwin":
+            found = ("Apple Silicon: распознавание работает через Metal "
+                     "(mlx-whisper) — рекомендуем максимальное качество.")
+        elif self._gpu:
             found = (f"Найдена видеокарта {self._gpu['name']} "
                      f"({vram_label(self._gpu['vram_mb'])}) — рекомендуем "
                      "максимальное качество.")
@@ -307,6 +316,68 @@ class Wizard:
         self._level_bar["value"] = min(100.0, self._mic_level * 700)
         self._root.after(80, self._poll_mic)
 
+    def _step_permissions(self):
+        self._title("Разрешения macOS")
+        ttk.Label(self._body, wraplength=500, justify="left", text=(
+            "Molvi слушает клавишу диктовки и вставляет текст в активное "
+            "окно — macOS требует явно разрешить и то, и другое. "
+            "В режиме разработки разрешения выдаются Терминалу.")).pack(
+            anchor="w", pady=(0, 10))
+        self._perm_rows = []
+        self._perm_probe = None  # живой виджет шага: умер — опрос прекращаем
+        for title, kind in (("Мониторинг ввода (клавиша диктовки)", "listen"),
+                            ("Универсальный доступ (вставка текста)", "post")):
+            row = ttk.Frame(self._body)
+            row.pack(anchor="w", fill="x", pady=4)
+            status = tk.StringVar()
+            ttk.Label(row, textvariable=status, width=3).pack(side="left")
+            ttk.Label(row, text=title).pack(side="left")
+            ttk.Button(row, text="Выдать…",
+                       command=lambda k=kind: self._request_permission(k)).pack(
+                side="right")
+            self._perm_rows.append((kind, status))
+            self._perm_probe = row
+        ttk.Label(self._body, foreground="#666", wraplength=500, justify="left",
+                  text=("Если после выдачи разрешения галочка не появилась — "
+                        "перезапустите Molvi, macOS применяет их при старте.")).pack(
+            anchor="w", pady=(10, 0))
+        self._poll_permissions()
+
+    @staticmethod
+    def _permission_granted(kind):
+        import Quartz
+        if kind == "listen":
+            return bool(Quartz.CGPreflightListenEventAccess())
+        return bool(Quartz.CGPreflightPostEventAccess())
+
+    def _request_permission(self, kind):
+        """Системный диалог (работает один раз) + панель System Settings."""
+        import subprocess
+        import Quartz
+        try:
+            if kind == "listen":
+                Quartz.CGRequestListenEventAccess()
+                pane = "Privacy_ListenEvent"
+            else:
+                Quartz.CGRequestPostEventAccess()
+                pane = "Privacy_Accessibility"
+            subprocess.Popen(
+                ["open", "x-apple.systempreferences:"
+                 f"com.apple.preference.security?{pane}"])
+        except Exception:
+            log.exception("Не удалось запросить разрешение %s", kind)
+
+    def _poll_permissions(self):
+        if self._perm_probe is None or not self._perm_probe.winfo_exists():
+            return  # ушли с шага — виджеты разрушены _clear()
+        try:
+            for kind, status in self._perm_rows:
+                status.set("✓" if self._permission_granted(kind) else "✗")
+        except Exception:
+            log.exception("Не удалось проверить разрешения TCC")
+            return
+        self._root.after(1000, self._poll_permissions)
+
     def _step_hotkey(self):
         self._title("Клавиша диктовки")
         self._hotkey_var = tk.StringVar(value=hk.human_label(self._cfg["hotkey"]))
@@ -363,9 +434,14 @@ class Wizard:
 
     def _step_done(self):
         self._title("Всё готово")
+        if sys.platform == "darwin":
+            where = "в строке меню (справа сверху)"
+            how = "Настройки в любой момент: значок в строке меню → «Настройки…»."
+        else:
+            where = "в трее (значок у часов)"
+            how = "Настройки в любой момент: правый клик по значку в трее → «Настройки…»."
         ttk.Label(self._body, wraplength=500, justify="left", text=(
             "После нажатия «Готово» загрузится модель распознавания — дождитесь "
-            "уведомления «Готов» в трее (значок у часов).\n\n"
+            f"уведомления «Готов» {where}.\n\n"
             f"Затем зажмите {hk.human_label(self._cfg['hotkey'])} и говорите — "
-            "текст появится там, где стоит курсор.\n\n"
-            "Настройки в любой момент: правый клик по значку в трее → «Настройки…».")).pack(anchor="w")
+            f"текст появится там, где стоит курсор.\n\n{how}")).pack(anchor="w")

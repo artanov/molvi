@@ -133,6 +133,7 @@ def main():
             paste_mode=cfg["paste_mode"],
             notify=tray.notify,
             sounds=sounds,
+            paste_hint=typer.PASTE_HINT,
         )
         controller.start()
 
