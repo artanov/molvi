@@ -35,7 +35,9 @@ def test_corrupt_file_returns_defaults(tmp_path):
 
 
 def test_defaults_have_v2_keys():
-    assert DEFAULTS["hotkey"] == ["ctrl_left"]
+    import sys
+    expected = ["win_right"] if sys.platform == "darwin" else ["ctrl_left"]
+    assert DEFAULTS["hotkey"] == expected
     assert DEFAULTS["sounds"] is True
 
 

@@ -1,24 +1,27 @@
-import ctypes
-import ctypes.wintypes as wintypes
+"""Ядро push-to-talk: конечный автомат комбинации клавиш, без системных API.
+
+Платформенная обвязка (низкоуровневый хук WinAPI / event tap Quartz) живёт в
+molvi/platform/*/hotkey.py и транслирует события ОС в вызовы
+HotkeyListener._handle(). Константы WM_* исторически совпадают с кодами
+сообщений Windows, но здесь это просто абстрактные коды «нажато/отпущено».
+
+Коды клавиш (vk) — произвольные числа из таблицы KeyTable: у Windows свои,
+у macOS свои; автомат сравнивает их только на равенство. Имена клавиш
+("ctrl_left", "win_right", …) — общие для всех платформ и хранятся в конфиге.
+"""
 import logging
 import threading
 
 log = logging.getLogger(__name__)
 
-_user32 = ctypes.windll.user32
-_kernel32 = ctypes.windll.kernel32
-
-WH_KEYBOARD_LL = 13
 WM_KEYDOWN = 0x0100
 WM_KEYUP = 0x0101
 WM_SYSKEYDOWN = 0x0104
 WM_SYSKEYUP = 0x0105
-WM_QUIT = 0x0012
 VK_RCONTROL = 0xA3
 VK_LCONTROL = 0xA2
 
 VK_ESCAPE = 0x1B
-LLKHF_INJECTED = 0x10
 
 VK_NAMES = {}
 for _i in range(26):
@@ -56,67 +59,43 @@ _DISPLAY = {
 }
 
 
-def names_to_vks(names):
+class KeyTable:
+    """Платформенный набор клавиш: имя↔vk, модификаторы, подписи, Esc."""
+
+    def __init__(self, names, modifiers, display, escape_vk):
+        self.names = names
+        self.to_name = {v: k for k, v in names.items()}
+        self.modifiers = modifiers
+        self.display = display
+        self.escape_vk = escape_vk
+
+
+# Таблица Windows — исторический набор по умолчанию; тесты автомата гоняются
+# на ней (автомату важно только равенство vk, не их платформенный смысл).
+TABLE = KeyTable(VK_NAMES, MODIFIER_NAMES, _DISPLAY, VK_ESCAPE)
+
+
+def names_to_vks(names, table=TABLE):
     vks = []
     for name in names:
-        vk = VK_NAMES.get(name)
+        vk = table.names.get(name)
         if vk is None:
             raise ValueError(f"Неизвестное имя клавиши: {name!r}")
         vks.append(vk)
     return vks
 
 
-def human_label(names):
-    return " + ".join(_DISPLAY.get(n, n.upper()) for n in names)
+def human_label(names, table=TABLE):
+    return " + ".join(table.display.get(n, n.upper()) for n in names)
 
 
-def normalize_capture(vks):
-    names = [VK_TO_NAME[vk] for vk in vks if vk in VK_TO_NAME]
-    mods = sorted((n for n in names if n in MODIFIER_NAMES), key=lambda n: VK_NAMES[n])
-    rest = sorted((n for n in names if n not in MODIFIER_NAMES), key=lambda n: VK_NAMES[n])
+def normalize_capture(vks, table=TABLE):
+    names = [table.to_name[vk] for vk in vks if vk in table.to_name]
+    mods = sorted((n for n in names if n in table.modifiers),
+                  key=lambda n: table.names[n])
+    rest = sorted((n for n in names if n not in table.modifiers),
+                  key=lambda n: table.names[n])
     return mods + rest
-
-
-LRESULT = ctypes.c_ssize_t  # LONG_PTR: pointer-width, not c_int
-
-_HOOKPROC = ctypes.CFUNCTYPE(
-    LRESULT, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
-)
-
-_user32.SetWindowsHookExW.argtypes = [
-    ctypes.c_int, _HOOKPROC, wintypes.HINSTANCE, wintypes.DWORD
-]
-_user32.SetWindowsHookExW.restype = wintypes.HHOOK
-_user32.CallNextHookEx.argtypes = [
-    wintypes.HHOOK, ctypes.c_int, wintypes.WPARAM, wintypes.LPARAM
-]
-_user32.CallNextHookEx.restype = LRESULT
-_user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
-_user32.UnhookWindowsHookEx.restype = wintypes.BOOL
-_user32.GetMessageW.argtypes = [
-    ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT
-]
-_user32.GetMessageW.restype = ctypes.c_int
-_user32.TranslateMessage.argtypes = [ctypes.POINTER(wintypes.MSG)]
-_user32.TranslateMessage.restype = wintypes.BOOL
-_user32.DispatchMessageW.argtypes = [ctypes.POINTER(wintypes.MSG)]
-_user32.DispatchMessageW.restype = LRESULT
-_user32.PostThreadMessageW.argtypes = [
-    wintypes.DWORD, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM
-]
-_user32.PostThreadMessageW.restype = wintypes.BOOL
-_kernel32.GetCurrentThreadId.argtypes = []
-_kernel32.GetCurrentThreadId.restype = wintypes.DWORD
-
-
-class _KBDLLHOOKSTRUCT(ctypes.Structure):
-    _fields_ = [
-        ("vkCode", wintypes.DWORD),
-        ("scanCode", wintypes.DWORD),
-        ("flags", wintypes.DWORD),
-        ("time", wintypes.DWORD),
-        ("dwExtraInfo", ctypes.POINTER(wintypes.ULONG)),
-    ]
 
 
 class HotkeyListener:
@@ -126,12 +105,15 @@ class HotkeyListener:
     повторный on_press — только после полного отпускания всех клавиш.
     Инжектированные события игнорируются: иначе собственная эмуляция
     Ctrl+V дёргала бы hotkey, содержащий Ctrl.
+
+    run()/stop() — в платформенных подклассах (molvi/platform/*/hotkey.py).
     """
 
-    def __init__(self, on_press, on_release, combo):
+    def __init__(self, on_press, on_release, combo, table=TABLE):
         self._on_press = on_press
         self._on_release = on_release
         self._combo = frozenset(combo)
+        self._table = table
         self._down = set()
         self._released = set()
         self._active = False
@@ -139,9 +121,6 @@ class HotkeyListener:
         self._capture_cb = None
         self._cap_peak = set()
         self._cap_down = set()
-        self._hook = None
-        self._thread_id = None
-        self._proc = _HOOKPROC(self._low_level_proc)  # держим ссылку от GC
         # set_combo/start_capture зовутся из tk-потока, _handle — из потока
         # хука; без лока сброс _active/_down может проскочить посреди
         # обработки нажатия и оставить запись включённой навсегда.
@@ -205,41 +184,15 @@ class HotkeyListener:
 
     def _handle_capture(self, msg, vk):
         if msg in (WM_KEYDOWN, WM_SYSKEYDOWN):
-            if vk == VK_ESCAPE:
+            if vk == self._table.escape_vk:
                 cb, self._capture_cb = self._capture_cb, None
                 cb(None)
                 return
-            if vk in VK_TO_NAME:
+            if vk in self._table.to_name:
                 self._cap_down.add(vk)
                 self._cap_peak.add(vk)
         elif msg in (WM_KEYUP, WM_SYSKEYUP):
             self._cap_down.discard(vk)
             if not self._cap_down and self._cap_peak:
                 cb, self._capture_cb = self._capture_cb, None
-                cb(normalize_capture(self._cap_peak))
-
-    def _low_level_proc(self, n_code, w_param, l_param):
-        if n_code >= 0:
-            kb = ctypes.cast(l_param, ctypes.POINTER(_KBDLLHOOKSTRUCT)).contents
-            try:
-                self._handle(w_param, kb.vkCode, bool(kb.flags & LLKHF_INJECTED))
-            except Exception:
-                log.exception("Ошибка в обработчике hotkey")
-        return _user32.CallNextHookEx(None, n_code, w_param, l_param)
-
-    def run(self):
-        """Блокирующий цикл; запускать в отдельном потоке."""
-        self._thread_id = _kernel32.GetCurrentThreadId()
-        self._hook = _user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._proc, None, 0)
-        if not self._hook:
-            raise OSError("SetWindowsHookExW failed")
-        msg = wintypes.MSG()
-        while _user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
-            _user32.TranslateMessage(ctypes.byref(msg))
-            _user32.DispatchMessageW(ctypes.byref(msg))
-        _user32.UnhookWindowsHookEx(self._hook)
-        self._hook = None
-
-    def stop(self):
-        if self._thread_id:
-            _user32.PostThreadMessageW(self._thread_id, WM_QUIT, 0, 0)
+                cb(normalize_capture(self._cap_peak, self._table))

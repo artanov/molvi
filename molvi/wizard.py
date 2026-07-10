@@ -13,7 +13,7 @@ import numpy as np
 import sounddevice as sd
 
 from molvi import fetch, gpu, paths
-from molvi import hotkey as hk
+from molvi.platform import hotkey as hk
 from molvi.config import DEFAULTS
 from molvi.settings import QUALITY_PRESETS, dedupe_input_devices, quality_index_for_model
 

@@ -1,4 +1,5 @@
-"""Пути данных: dev-режим — корень репозитория, frozen (PyInstaller) — %APPDATA%."""
+"""Пути данных: dev-режим — корень репозитория, frozen (PyInstaller) —
+%APPDATA% на Windows, ~/Library/Application Support на macOS."""
 import os
 import sys
 from pathlib import Path
@@ -16,7 +17,10 @@ def repo_root():
 
 def data_dir():
     if is_frozen():
-        base = Path(os.environ.get("APPDATA", str(Path.home()))) / APP_NAME
+        if sys.platform == "darwin":
+            base = Path.home() / "Library" / "Application Support" / APP_NAME
+        else:
+            base = Path(os.environ.get("APPDATA", str(Path.home()))) / APP_NAME
     else:
         base = repo_root()
     base.mkdir(parents=True, exist_ok=True)
@@ -38,4 +42,6 @@ def cuda_dir():
 def autostart_command():
     if is_frozen():
         return f'"{sys.executable}"'
+    if sys.platform == "darwin":
+        return f'"{sys.executable}" -m molvi.app'  # dev: python текущего venv
     return f'"{repo_root() / "molvi.bat"}"'  # путь с пробелом сломал бы автозапуск

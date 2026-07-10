@@ -2,7 +2,10 @@ import ctypes
 
 import pytest
 
-import molvi.typer as typer
+typer = pytest.importorskip(
+    "molvi.platform.win32.typer",
+    reason="вставка текста через WinAPI — только Windows",
+)
 
 
 @pytest.fixture

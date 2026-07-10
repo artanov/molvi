@@ -1,5 +1,7 @@
 import winreg
 
+LABEL = "Запускать вместе с Windows"
+
 _RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 _VALUE_NAME = "Molvi"
 

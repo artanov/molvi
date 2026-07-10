@@ -26,7 +26,8 @@ def _add_cuda_dll_dirs():
         os.environ["PATH"] = str(app_cuda) + os.pathsep + os.environ["PATH"]
 
 
-_add_cuda_dll_dirs()
+if sys.platform == "win32":
+    _add_cuda_dll_dirs()
 
 from faster_whisper import WhisperModel  # noqa: E402
 
@@ -35,6 +36,8 @@ def _cuda_libs_loadable():
     """cuBLAS/cuDNN грузятся ctranslate2 лениво при первом encode(): без них
     cuda-модель «успешно» создаётся, а первая диктовка падает — и повторный
     encode после сбоя зависает внутри ctranslate2. Проверяем заранее."""
+    if sys.platform != "win32":
+        return False  # CUDA бывает только на Windows-машинах с NVIDIA
     try:
         ctypes.WinDLL("cublas64_12.dll")
         ctypes.WinDLL("cudnn64_9.dll")

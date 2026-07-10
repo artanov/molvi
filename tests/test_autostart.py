@@ -1,6 +1,7 @@
-import winreg
+import pytest
 
-import molvi.autostart as autostart
+winreg = pytest.importorskip("winreg", reason="реестр — только Windows")
+autostart = pytest.importorskip("molvi.platform.win32.autostart")
 
 
 class FakeKey:

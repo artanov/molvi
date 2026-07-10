@@ -7,4 +7,4 @@ numpy==2.5.1
 sounddevice==0.5.5
 pystray==0.19.5
 Pillow==12.3.0
-pywin32==312
+pywin32==312; sys_platform == "win32"

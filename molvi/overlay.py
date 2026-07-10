@@ -1,19 +1,13 @@
-import ctypes
-import ctypes.wintypes as wintypes
 import logging
 import math
 import queue
 import tkinter as tk
 
 from molvi import theme
+from molvi.platform import overlay as _plat
 
 log = logging.getLogger(__name__)
 
-GWL_EXSTYLE = -20
-WS_EX_NOACTIVATE = 0x08000000
-WS_EX_TOOLWINDOW = 0x00000080
-
-KEY_COLOR = "#ff00fe"
 _BASE_SIZE = (400, 128)   # логический размер пилюли; соответствует 192 DPI (200%)
 
 _TEXT_STATES = {
@@ -55,8 +49,9 @@ def bar_heights(level, t, n=N_BARS):
 
 
 class Overlay:
-    """Мини-окно поверх всех окон. Не забирает фокус (WS_EX_NOACTIVATE) —
-    иначе вставка ушла бы в оверлей, а не в активное приложение."""
+    """Мини-окно поверх всех окон. Не забирает фокус (платформенный трюк:
+    WS_EX_NOACTIVATE / activationPolicy) — иначе вставка ушла бы в оверлей,
+    а не в активное приложение."""
 
     def __init__(self, scale=1.0):
         self._scale = scale
@@ -71,18 +66,17 @@ class Overlay:
         self._root.withdraw()
         self._root.overrideredirect(True)
         self._root.attributes("-topmost", True)
-        # Стиль WS_EX_NOACTIVATE должен стоять ДО первого показа окна,
+        # «Не красть фокус» должно стоять ДО первого показа окна,
         # иначе первый deiconify() украдёт фокус у активного приложения.
         self._root.update_idletasks()
-        self._apply_no_activate()
+        _plat.apply_no_activate(self._root)
         self._canvas = None
-        pill = self._make_pill_image()
+        pill, bg = self._make_pill_image()
         if pill is not None:
             w, h = pill.width(), pill.height()
-            self._root.configure(bg=KEY_COLOR)
-            self._root.attributes("-transparentcolor", KEY_COLOR)
+            self._root.configure(bg=bg)
             self._canvas = tk.Canvas(self._root, width=w, height=h,
-                                     bg=KEY_COLOR, highlightthickness=0, bd=0)
+                                     bg=bg, highlightthickness=0, bd=0)
             self._canvas.create_image(0, 0, image=pill, anchor="nw")
             self._pill = pill  # держим ссылку от GC
             self._build_scene(w, h)
@@ -103,78 +97,24 @@ class Overlay:
     def root(self):
         return self._root
 
-    def _hwnd(self):
-        user32 = ctypes.windll.user32
-        user32.GetParent.argtypes = [wintypes.HWND]
-        user32.GetParent.restype = wintypes.HWND
-        return user32.GetParent(self._root.winfo_id()) or self._root.winfo_id()
-
-    def _apply_no_activate(self):
-        user32 = ctypes.windll.user32
-        user32.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
-        user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
-        user32.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
-        user32.SetWindowLongPtrW.restype = ctypes.c_ssize_t
-        hwnd = self._hwnd()
-        style = user32.GetWindowLongPtrW(hwnd, GWL_EXSTYLE)
-        user32.SetWindowLongPtrW(
-            hwnd, GWL_EXSTYLE, style | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW
-        )
-
-    def _monitor_workarea(self):
-        """Рабочая область монитора с активным окном; None при ошибке.
-
-        Пилюля должна быть на том же мониторе, куда печатается текст, —
-        winfo_screenwidth() на нескольких мониторах давал центр всего
-        виртуального стола, и оверлей уезжал на соседний экран."""
-        try:
-            user32 = ctypes.windll.user32
-
-            class MONITORINFO(ctypes.Structure):
-                _fields_ = [("cbSize", wintypes.DWORD),
-                            ("rcMonitor", wintypes.RECT),
-                            ("rcWork", wintypes.RECT),
-                            ("dwFlags", wintypes.DWORD)]
-
-            MONITOR_DEFAULTTONEAREST = 2
-            monitor = user32.MonitorFromWindow(
-                user32.GetForegroundWindow(), MONITOR_DEFAULTTONEAREST)
-            info = MONITORINFO()
-            info.cbSize = ctypes.sizeof(MONITORINFO)
-            if not user32.GetMonitorInfoW(monitor, ctypes.byref(info)):
-                return None
-            r = info.rcWork
-            return r.left, r.top, r.right, r.bottom
-        except Exception:
-            log.warning("Не удалось определить монитор активного окна", exc_info=True)
-            return None
-
     def _place(self):
-        area = self._monitor_workarea()
+        area = _plat.monitor_workarea()
         if area is None:  # запасной вариант: первичный экран по метрикам tk
             area = (0, 0, self._root.winfo_screenwidth(),
                     self._root.winfo_screenheight())
         x, y = compute_position(area, self._w, self._h)
         self._root.geometry(f"{self._w}x{self._h}+{x}+{y}")
 
-    def _dpi(self):
-        try:
-            user32 = ctypes.windll.user32
-            user32.GetDpiForWindow.argtypes = [wintypes.HWND]
-            user32.GetDpiForWindow.restype = wintypes.UINT
-            return user32.GetDpiForWindow(self._hwnd()) or 96
-        except Exception:
-            return 96
-
     def _make_pill_image(self):
-        """Фон-пилюля, отрисованная на лету; None → текстовый fallback.
+        """Фон-пилюля, отрисованная на лету → (PhotoImage, цвет фона);
+        (None, None) → текстовый fallback.
 
-        Ключевой цвет прозрачен только при ТОЧНОМ совпадении, поэтому края
-        рисуем с суперсэмплингом и делаем альфу бинарной, примешав
-        полупрозрачные пиксели к тёмному матту (иначе — розовая кайма)."""
+        Края рисуем с суперсэмплингом; превращение RGBA в отображаемое
+        изображение и способ прозрачности — платформенные
+        (ключевой цвет на Windows, настоящая альфа на macOS)."""
         try:
-            from PIL import Image, ImageDraw, ImageTk
-            scale = self._dpi() / 192 * self._scale
+            from PIL import Image, ImageDraw
+            scale = _plat.dpi(self._root) / 192 * self._scale
             size = (max(1, int(_BASE_SIZE[0] * scale)), max(1, int(_BASE_SIZE[1] * scale)))
             ss = 4
             big = Image.new("RGBA", (size[0] * ss, size[1] * ss), (0, 0, 0, 0))
@@ -187,15 +127,11 @@ class Overlay:
                 width=2 * ss,
             )
             img = big.resize(size, Image.LANCZOS)
-            matte = Image.new("RGBA", size, theme.INK_800)
-            matte.alpha_composite(img)
-            hard_alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
-            bg = Image.new("RGB", size, KEY_COLOR)
-            bg.paste(matte.convert("RGB"), mask=hard_alpha)
-            return ImageTk.PhotoImage(bg, master=self._root)
+            bg = _plat.enable_transparency(self._root)
+            return _plat.pill_to_photoimage(self._root, img), bg
         except Exception:
             log.warning("Не удалось отрисовать пилюлю оверлея", exc_info=True)
-            return None
+            return None, None
 
     def _build_scene(self, w, h):
         """Точка-индикатор слева + бары эквалайзера. Геометрия — от пилюли."""

@@ -6,6 +6,7 @@
 репозитория — мигрировать нечего. Всё best-effort: ошибка шага не мешает запуску.
 """
 import os
+import sys
 from pathlib import Path
 
 from molvi import paths
@@ -47,8 +48,9 @@ def migrate_autostart():
 
 
 def run():
-    """Прогнать все шаги миграции (только для frozen-сборки)."""
-    if not paths.is_frozen():
+    """Прогнать все шаги миграции (только для frozen-сборки на Windows:
+    под старым именем существовали только Windows-установки)."""
+    if not paths.is_frozen() or sys.platform != "win32":
         return
     for step in (migrate_data_dir, migrate_autostart):
         try:

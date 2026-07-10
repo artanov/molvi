@@ -4,8 +4,8 @@ from tkinter import ttk
 
 import sounddevice as sd
 
-from molvi import autostart
-from molvi import hotkey as hk
+from molvi.platform import autostart
+from molvi.platform import hotkey as hk
 
 log = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class SettingsWindow:
             autostart_now = False
         self._autostart_var = tk.BooleanVar(value=autostart_now)
         ttk.Checkbutton(
-            frm, text="Запускать вместе с Windows", variable=self._autostart_var
+            frm, text=autostart.LABEL, variable=self._autostart_var
         ).grid(row=5, column=0, columnspan=3, sticky="w", pady=4)
 
         btns = ttk.Frame(frm)

@@ -58,17 +58,15 @@ def main():
         # transcriber импортируется НИЖЕ — после докачки CUDA-DLL: его
         # _add_cuda_dll_dirs() добавляет каталог в поиск только если тот
         # уже существует и наполнен.
-        from molvi import autostart
         from molvi.controller import Controller
-        from molvi.hotkey import (
-            VK_LCONTROL, HotkeyListener, human_label, names_to_vks,
-        )
         from molvi.overlay import Overlay
+        from molvi.platform import autostart
+        from molvi.platform import hotkey as hk
+        from molvi.platform import typer
         from molvi.recorder import Recorder
         from molvi.settings import SettingsWindow
         from molvi.sounds import Sounds
         from molvi.tray import Tray
-        from molvi.typer import insert_text
 
         overlay = Overlay(scale=cfg["overlay_scale"])
         sounds = Sounds(cfg["sounds"])
@@ -126,7 +124,7 @@ def main():
         recorder = Recorder(samplerate=cfg["samplerate"], device=cfg["input_device"])
         overlay.set_level_source(lambda: recorder.level)  # эквалайзер дышит голосом
         controller = Controller(
-            recorder, transcriber, insert_text, overlay,
+            recorder, transcriber, typer.insert_text, overlay,
             min_duration_sec=cfg["min_duration_sec"],
             samplerate=cfg["samplerate"],
             paste_mode=cfg["paste_mode"],
@@ -137,12 +135,13 @@ def main():
 
         def _combo_from_cfg():
             try:
-                return names_to_vks(cfg["hotkey"])
+                return hk.names_to_vks(cfg["hotkey"])
             except ValueError:
-                log.warning("Некорректный hotkey %r, использую ctrl_left", cfg["hotkey"])
-                return [VK_LCONTROL]
+                log.warning("Некорректный hotkey %r, использую %s",
+                            cfg["hotkey"], hk.DEFAULT_HOTKEY)
+                return hk.names_to_vks(hk.DEFAULT_HOTKEY)
 
-        listener = HotkeyListener(
+        listener = hk.HotkeyListener(
             on_press=controller.on_press,
             on_release=controller.on_release,
             combo=_combo_from_cfg(),
@@ -249,7 +248,7 @@ def main():
         overlay.set_settings_opener(open_settings_window)
 
         suffix = "" if transcriber.device == "cuda" else " (CPU — медленный режим!)"
-        tray.notify(f"Готов. Зажмите {human_label(cfg['hotkey'])} и говорите{suffix}")
+        tray.notify(f"Готов. Зажмите {hk.human_label(cfg['hotkey'])} и говорите{suffix}")
         overlay.run()  # блокирует главный поток до schedule_quit()
         log.info("Остановлен")
     except Exception as exc:

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -10,7 +11,9 @@ DEFAULTS = {
     "device": "auto",           # auto | cuda | cpu
     "compute_type": "int8_float16",
     "language": "auto",         # auto | ru | en
-    "hotkey": ["ctrl_left"],    # список имён клавиш (см. hotkey.VK_NAMES)
+    # Список имён клавиш (см. hotkey.VK_NAMES). На маке дефолт — правый Cmd:
+    # почти не используется соло и не конфликтует с системными сочетаниями.
+    "hotkey": ["win_right"] if sys.platform == "darwin" else ["ctrl_left"],
     "sounds": True,
     "overlay_scale": 0.6,       # размер пилюли-оверлея (1.0 = 200×64 лог. пикселей)
     "min_duration_sec": 0.3,

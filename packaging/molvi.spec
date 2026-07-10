@@ -18,8 +18,14 @@ a = Analysis(
     datas=[("../molvi/assets", "molvi/assets")]
           + collect_data_files("faster_whisper")
           + ct2_datas,
-    hiddenimports=["pystray._win32", "PIL.ImageTk", "sounddevice"] + ct2_hidden,
-    excludes=["nvidia", "torch", "pytest", "tkinter.test"],
+    hiddenimports=["pystray._win32", "PIL.ImageTk", "sounddevice",
+                   # Платформенный слой импортируется через if по sys.platform —
+                   # перечисляем явно, чтобы анализатор не потерял win32-ветку.
+                   "molvi.platform.win32.autostart", "molvi.platform.win32.hotkey",
+                   "molvi.platform.win32.overlay", "molvi.platform.win32.sounds",
+                   "molvi.platform.win32.typer"] + ct2_hidden,
+    excludes=["nvidia", "torch", "pytest", "tkinter.test",
+              "molvi.platform.darwin"],
 )
 pyz = PYZ(a.pure)
 exe = EXE(

@@ -1,10 +1,14 @@
 import logging
-import winsound
 from pathlib import Path
+
+from molvi.platform import sounds as _backend
 
 log = logging.getLogger(__name__)
 
 ASSETS = Path(__file__).parent / "assets"
+
+# Точка подмены в тестах; сам бэкенд платформенный (winsound / afplay).
+_play_wav = _backend.play_wav
 
 
 class Sounds:
@@ -33,6 +37,6 @@ class Sounds:
                 log.warning("Звук %s не найден, сигнал пропущен", name)
             return
         try:
-            winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC)
+            _play_wav(str(path))
         except Exception:
             log.warning("Не удалось воспроизвести %s", name, exc_info=True)
