@@ -7,3 +7,5 @@ packaging/dist/
 packaging/molvi.ico
 /cuda/
 packaging/molvi.icns
+# черновики постов для соцсетей — локальные, в публичный репозиторий не попадают
+docs/posts/
