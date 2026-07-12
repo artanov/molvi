@@ -42,6 +42,21 @@ NVIDIA (6+ ГБ видеопамяти); без неё работает быст
 Требования: macOS 13.5+, Apple Silicon (M1 и новее). Распознавание — через
 Metal (mlx-whisper), модель large-v3-turbo идёт даже на M1 с 8 ГБ.
 
+Полное удаление (например, чтобы попробовать установку заново): выйти из
+Molvi (значок в строке меню → «Выход»), затем
+
+```
+rm -rf /Applications/Molvi.app                                  # приложение
+rm -rf ~/Library/"Application Support"/Molvi                    # настройки и журнал
+rm -f  ~/Library/LaunchAgents/tech.molvi.app.plist              # автозапуск
+rm -rf ~/.cache/huggingface/hub/models--mlx-community--whisper* # модель (~1.6 ГБ)
+tccutil reset ListenEvent tech.molvi.app                        # сброс разрешений
+tccutil reset Accessibility tech.molvi.app                      #   (по желанию)
+tccutil reset Microphone tech.molvi.app
+```
+
+— от Molvi не останется ничего, установка пройдёт как в первый раз.
+
 ## Разработка
 
 Windows:

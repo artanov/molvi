@@ -335,6 +335,33 @@
           <p class="a">Пока не поддерживается: распознавание работает через Apple-движок
             MLX, которому нужен чип M-серии (M1 и новее).</p>
         </details>
+        <details>
+          <summary>Как полностью удалить Molvi (или переустановить с нуля)</summary>
+          <div class="a">
+            <p>Molvi хранит всё в трёх местах — приложение, папка данных и кэш
+              модели. Сначала выйдите из Molvi (значок в строке меню → «Выход»),
+              затем выполните в Терминале:</p>
+            <pre style="margin:12px 0; padding:14px 16px; background:var(--ink-900);
+              border:1px solid var(--ink-600); border-radius:10px; overflow-x:auto;
+              font-size:13px; line-height:1.7"><code># приложение
+rm -rf /Applications/Molvi.app
+# настройки и журнал
+rm -rf ~/Library/"Application Support"/Molvi
+# автозапуск (если включали)
+rm -f ~/Library/LaunchAgents/tech.molvi.app.plist
+# скачанная модель (~1.6 ГБ)
+rm -rf ~/.cache/huggingface/hub/models--mlx-community--whisper*
+# сброс выданных разрешений (по желанию)
+tccutil reset ListenEvent tech.molvi.app
+tccutil reset Accessibility tech.molvi.app
+tccutil reset Microphone tech.molvi.app</code></pre>
+            <p>После этого от Molvi в системе не остаётся ничего. Для переустановки
+              просто пройдите шаги этой страницы заново — включая Gatekeeper и
+              выдачу разрешений. Без Терминала: приложение — в Корзину из папки
+              «Программы», папку <code>~/Library/Application Support/Molvi</code> —
+              в Корзину из Finder (Переход → Переход к папке…).</p>
+          </div>
+        </details>
       </div>
     </section>
 
