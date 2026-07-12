@@ -229,8 +229,8 @@
     <p class="cmd">cat INSTALL.md</p>
     <ol class="steps">
       <li>качаешь <b>Molvi.dmg</b> (~150 МБ) — кнопка ниже, перетаскиваешь в Applications</li>
-      <li>первый запуск: <b>правый клик → Открыть</b> <span class="note"># нотаризации нет — есть исходники</span><br>
-        <span class="note">&nbsp;&nbsp;&nbsp;альтернатива: <code>xattr -cr /Applications/Molvi.app</code></span></li>
+      <li>снимаешь карантин: <code>xattr -cr /Applications/Molvi.app</code> <span class="note"># нотаризации нет — есть исходники</span><br>
+        <span class="note">&nbsp;&nbsp;&nbsp;без терминала: запустить → «Готово» → System Settings → Privacy &amp; Security → «Открыть всё равно» (sequoia убрала правый-клик→Открыть)</span></li>
       <li>мастер скачает модель (<code>large-v3-turbo</code> ≈ 1.6 ГБ) и попросит два разрешения: <b>Мониторинг ввода</b> + <b>Универсальный доступ</b></li>
       <li>зажал <code>⌘</code> → сказал → готово</li>
     </ol>

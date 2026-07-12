@@ -196,30 +196,41 @@
     <section class="step">
       <h2>Установите и пройдите Gatekeeper</h2>
       <p>Откройте DMG и перетащите <b>Molvi</b> на ярлык <b>Applications</b>.
-        Затем — важный момент первого запуска:</p>
-      <ul class="substeps">
-        <li>откройте папку «Программы» и нажмите на Molvi <b>правой кнопкой</b>;</li>
-        <li>выберите <b>«Открыть»</b>, и в появившемся окне — снова <b>«Открыть»</b>.</li>
-      </ul>
-      <div class="ss" role="img" aria-label="Иллюстрация окна Gatekeeper: приложение от неустановленного разработчика; кнопки Открыть и Отмена" style="max-width:440px">
+        При первом запуске macOS покажет предупреждение — и предложит только
+        «Переместить в Корзину». Это нормально, корзина не понадобится:</p>
+      <div class="ss" role="img" aria-label="Иллюстрация окна Gatekeeper: не удалось проверить приложение; кнопки Готово и Переместить в Корзину" style="max-width:440px">
         <div class="ss-body" style="background:#ECECEC; color:#1d1d1f">
-          <h3 style="color:#1d1d1f">Не удаётся подтвердить разработчика «Molvi»</h3>
-          <p style="color:#515154">macOS не может проверить приложение на наличие
-            вредоносного ПО. Открывайте, только если уверены в источнике.</p>
+          <h3 style="color:#1d1d1f">Приложение «Molvi» не открыто</h3>
+          <p style="color:#515154">Не удалось проверить, что приложение
+            не содержит вредоносное ПО. Обновите его или обратитесь
+            к разработчику.</p>
         </div>
         <div class="ss-actions" style="background:#ECECEC">
-          <span class="run" style="background:#007AFF; color:#fff; border-radius:7px">Открыть</span>
-          <span class="dont" style="border:1px solid #B5B5B7; color:#1d1d1f; border-radius:7px">Отмена</span>
+          <span class="run" style="background:#007AFF; color:#fff; border-radius:7px">Готово</span>
+          <span class="dont" style="border:1px solid #B5B5B7; color:#1d1d1f; border-radius:7px">Переместить в Корзину</span>
         </div>
       </div>
-      <p class="caption">Так выглядит предупреждение Gatekeeper (иллюстрация). Через
-        правый клик появляется кнопка «Открыть» — при обычном двойном клике её нет.</p>
+      <p class="caption">Окно Gatekeeper в macOS 15 (иллюстрация). Нажмите «Готово» —
+        не «Переместить в Корзину».</p>
+      <ul class="substeps">
+        <li>нажмите <b>«Готово»</b>;</li>
+        <li>откройте <b>System Settings → Конфиденциальность и безопасность</b>,
+          прокрутите вниз до строки «"Molvi" был заблокирован…»;</li>
+        <li>нажмите <b>«Открыть всё равно»</b> и подтвердите.</li>
+      </ul>
+      <div class="why">
+        <div class="t">Быстрее — одной командой в Терминале</div>
+        <p><code style="background:var(--ink-800); border:1px solid var(--ink-600); border-radius:6px; padding:1px 7px; font-size:14px">xattr -cr /Applications/Molvi.app</code> —
+          снимает карантин, после этого Molvi открывается обычным двойным кликом
+          без всяких предупреждений. На macOS 13–14 работает и старый способ:
+          правый клик по Molvi → «Открыть» → «Открыть».</p>
+      </div>
       <div class="why">
         <div class="t">Почему появляется это окно</div>
         <p>Apple доверяет приложениям с нотаризацией (платная подписка разработчика,
-          $99 в год). У бесплатного Molvi её нет, поэтому Gatekeeper перестраховывается.
-          Код Molvi открыт — любой может проверить, что внутри. Альтернатива для
-          любителей терминала: <code style="background:var(--ink-800); border:1px solid var(--ink-600); border-radius:6px; padding:1px 7px; font-size:14px">xattr -cr /Applications/Molvi.app</code></p>
+          $99 в год). У бесплатного Molvi её нет, поэтому Gatekeeper перестраховывается —
+          а в macOS 15 стал строже и убрал кнопку «Открыть» из правого клика.
+          Код Molvi открыт — любой может проверить, что внутри.</p>
       </div>
     </section>
 
