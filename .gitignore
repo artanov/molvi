@@ -9,3 +9,6 @@ packaging/molvi.ico
 packaging/molvi.icns
 # черновики постов для соцсетей — локальные, в публичный репозиторий не попадают
 docs/posts/
+# SMM-база и локальная конфигурация Claude Code — не для публичного репо
+docs/smm/
+.claude/

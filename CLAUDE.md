@@ -54,3 +54,12 @@ packaging/build-mac.sh                     # локальная сборка .ap
 - **Сайт**: правки в `docs/site/**` → push в main → автодеплой на molvi.tech.
 - Версии зависимостей запинены (`requirements-base.txt`) — поднимать осознанно.
 - Коммиты и комментарии в коде — по-русски; комментарии объясняют «почему», не «что».
+
+## SMM
+
+Продвижением занимается SMM-агент: база знаний — `docs/smm/` (локальная,
+в .gitignore), персона — `.claude/agents/smm-manager.md`, ежедневный запуск —
+задача планировщика Windows «Molvi SMM Daily» в 10:00
+(`docs/smm/run-daily.cmd` → `docs/smm/daily-prompt.md`). Сообщения из Telegram
+про публикации и правки постов — это ответы SMM-агенту: действуй по его персоне
+и обновляй журнал `docs/smm/log.md`.
