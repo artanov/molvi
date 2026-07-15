@@ -1,28 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://molvi.tech/</loc>
-    <lastmod>2026-07-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/"/>
+    <lastmod>2026-07-15</lastmod>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://molvi.tech/en/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/"/>
+    <lastmod>2026-07-15</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://molvi.tech/install.html</loc>
-    <lastmod>2026-07-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/install.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/install.html"/>
+    <lastmod>2026-07-15</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://molvi.tech/en/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/install.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/install.html"/>
+    <lastmod>2026-07-15</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://molvi.tech/install-mac.html</loc>
-    <lastmod>2026-07-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/install-mac.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/install-mac.html"/>
+    <lastmod>2026-07-15</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://molvi.tech/en/install-mac.html</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/install-mac.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/install-mac.html"/>
+    <lastmod>2026-07-15</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://molvi.tech/geek/</loc>
-    <lastmod>2026-07-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/"/>
+    <lastmod>2026-07-15</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://molvi.tech/en/geek/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/"/>
+    <lastmod>2026-07-15</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://molvi.tech/geek/mac/</loc>
-    <lastmod>2026-07-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/mac/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/mac/"/>
+    <lastmod>2026-07-15</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://molvi.tech/en/geek/mac/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/mac/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/mac/"/>
+    <lastmod>2026-07-15</lastmod>
     <priority>0.5</priority>
   </url>
 </urlset>
