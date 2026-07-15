@@ -1,4 +1,16 @@
+import pytest
+
+from molvi import i18n
 from molvi.wizard import resolve_device, vram_label
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Тесты зависят от текущего языка i18n — фиксируем ru независимо
+    # от порядка запуска файлов.
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 def test_resolve_device_large_always_tries_gpu():
@@ -24,3 +36,17 @@ def test_vram_label():
     assert vram_label(8192) == "8 ГБ"
     assert vram_label(6000) == "5 ГБ"
     assert vram_label(512) == "512 МБ"  # не «0 ГБ»
+
+
+def test_vram_label_english():
+    from molvi import i18n
+    i18n.set_language("en")
+    try:
+        assert vram_label(8192) == "8 GB"
+        assert vram_label(512) == "512 MB"
+    finally:
+        i18n.set_language("ru")
+
+
+def test_vram_label_russian():
+    assert vram_label(8192) == "8 ГБ"

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to install Molvi on Windows — step-by-step guide</title>
+<meta name="description" content="How to install Molvi on Windows: the download, SmartScreen, the installer, the first-run wizard — what to choose and why. With screenshots of every step.">
+<link rel="canonical" href="https://molvi.tech/en/install.html">
+<link rel="alternate" hreflang="ru" href="https://molvi.tech/install.html">
+<link rel="alternate" hreflang="en" href="https://molvi.tech/en/install.html">
+<link rel="alternate" hreflang="x-default" href="https://molvi.tech/install.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
+<style>
+  /* Tokens — copied from index.html (Molvi's shared design system). */
+  :root{
+    --coral:#F04A3F; --coral-hover:#FF5C50; --coral-deep:#C63A30;
+    --ink-900:#141316; --ink-800:#1C1A1F; --ink-700:#26232B; --ink-600:#332F38;
+    --cream:#F3EEE3; --cream-dim:#B8B2A6; --cream-faint:#7C776E;
+    --warn:#E0A83E; --success:#3FB27F;
+    --maxw:800px;
+    --radius:18px;
+    --font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; font-family:var(--font); background:var(--ink-900); color:var(--cream);
+    -webkit-font-smoothing:antialiased; line-height:1.65; font-size:17px}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:700}
+  p{margin:0}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:9px;
+    font:inherit; font-weight:600; font-size:16px; cursor:pointer; border:0;
+    padding:14px 24px; border-radius:12px; min-height:48px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease}
+  .btn-primary{background:var(--coral); color:#fff}
+  .btn-primary:hover{background:var(--coral-hover); transform:translateY(-1px)}
+  .btn-primary:active{background:var(--coral-deep)}
+  .btn svg{width:19px; height:19px; flex:none}
+  :focus-visible{outline:2px solid var(--coral); outline-offset:3px; border-radius:6px}
+
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:color-mix(in srgb, var(--ink-900) 82%, transparent);
+    border-bottom:1px solid var(--ink-600)}
+  .nav-inner{display:flex; align-items:center; justify-content:space-between; height:66px;
+    max-width:1120px; margin:0 auto; padding:0 24px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; font-size:19px}
+  .brand img{width:32px; height:32px; border-radius:8px; display:block}
+  .nav-links{display:flex; align-items:center; gap:26px}
+  .nav-links a{color:var(--cream-dim); font-size:15px; font-weight:500}
+  .nav-links a:hover{color:var(--cream)}
+
+  header.page{padding:64px 0 20px; text-align:center}
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--cream-dim)}
+  .eyebrow::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--coral);
+    box-shadow:0 0 12px 2px var(--coral)}
+  header.page h1{font-size:clamp(32px,5.5vw,52px); margin-top:18px}
+  header.page .lede{color:var(--cream-dim); margin:16px auto 0; max-width:560px; font-size:18px}
+
+  /* Steps: numbering follows the real sequence of actions */
+  .steps{counter-reset:step; padding:36px 0 80px}
+  .step{position:relative; padding:36px 0 36px 74px; border-top:1px solid var(--ink-600)}
+  .step:first-child{border-top:0}
+  .step::before{counter-increment:step; content:counter(step);
+    position:absolute; left:0; top:34px; width:46px; height:46px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb,var(--coral) 14%,transparent); color:var(--coral);
+    font-size:20px; font-weight:700}
+  .step h2{font-size:26px}
+  .step > p{color:var(--cream-dim); margin-top:12px; max-width:640px}
+  .step p b, .step li b{color:var(--cream); font-weight:600}
+
+  .shot{margin:22px 0 4px; border:1px solid var(--ink-600); border-radius:14px;
+    overflow:hidden; background:var(--ink-800); max-width:600px;
+    box-shadow:0 18px 44px -20px rgba(0,0,0,.7)}
+  .shot img{display:block; width:100%; height:auto}
+  .caption{font-size:13.5px; color:var(--cream-faint); margin:10px 0 0}
+
+  .why{margin-top:18px; padding:16px 18px; border-left:3px solid var(--coral);
+    background:var(--ink-800); border-radius:0 12px 12px 0; max-width:640px}
+  .why .t{font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--coral); margin-bottom:6px}
+  .why p{color:var(--cream-dim); font-size:15.5px}
+
+  .choices{list-style:none; margin:16px 0 0; padding:0; max-width:640px}
+  .choices li{padding:13px 16px; border:1px solid var(--ink-600); border-radius:12px;
+    margin-top:10px; color:var(--cream-dim); font-size:15.5px}
+  .choices .pick{border-color:color-mix(in srgb,var(--coral) 55%,var(--ink-600));
+    background:color-mix(in srgb,var(--coral) 7%,transparent)}
+  .tag{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase; border-radius:6px; padding:2px 8px; margin-right:8px;
+    background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral)}
+  .tag.opt{background:var(--ink-600); color:var(--cream-dim)}
+
+  .kbd{font-size:13.5px; font-weight:600; color:var(--cream); background:var(--ink-800);
+    border:1px solid var(--ink-600); border-bottom-width:2px; border-radius:7px; padding:2px 9px}
+
+  /* List of downloaded components with direct links to sources */
+  .dl-list{list-style:none; margin:16px 0 0; padding:0; max-width:640px}
+  .dl-list li{padding:14px 16px; border:1px solid var(--ink-600); border-radius:12px;
+    margin-top:10px; color:var(--cream-dim); font-size:15.5px}
+  .dl-list b{color:var(--cream); font-weight:600}
+  .dl-list a{color:var(--coral); text-decoration:underline; text-underline-offset:3px}
+  .dl-list a:hover{color:var(--coral-hover)}
+  .dl-list .src{display:block; margin-top:6px; font-size:14px; color:var(--cream-faint)}
+  .dl-list code{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:6px;
+    padding:1px 7px; font-size:13.5px}
+
+  /* SmartScreen: a stylized illustration of the system dialog */
+  .ss{max-width:520px; margin:22px 0 4px; border-radius:10px; overflow:hidden;
+    border:1px solid var(--ink-600); box-shadow:0 18px 44px -20px rgba(0,0,0,.7);
+    font-size:14.5px; line-height:1.5}
+  .ss-body{background:#0B5CAD; color:#fff; padding:26px 28px}
+  .ss-body h3{font-size:19px; font-weight:600; letter-spacing:0}
+  .ss-body p{margin-top:10px; color:#D6E6F5; font-size:14px}
+  .ss-body .more{display:inline-block; margin-top:10px; color:#fff; text-decoration:underline;
+    cursor:pointer; font-size:14px}
+  .ss-actions{background:#0B5CAD; padding:0 28px 24px; display:flex; gap:10px; justify-content:flex-end}
+  .ss-actions span{padding:8px 18px; font-size:14px; cursor:pointer}
+  .ss-actions .run{background:#fff; color:#0B5CAD; font-weight:600}
+  .ss-actions .dont{border:1px solid #fff; color:#fff}
+
+  .substeps{margin:8px 0 0; padding:0; list-style:none; max-width:640px}
+  .substeps li{position:relative; padding:8px 0 8px 30px; color:var(--cream-dim); font-size:16px}
+  .substeps li::before{content:"→"; position:absolute; left:2px; color:var(--coral); font-weight:700}
+
+  .faq{max-width:640px; margin-top:14px}
+  .faq details{border:1px solid var(--ink-600); border-radius:12px; margin-top:10px;
+    background:var(--ink-800)}
+  .faq summary{padding:15px 18px; cursor:pointer; font-weight:600; color:var(--cream);
+    list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px}
+  .faq summary::after{content:"+"; color:var(--coral); font-size:20px; font-weight:400; flex:none}
+  .faq details[open] summary::after{content:"–"}
+  .faq .a{padding:0 18px 16px; color:var(--cream-dim); font-size:15.5px}
+  .faq code{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:6px;
+    padding:1px 7px; font-size:14px}
+
+  footer{border-top:1px solid var(--ink-600); padding:36px 0; text-align:center;
+    color:var(--cream-faint); font-size:14.5px}
+  footer a{color:var(--cream-dim)}
+  footer a:hover{color:var(--cream)}
+
+  @media(max-width:640px){
+    .step{padding-left:0; padding-top:74px}
+    .step::before{top:20px}
+    header.page{padding-top:44px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{transition:none !important; scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="./index.html">
+      <img src="../assets/icon.png" alt="Molvi logo" width="32" height="32">Molvi
+    </a>
+    <nav class="nav-links" aria-label="Navigation">
+      <a href="/install.html" lang="ru" title="Russian version">RU</a>
+      <a href="./index.html#features">Features</a>
+      <a href="https://github.com/artanov/molvi">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <header class="page">
+    <span class="eyebrow">Guide</span>
+    <h1>Installing Molvi</h1>
+    <p class="lede">Five steps, 5–10 minutes including the model download.
+      Every screen tells you what to pick and why.</p>
+  </header>
+
+  <div class="steps">
+
+    <!-- STEP 1 -->
+    <section class="step">
+      <h2>Download the installer</h2>
+      <p>Click the button — it opens the latest release page on GitHub.
+        Download the <b>Molvi-Setup-…exe</b> file (about 70 MB) from the "Assets" section.</p>
+      <p style="margin-top:20px">
+        <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Download the latest release
+        </a>
+      </p>
+      <div class="why">
+        <div class="t">Why GitHub</div>
+        <p>Molvi is open source, and GitHub is its official and only
+          source. Installers from anywhere else could be fakes.</p>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step">
+      <h2>Get past the Windows warning</h2>
+      <p>When you launch the installer, Windows shows a blue
+        "Windows protected your PC" screen. That's expected:</p>
+      <ul class="substeps">
+        <li>click <b>"More info"</b>;</li>
+        <li>then the <b>"Run anyway"</b> button that appears.</li>
+      </ul>
+      <div class="ss" role="img" aria-label="Illustration of the SmartScreen dialog: Windows protected your PC; a More info link; Run anyway and Don't run buttons">
+        <div class="ss-body">
+          <h3>Windows protected your PC</h3>
+          <p>Windows Defender SmartScreen prevented an unrecognized
+            app from starting. Running this app might put your PC at risk.</p>
+          <span class="more">More info</span>
+        </div>
+        <div class="ss-actions">
+          <span class="run">Run anyway</span>
+          <span class="dont">Don't run</span>
+        </div>
+      </div>
+      <p class="caption">This is what the SmartScreen dialog looks like (illustration).</p>
+      <div class="why">
+        <div class="t">Why this dialog appears</div>
+        <p>Windows trusts apps with a paid code-signing certificate (several hundred
+          dollars a year). Molvi is free and doesn't have one, so SmartScreen plays it
+          safe. Molvi's code is open — anyone can check what's inside.</p>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step">
+      <h2>Go through the installer</h2>
+      <p>The first screen suggests an install folder — just click <b>"Next"</b>.
+        Then you'll choose additional tasks:</p>
+      <div class="shot"><img src="../assets/install/installer-2-tasks.png"
+        alt="The installer's &quot;Select Additional Tasks&quot; screen with checkboxes for &quot;Create a desktop shortcut&quot; and &quot;Launch at Windows startup&quot;" loading="lazy" width="598" height="464"></div>
+      <ul class="choices">
+        <li class="pick"><span class="tag">Recommended</span><b>Launch at Windows startup</b> —
+          Molvi lives in the tray and barely uses any resources while you're not dictating.
+          With autostart, dictation is always at hand; without it, you'd have to launch
+          Molvi manually.</li>
+        <li><span class="tag opt">Optional</span><b>Desktop shortcut</b> —
+          only needed for launching manually. If you enabled autostart, you can uncheck it.</li>
+      </ul>
+      <p style="margin-top:14px">Next, click <b>"Next" → "Install"</b>. At the end, leave the
+        "Launch Molvi" checkbox on and click <b>"Finish"</b>.</p>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="step">
+      <h2>Go through the first-run wizard</h2>
+      <p>On first launch, Molvi walks you through setup itself — six short screens.</p>
+
+      <h3 style="margin-top:26px; font-size:19px">4.1. Welcome</h3>
+      <div class="shot"><img src="../assets/install/wizard-1-welcome.png"
+        alt="The first-run wizard's welcome screen" loading="lazy" width="562" height="403"></div>
+      <p class="caption">Just click "Next".</p>
+
+      <h3 style="margin-top:26px; font-size:19px">4.2. Hardware and quality</h3>
+      <div class="shot"><img src="../assets/install/wizard-2-hardware.png"
+        alt="The &quot;Hardware&quot; screen: a GPU was found, choose recognition quality from three options" loading="lazy" width="562" height="403"></div>
+      <p class="caption">The wizard detected your GPU on its own and pre-selected the recommended option.</p>
+      <ul class="choices">
+        <li class="pick"><span class="tag">NVIDIA 6+ GB</span><b>Maximum — large-v3</b> —
+          the best quality, dictation is recognized almost without errors. Requires an
+          NVIDIA GPU with 6+ GB of VRAM; ~3 GB download.</li>
+        <li><span class="tag opt">No NVIDIA</span><b>Fast — base</b> — works on any
+          CPU and downloads in about a minute (~150 MB). Lower quality, but plenty for
+          short phrases.</li>
+        <li><span class="tag opt">Trade-off</span><b>Medium — small</b> — noticeably more
+          accurate than base on CPU, but slower too (~500 MB).</li>
+      </ul>
+      <div class="why">
+        <div class="t">Why it works this way</div>
+        <p>The large-v3 model on a CPU takes several minutes to recognize a minute of
+          speech — that's unworkable, so without a suitable GPU the wizard suggests a
+          fast model. You can always change the quality later in Settings.</p>
+      </div>
+
+      <h3 style="margin-top:26px; font-size:19px">4.3. Downloading components</h3>
+      <div class="shot"><img src="../assets/install/wizard-3-download.png"
+        alt="The &quot;Downloading components&quot; screen: what will be downloaded, a progress bar, and a &quot;Start download&quot; button" loading="lazy" width="562" height="403"></div>
+      <p class="caption">Click "Start download" and wait for the "Done!" message.</p>
+      <p style="margin-top:18px"><b style="color:var(--cream)">What exactly gets downloaded</b> —
+        only open components from official sources:</p>
+      <ul class="dl-list">
+        <li><b>Speech recognition model</b> — faster-whisper by Systran
+          (a conversion of OpenAI's open Whisper model), downloaded from Hugging Face
+          depending on the quality you chose:
+          <a href="https://huggingface.co/Systran/faster-whisper-large-v3">large-v3</a> (~3 GB),
+          <a href="https://huggingface.co/Systran/faster-whisper-small">small</a> (~500 MB) or
+          <a href="https://huggingface.co/Systran/faster-whisper-base">base</a> (~150 MB).
+          <span class="src">Saved to the Hugging Face cache:
+            <code>%USERPROFILE%\.cache\huggingface</code></span></li>
+        <li><b>NVIDIA libraries</b> (only if a suitable GPU is present) —
+          the official
+          <a href="https://pypi.org/project/nvidia-cublas-cu12/">cuBLAS</a> and
+          <a href="https://pypi.org/project/nvidia-cudnn-cu12/">cuDNN</a> packages from PyPI
+          (~0.6 GB total) — GPU recognition runs on them.
+          <span class="src">Extracted to
+            <code>%APPDATA%\Molvi\cuda</code></span></li>
+      </ul>
+      <div class="why">
+        <div class="t">Why it's better not to skip this</div>
+        <p>You can skip it — but then everything downloads on your first dictation, and
+          the first phrase will "hang" for a few minutes. It's more convenient to wait
+          once now.</p>
+      </div>
+
+      <h3 style="margin-top:26px; font-size:19px">4.4. Microphone</h3>
+      <div class="shot"><img src="../assets/install/wizard-4-mic.png"
+        alt="The &quot;Microphone&quot; screen: a device dropdown and a sound level bar" loading="lazy" width="562" height="403"></div>
+      <p class="caption">Say something — the bar should move.</p>
+      <ul class="substeps">
+        <li>the bar moves — leave "System default" and move on;</li>
+        <li>the bar stays still — pick a different microphone from the list and check again.</li>
+      </ul>
+
+      <h3 style="margin-top:26px; font-size:19px">4.5. Dictation key</h3>
+      <div class="shot"><img src="../assets/install/wizard-5-hotkey.png"
+        alt="The &quot;Dictation key&quot; screen: the current Ctrl key on the left and a &quot;Change&quot; button" loading="lazy" width="562" height="403"></div>
+      <p class="caption">Left <span class="kbd">Ctrl</span> by default: hold it, speak, release it.</p>
+      <div class="why">
+        <div class="t">Which key to choose</div>
+        <p>Left Ctrl is convenient: it's always under your pinky, and Molvi ignores
+          brief accidental presses (like Ctrl+C) — a recording that's too short is
+          simply discarded. If Ctrl still gets in your way, click "Change" and hold
+          your own combination, for example <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span>.</p>
+      </div>
+
+      <h3 style="margin-top:26px; font-size:19px">4.6. Done</h3>
+      <div class="shot"><img src="../assets/install/wizard-6-done.png"
+        alt="The wizard's final &quot;All set&quot; screen, reminding you to wait for the tray notification" loading="lazy" width="562" height="403"></div>
+      <p class="caption">After "Finish," the model loads into memory — wait for the
+        "Ready" notification near the clock (10–30 seconds).</p>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step">
+      <h2>Dictate your first phrase</h2>
+      <ul class="substeps">
+        <li>place your cursor in any text field — Notepad, a browser, a messenger;</li>
+        <li>hold <span class="kbd">Ctrl</span> — a "Recording…" pill appears;</li>
+        <li>say: "Hi! This is Molvi typing with my voice";</li>
+        <li>release the key — within a second or two, the text appears at your cursor.</li>
+      </ul>
+      <div class="why">
+        <div class="t">If you want to change something</div>
+        <p>Right-click the Molvi tray icon → "Settings…": key, microphone, language,
+          model quality, sounds, autostart.</p>
+      </div>
+      <div class="shot" style="max-width:520px"><img src="../assets/install/settings.png"
+        alt="The Molvi settings window: dictation key, microphone, language, quality, sounds, autostart" loading="lazy" width="508" height="267"></div>
+      <p class="caption">The settings window — everything from the wizard, in one place.</p>
+    </section>
+
+    <!-- STEP 6: FAQ -->
+    <section class="step">
+      <h2>If something went wrong</h2>
+      <div class="faq">
+        <details>
+          <summary>Recognition is slow</summary>
+          <p class="a">It's likely running on the CPU instead of the GPU. Open the log
+            <code>%APPDATA%\Molvi\molvi.log</code> and find the line "Model loaded,
+            device: …" — it should say <code>cuda</code>. If it says <code>cpu</code> —
+            choose "Fast" quality in Settings, or check that you have an NVIDIA GPU
+            with 6+ GB of VRAM and an up-to-date driver.</p>
+        </details>
+        <details>
+          <summary>Text doesn't appear</summary>
+          <p class="a">Check your microphone: in the log, after "Recording … s" a line
+            reading "Recognized 0 characters" means the microphone is silent. Open
+            Settings and choose a different recording device. Also make sure your
+            cursor is in a text field — Molvi types wherever the cursor is.</p>
+        </details>
+        <details>
+          <summary>My antivirus flags the installer</summary>
+          <p class="a">Same reason as SmartScreen: no paid code-signing certificate.
+            Molvi's code is open — builds happen publicly on GitHub from source, and
+            every release can be checked against the code. Add Molvi to your exclusions.</p>
+        </details>
+        <details>
+          <summary>The tray icon is gone / nothing works</summary>
+          <p class="a">Check the hidden icons (the "^" arrow near the clock) — Windows
+            likes to hide new icons. If Molvi really isn't running, launch it from the
+            shortcut and check the log <code>%APPDATA%\Molvi\molvi.log</code> —
+            it'll show the reason if there's an error. Still stuck? —
+            <a href="https://github.com/artanov/molvi/issues" style="color:var(--coral)">open an issue</a>.</p>
+        </details>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><a href="./index.html">← Back home</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi">GitHub</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi/blob/main/LICENSE">MIT License</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

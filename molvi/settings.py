@@ -5,36 +5,56 @@ from tkinter import ttk
 
 import sounddevice as sd
 
+from molvi.i18n import tr
 from molvi.platform import autostart
 from molvi.platform import hotkey as hk
 
 log = logging.getLogger(__name__)
 
-if sys.platform == "darwin":
-    QUALITY_PRESETS = [
-        ("Максимальное — large-v3-turbo (~1.6 ГБ)", "large-v3-turbo"),
-        ("Среднее — small (~500 МБ)", "small"),
-        ("Быстрое — base (~150 МБ)", "base"),
+
+# Пресеты/языки — функции, а не модульные константы: перевод берётся в момент
+# вызова, иначе окно застыло бы на языке, который был активен при импорте.
+def quality_presets():
+    if sys.platform == "darwin":
+        return [
+            (tr("settings.quality.max_mac"), "large-v3-turbo"),
+            (tr("settings.quality.small"), "small"),
+            (tr("settings.quality.base"), "base"),
+        ]
+    return [
+        (tr("settings.quality.max_win"), "large-v3"),
+        (tr("settings.quality.small"), "small"),
+        (tr("settings.quality.base"), "base"),
     ]
-else:
-    QUALITY_PRESETS = [
-        ("Максимальное — large-v3 (нужна NVIDIA, ~3 ГБ)", "large-v3"),
-        ("Среднее — small (~500 МБ)", "small"),
-        ("Быстрое — base (~150 МБ)", "base"),
-    ]
-LANGUAGES = [("Авто", "auto"), ("Русский", "ru"), ("English", "en")]
-_DEFAULT_DEVICE_LABEL = "Системный по умолчанию"
+
+
+def language_choices():
+    return [(tr("settings.lang.auto"), "auto"),
+            (tr("settings.lang.ru"), "ru"),
+            (tr("settings.lang.en"), "en")]
+
+
+def ui_language_choices():
+    # Названия языков — на самом языке: «Русский» ищет русскоязычный.
+    return [(tr("settings.ui_lang.auto"), "auto"), ("Русский", "ru"), ("English", "en")]
 
 
 def quality_index_for_model(model):
-    for i, (_label, m) in enumerate(QUALITY_PRESETS):
+    for i, (_label, m) in enumerate(quality_presets()):
         if m == model:
             return i
     return 0
 
 
 def language_index(code):
-    for i, (_label, c) in enumerate(LANGUAGES):
+    for i, (_label, c) in enumerate(language_choices()):
+        if c == code:
+            return i
+    return 0
+
+
+def ui_language_index(code):
+    for i, (_label, c) in enumerate(ui_language_choices()):
         if c == code:
             return i
     return 0
@@ -54,12 +74,13 @@ def dedupe_input_devices(devices):
 
 def device_choices(device_names, current):
     """→ (values_list, initial_index, mapping) для комбобокса микрофона."""
-    values = [_DEFAULT_DEVICE_LABEL] + list(device_names)
-    mapping = {_DEFAULT_DEVICE_LABEL: None}
+    default_label = tr("settings.default_device")
+    values = [default_label] + list(device_names)
+    mapping = {default_label: None}
     for name in device_names:
         mapping[name] = name
     if current is not None and current not in device_names:
-        label = f"Текущее: {current}"
+        label = tr("settings.current_device", name=current)
         values.insert(1, label)
         mapping[label] = current
         return values, 1, mapping
@@ -78,43 +99,53 @@ class SettingsWindow:
         self._capture_result = "idle"
 
         win = self._win = tk.Toplevel(root)
-        win.title("Molvi — настройки")
+        win.title(tr("settings.title"))
         win.resizable(False, False)
         win.attributes("-topmost", True)
         frm = ttk.Frame(win, padding=16)
         frm.grid()
         frm.columnconfigure(1, minsize=280)
 
-        ttk.Label(frm, text="Клавиша диктовки:").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Label(frm, text=tr("settings.hotkey")).grid(row=0, column=0, sticky="w", pady=4)
         self._hotkey_var = tk.StringVar(value=hk.human_label(self._hotkey_names))
         ttk.Label(frm, textvariable=self._hotkey_var).grid(row=0, column=1, sticky="w")
-        self._hotkey_btn = ttk.Button(frm, text="Изменить", command=self._change_hotkey)
+        self._hotkey_btn = ttk.Button(frm, text=tr("settings.change"), command=self._change_hotkey)
         self._hotkey_btn.grid(row=0, column=2, padx=(8, 0))
 
-        ttk.Label(frm, text="Микрофон:").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Label(frm, text=tr("settings.microphone")).grid(row=1, column=0, sticky="w", pady=4)
         device_names = dedupe_input_devices(sd.query_devices())
         values, idx, self._device_mapping = device_choices(device_names, cfg["input_device"])
         self._mic = ttk.Combobox(frm, values=values, state="readonly", width=40)
         self._mic.current(idx)
         self._mic.grid(row=1, column=1, columnspan=2, sticky="we")
 
-        ttk.Label(frm, text="Язык:").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(frm, text=tr("settings.language")).grid(row=2, column=0, sticky="w", pady=4)
+        self._languages = language_choices()
         self._lang = ttk.Combobox(
-            frm, values=[label for label, _ in LANGUAGES], state="readonly"
+            frm, values=[label for label, _ in self._languages], state="readonly"
         )
         self._lang.current(language_index(cfg["language"]))
         self._lang.grid(row=2, column=1, columnspan=2, sticky="we")
 
-        ttk.Label(frm, text="Качество:").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Label(frm, text=tr("settings.ui_language")).grid(row=3, column=0, sticky="w", pady=4)
+        self._ui_langs = ui_language_choices()
+        self._ui_lang = ttk.Combobox(
+            frm, values=[label for label, _ in self._ui_langs], state="readonly"
+        )
+        self._ui_lang.current(ui_language_index(cfg.get("ui_language", "auto")))
+        self._ui_lang.grid(row=3, column=1, columnspan=2, sticky="we")
+
+        ttk.Label(frm, text=tr("settings.quality")).grid(row=4, column=0, sticky="w", pady=4)
+        self._presets = quality_presets()
         self._quality = ttk.Combobox(
-            frm, values=[label for label, _ in QUALITY_PRESETS], state="readonly"
+            frm, values=[label for label, _ in self._presets], state="readonly"
         )
         self._quality.current(quality_index_for_model(cfg["model"]))
-        self._quality.grid(row=3, column=1, columnspan=2, sticky="we")
+        self._quality.grid(row=4, column=1, columnspan=2, sticky="we")
 
         self._sounds_var = tk.BooleanVar(value=bool(cfg["sounds"]))
-        ttk.Checkbutton(frm, text="Звуки записи", variable=self._sounds_var).grid(
-            row=4, column=0, columnspan=3, sticky="w", pady=4
+        ttk.Checkbutton(frm, text=tr("settings.sounds"), variable=self._sounds_var).grid(
+            row=5, column=0, columnspan=3, sticky="w", pady=4
         )
 
         try:
@@ -123,14 +154,14 @@ class SettingsWindow:
             autostart_now = False
         self._autostart_var = tk.BooleanVar(value=autostart_now)
         ttk.Checkbutton(
-            frm, text=autostart.LABEL, variable=self._autostart_var
-        ).grid(row=5, column=0, columnspan=3, sticky="w", pady=4)
+            frm, text=tr(autostart.LABEL_KEY), variable=self._autostart_var
+        ).grid(row=6, column=0, columnspan=3, sticky="w", pady=4)
 
         btns = ttk.Frame(frm)
-        btns.grid(row=6, column=0, columnspan=3, pady=(12, 0))
-        self._save_btn = ttk.Button(btns, text="Сохранить", command=self._save)
+        btns.grid(row=7, column=0, columnspan=3, pady=(12, 0))
+        self._save_btn = ttk.Button(btns, text=tr("settings.save"), command=self._save)
         self._save_btn.grid(row=0, column=0, padx=4)
-        self._cancel_btn = ttk.Button(btns, text="Отмена", command=self._close)
+        self._cancel_btn = ttk.Button(btns, text=tr("settings.cancel"), command=self._close)
         self._cancel_btn.grid(row=0, column=1, padx=4)
         self._win.protocol("WM_DELETE_WINDOW", self._close)
 
@@ -147,7 +178,7 @@ class SettingsWindow:
         self._hotkey_btn.config(state="disabled")
         self._save_btn.config(state="disabled")
         self._cancel_btn.config(state="disabled")
-        self._hotkey_var.set("Нажмите комбинацию… (Esc — отмена)")
+        self._hotkey_var.set(tr("settings.press_combo"))
         self._capture_result = "wait"
         # колбэк придёт из потока хука — только записываем результат
         self._listener.start_capture(self._on_captured)
@@ -185,8 +216,9 @@ class SettingsWindow:
         cfg = dict(self._cfg)
         cfg["hotkey"] = list(self._hotkey_names)
         cfg["input_device"] = self._device_mapping[self._mic.get()]
-        cfg["language"] = LANGUAGES[self._lang.current()][1]
-        cfg["model"] = QUALITY_PRESETS[self._quality.current()][1]
+        cfg["language"] = self._languages[self._lang.current()][1]
+        cfg["ui_language"] = self._ui_langs[self._ui_lang.current()][1]
+        cfg["model"] = self._presets[self._quality.current()][1]
         cfg["sounds"] = bool(self._sounds_var.get())
         self._on_save(cfg, bool(self._autostart_var.get()))
         self._win.destroy()

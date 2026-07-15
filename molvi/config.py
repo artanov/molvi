@@ -13,6 +13,7 @@ DEFAULTS = {
     "device": "auto",           # auto | cuda | cpu (на маке игнорируется — mlx)
     "compute_type": "int8_float16",
     "language": "auto",         # auto | ru | en
+    "ui_language": "auto",      # язык интерфейса: auto (по системе) | ru | en
     # Список имён клавиш (см. hotkey.VK_NAMES). На маке дефолт — правый Cmd:
     # почти не используется соло и не конфликтует с системными сочетаниями.
     "hotkey": ["win_right"] if sys.platform == "darwin" else ["ctrl_left"],

@@ -114,3 +114,8 @@ def test_save_config_round_trip(tmp_path):
     loaded = load_config(p)
     assert loaded["hotkey"] == ["f9"]
     assert loaded["sounds"] is False
+
+
+def test_ui_language_default_auto(tmp_path):
+    cfg = load_config(tmp_path / "config.json")
+    assert cfg["ui_language"] == "auto"

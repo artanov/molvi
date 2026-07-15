@@ -2,6 +2,8 @@ import logging
 import queue
 import threading
 
+from molvi.i18n import tr
+
 log = logging.getLogger(__name__)
 
 
@@ -84,7 +86,7 @@ class Controller:
                 self._recorder.start()
             except Exception as exc:
                 log.exception("Не удалось начать запись")
-                self._notify(f"Микрофон недоступен: {exc}")
+                self._notify(tr("controller.mic_unavailable", exc=exc))
                 self._ui.hide()
                 return
             self._recording = True
@@ -101,7 +103,7 @@ class Controller:
                 audio = self._recorder.stop()
             except Exception as exc:
                 log.exception("Не удалось остановить запись")
-                self._notify(f"Ошибка записи: {exc}")
+                self._notify(tr("controller.record_error", exc=exc))
                 self._ui.hide()
                 return
         if len(audio) < self._min_samples:
@@ -122,7 +124,7 @@ class Controller:
                 text = self._transcriber.transcribe(audio)
             except Exception as exc:
                 log.exception("Ошибка распознавания")
-                self._notify(f"Ошибка распознавания: {exc}")
+                self._notify(tr("controller.transcribe_error", exc=exc))
                 text = None
             if text is not None:
                 log.info("Распознано %d символов", len(text))
@@ -131,10 +133,8 @@ class Controller:
                     self._insert_fn(text, self._paste_mode)
                 except Exception as exc:
                     log.exception("Ошибка вставки текста")
-                    self._notify(
-                        f"Не удалось вставить текст: {exc}. Распознанный "
-                        f"текст — в буфере обмена ({self._paste_hint})."
-                    )
+                    self._notify(tr("controller.paste_error",
+                                    exc=exc, paste_hint=self._paste_hint))
             with self._lock:
                 still_recording = self._recording
             if not still_recording:

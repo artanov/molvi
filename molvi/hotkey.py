@@ -12,6 +12,8 @@ HotkeyListener._handle(). Константы WM_* исторически сов�
 import logging
 import threading
 
+from molvi import i18n
+
 log = logging.getLogger(__name__)
 
 WM_KEYDOWN = 0x0100
@@ -47,7 +49,7 @@ MODIFIER_NAMES = {
     "alt_left", "alt_right", "win_left", "win_right",
 }
 
-_DISPLAY = {
+_DISPLAY_RU = {
     "ctrl_left": "Ctrl слева", "ctrl_right": "Ctrl справа",
     "shift_left": "Shift слева", "shift_right": "Shift справа",
     "alt_left": "Alt слева", "alt_right": "Alt справа",
@@ -57,6 +59,17 @@ _DISPLAY = {
     "insert": "Insert", "delete": "Delete", "home": "Home", "end": "End",
     "pageup": "PageUp", "pagedown": "PageDown",
 }
+_DISPLAY_EN = {
+    "ctrl_left": "Left Ctrl", "ctrl_right": "Right Ctrl",
+    "shift_left": "Left Shift", "shift_right": "Right Shift",
+    "alt_left": "Left Alt", "alt_right": "Right Alt",
+    "win_left": "Left Win", "win_right": "Right Win",
+    "space": "Space", "capslock": "CapsLock", "tab": "Tab",
+    "backquote": "`", "left": "←", "up": "↑", "right": "→", "down": "↓",
+    "insert": "Insert", "delete": "Delete", "home": "Home", "end": "End",
+    "pageup": "PageUp", "pagedown": "PageDown",
+}
+_DISPLAY = {"ru": _DISPLAY_RU, "en": _DISPLAY_EN}
 
 
 class KeyTable:
@@ -66,6 +79,7 @@ class KeyTable:
         self.names = names
         self.to_name = {v: k for k, v in names.items()}
         self.modifiers = modifiers
+        # подписи по языкам {"ru": {...}, "en": {...}}
         self.display = display
         self.escape_vk = escape_vk
 
@@ -86,7 +100,8 @@ def names_to_vks(names, table=TABLE):
 
 
 def human_label(names, table=TABLE):
-    return " + ".join(table.display.get(n, n.upper()) for n in names)
+    labels = table.display.get(i18n.current_language(), {})
+    return " + ".join(labels.get(n, n.upper()) for n in names)
 
 
 def normalize_capture(vks, table=TABLE):

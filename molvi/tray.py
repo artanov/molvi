@@ -4,6 +4,7 @@ import pystray
 from PIL import Image, ImageDraw
 
 from molvi import theme
+from molvi.i18n import tr
 
 
 def _make_icon_image(color=theme.CORAL):
@@ -24,12 +25,12 @@ class Tray:
         self._icon = pystray.Icon(
             "Molvi", _make_icon_image(), "Molvi",
             menu=pystray.Menu(
-                pystray.MenuItem("Настройки…", self._settings),
+                pystray.MenuItem(lambda item: tr("tray.settings"), self._settings),
                 pystray.MenuItem(
-                    lambda item: "Возобновить" if self._paused else "Пауза",
+                    lambda item: tr("tray.resume") if self._paused else tr("tray.pause"),
                     self._toggle,
                 ),
-                pystray.MenuItem("Выход", self._exit),
+                pystray.MenuItem(lambda item: tr("tray.quit"), self._exit),
             ),
         )
 
@@ -46,6 +47,13 @@ class Tray:
 
     def start(self):
         self._icon.run_detached()
+
+    def refresh(self):
+        """Перечитать подписи меню (после смены языка интерфейса)."""
+        try:
+            self._icon.update_menu()
+        except Exception:
+            pass  # как и notify — best effort
 
     def notify(self, msg):
         try:

@@ -35,3 +35,6 @@ jobs:
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://molvi.tech/install.html)
           echo "https://molvi.tech/install.html → HTTP $code"
           test "$code" = "200"
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://molvi.tech/en/)
+          echo "https://molvi.tech/en/ → HTTP $code"
+          test "$code" = "200"

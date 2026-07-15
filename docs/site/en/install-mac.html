@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to install Molvi on Mac — step-by-step guide</title>
+<meta name="description" content="How to install Molvi on macOS (Apple Silicon): DMG, Gatekeeper, the first-run wizard, the Input Monitoring and Accessibility permissions.">
+<link rel="canonical" href="https://molvi.tech/en/install-mac.html">
+<link rel="alternate" hreflang="ru" href="https://molvi.tech/install-mac.html">
+<link rel="alternate" hreflang="en" href="https://molvi.tech/en/install-mac.html">
+<link rel="alternate" hreflang="x-default" href="https://molvi.tech/install-mac.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
+<style>
+  /* Tokens — copied from index.html (Molvi's shared design system). */
+  :root{
+    --coral:#F04A3F; --coral-hover:#FF5C50; --coral-deep:#C63A30;
+    --ink-900:#141316; --ink-800:#1C1A1F; --ink-700:#26232B; --ink-600:#332F38;
+    --cream:#F3EEE3; --cream-dim:#B8B2A6; --cream-faint:#7C776E;
+    --warn:#E0A83E; --success:#3FB27F;
+    --maxw:800px;
+    --radius:18px;
+    --font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; font-family:var(--font); background:var(--ink-900); color:var(--cream);
+    -webkit-font-smoothing:antialiased; line-height:1.65; font-size:17px}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:700}
+  p{margin:0}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:9px;
+    font:inherit; font-weight:600; font-size:16px; cursor:pointer; border:0;
+    padding:14px 24px; border-radius:12px; min-height:48px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease}
+  .btn-primary{background:var(--coral); color:#fff}
+  .btn-primary:hover{background:var(--coral-hover); transform:translateY(-1px)}
+  .btn-primary:active{background:var(--coral-deep)}
+  .btn svg{width:19px; height:19px; flex:none}
+  :focus-visible{outline:2px solid var(--coral); outline-offset:3px; border-radius:6px}
+
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:color-mix(in srgb, var(--ink-900) 82%, transparent);
+    border-bottom:1px solid var(--ink-600)}
+  .nav-inner{display:flex; align-items:center; justify-content:space-between; height:66px;
+    max-width:1120px; margin:0 auto; padding:0 24px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; font-size:19px}
+  .brand img{width:32px; height:32px; border-radius:8px; display:block}
+  .nav-links{display:flex; align-items:center; gap:26px}
+  .nav-links a{color:var(--cream-dim); font-size:15px; font-weight:500}
+  .nav-links a:hover{color:var(--cream)}
+
+  header.page{padding:64px 0 20px; text-align:center}
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--cream-dim)}
+  .eyebrow::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--coral);
+    box-shadow:0 0 12px 2px var(--coral)}
+  header.page h1{font-size:clamp(32px,5.5vw,52px); margin-top:18px}
+  header.page .lede{color:var(--cream-dim); margin:16px auto 0; max-width:560px; font-size:18px}
+
+  /* Steps: numbering follows the real sequence of actions */
+  .steps{counter-reset:step; padding:36px 0 80px}
+  .step{position:relative; padding:36px 0 36px 74px; border-top:1px solid var(--ink-600)}
+  .step:first-child{border-top:0}
+  .step::before{counter-increment:step; content:counter(step);
+    position:absolute; left:0; top:34px; width:46px; height:46px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb,var(--coral) 14%,transparent); color:var(--coral);
+    font-size:20px; font-weight:700}
+  .step h2{font-size:26px}
+  .step > p{color:var(--cream-dim); margin-top:12px; max-width:640px}
+  .step p b, .step li b{color:var(--cream); font-weight:600}
+
+  .shot{margin:22px 0 4px; border:1px solid var(--ink-600); border-radius:14px;
+    overflow:hidden; background:var(--ink-800); max-width:600px;
+    box-shadow:0 18px 44px -20px rgba(0,0,0,.7)}
+  .shot img{display:block; width:100%; height:auto}
+  .caption{font-size:13.5px; color:var(--cream-faint); margin:10px 0 0}
+
+  .why{margin-top:18px; padding:16px 18px; border-left:3px solid var(--coral);
+    background:var(--ink-800); border-radius:0 12px 12px 0; max-width:640px}
+  .why .t{font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--coral); margin-bottom:6px}
+  .why p{color:var(--cream-dim); font-size:15.5px}
+
+  .choices{list-style:none; margin:16px 0 0; padding:0; max-width:640px}
+  .choices li{padding:13px 16px; border:1px solid var(--ink-600); border-radius:12px;
+    margin-top:10px; color:var(--cream-dim); font-size:15.5px}
+  .choices .pick{border-color:color-mix(in srgb,var(--coral) 55%,var(--ink-600));
+    background:color-mix(in srgb,var(--coral) 7%,transparent)}
+  .tag{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase; border-radius:6px; padding:2px 8px; margin-right:8px;
+    background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral)}
+  .tag.opt{background:var(--ink-600); color:var(--cream-dim)}
+
+  .kbd{font-size:13.5px; font-weight:600; color:var(--cream); background:var(--ink-800);
+    border:1px solid var(--ink-600); border-bottom-width:2px; border-radius:7px; padding:2px 9px}
+
+  /* List of downloaded components with direct links to sources */
+  .dl-list{list-style:none; margin:16px 0 0; padding:0; max-width:640px}
+  .dl-list li{padding:14px 16px; border:1px solid var(--ink-600); border-radius:12px;
+    margin-top:10px; color:var(--cream-dim); font-size:15.5px}
+  .dl-list b{color:var(--cream); font-weight:600}
+  .dl-list a{color:var(--coral); text-decoration:underline; text-underline-offset:3px}
+  .dl-list a:hover{color:var(--coral-hover)}
+  .dl-list .src{display:block; margin-top:6px; font-size:14px; color:var(--cream-faint)}
+  .dl-list code{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:6px;
+    padding:1px 7px; font-size:13.5px}
+
+  /* SmartScreen: a stylized illustration of the system dialog */
+  .ss{max-width:520px; margin:22px 0 4px; border-radius:10px; overflow:hidden;
+    border:1px solid var(--ink-600); box-shadow:0 18px 44px -20px rgba(0,0,0,.7);
+    font-size:14.5px; line-height:1.5}
+  .ss-body{background:#0B5CAD; color:#fff; padding:26px 28px}
+  .ss-body h3{font-size:19px; font-weight:600; letter-spacing:0}
+  .ss-body p{margin-top:10px; color:#D6E6F5; font-size:14px}
+  .ss-body .more{display:inline-block; margin-top:10px; color:#fff; text-decoration:underline;
+    cursor:pointer; font-size:14px}
+  .ss-actions{background:#0B5CAD; padding:0 28px 24px; display:flex; gap:10px; justify-content:flex-end}
+  .ss-actions span{padding:8px 18px; font-size:14px; cursor:pointer}
+  .ss-actions .run{background:#fff; color:#0B5CAD; font-weight:600}
+  .ss-actions .dont{border:1px solid #fff; color:#fff}
+
+  .substeps{margin:8px 0 0; padding:0; list-style:none; max-width:640px}
+  .substeps li{position:relative; padding:8px 0 8px 30px; color:var(--cream-dim); font-size:16px}
+  .substeps li::before{content:"→"; position:absolute; left:2px; color:var(--coral); font-weight:700}
+
+  .faq{max-width:640px; margin-top:14px}
+  .faq details{border:1px solid var(--ink-600); border-radius:12px; margin-top:10px;
+    background:var(--ink-800)}
+  .faq summary{padding:15px 18px; cursor:pointer; font-weight:600; color:var(--cream);
+    list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px}
+  .faq summary::after{content:"+"; color:var(--coral); font-size:20px; font-weight:400; flex:none}
+  .faq details[open] summary::after{content:"–"}
+  .faq .a{padding:0 18px 16px; color:var(--cream-dim); font-size:15.5px}
+  .faq code{background:var(--ink-900); border:1px solid var(--ink-600); border-radius:6px;
+    padding:1px 7px; font-size:14px}
+
+  footer{border-top:1px solid var(--ink-600); padding:36px 0; text-align:center;
+    color:var(--cream-faint); font-size:14.5px}
+  footer a{color:var(--cream-dim)}
+  footer a:hover{color:var(--cream)}
+
+  @media(max-width:640px){
+    .step{padding-left:0; padding-top:74px}
+    .step::before{top:20px}
+    header.page{padding-top:44px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{transition:none !important; scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="./index.html">
+      <img src="../assets/icon.png" alt="Molvi logo" width="32" height="32">Molvi
+    </a>
+    <nav class="nav-links" aria-label="Navigation">
+      <a href="/install-mac.html" lang="ru" title="Russian version">RU</a>
+      <a href="./index.html#features">Features</a>
+      <a href="./install.html">Windows</a>
+      <a href="https://github.com/artanov/molvi">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <header class="page">
+    <span class="eyebrow">Guide · macOS</span>
+    <h1>Installing Molvi on&nbsp;Mac</h1>
+    <p class="lede">Five steps, 5–10 minutes including the model download.
+      Works on any Apple Silicon Mac — M1, M2, M3, M4 and newer
+      (macOS 13.5+); the newer the chip, the faster the recognition.
+      Intel Macs are not supported.</p>
+  </header>
+
+  <div class="steps">
+
+    <!-- STEP 1 -->
+    <section class="step">
+      <h2>Download the disk image</h2>
+      <p>Click the button — it opens the latest release page on GitHub.
+        Download the <b>Molvi-…dmg</b> file (~150 MB) from the "Assets" section.</p>
+      <p style="margin-top:20px">
+        <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Download the latest release
+        </a>
+      </p>
+      <div class="why">
+        <div class="t">Why GitHub</div>
+        <p>Molvi is open source, and GitHub is its official and only
+          source. Disk images from anywhere else could be fakes.</p>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step">
+      <h2>Install it and get past Gatekeeper</h2>
+      <p>Open the DMG and drag <b>Molvi</b> onto the <b>Applications</b> shortcut.
+        On first launch, macOS shows a warning — and offers only
+        "Move to Trash." That's expected; you won't need the trash:</p>
+      <div class="ss" role="img" aria-label="Illustration of the Gatekeeper dialog: the app couldn't be verified; Done and Move to Trash buttons" style="max-width:440px">
+        <div class="ss-body" style="background:#ECECEC; color:#1d1d1f">
+          <h3 style="color:#1d1d1f">"Molvi" was not opened</h3>
+          <p style="color:#515154">Apple could not verify that this app is free
+            of malware. Update it or contact the developer.</p>
+        </div>
+        <div class="ss-actions" style="background:#ECECEC">
+          <span class="run" style="background:#007AFF; color:#fff; border-radius:7px">Done</span>
+          <span class="dont" style="border:1px solid #B5B5B7; color:#1d1d1f; border-radius:7px">Move to Trash</span>
+        </div>
+      </div>
+      <p class="caption">The Gatekeeper dialog in macOS 15 (illustration). Click "Done" —
+        not "Move to Trash."</p>
+      <ul class="substeps">
+        <li>click <b>"Done"</b>;</li>
+        <li>open <b>System Settings → Privacy &amp; Security</b>,
+          scroll down to the line "'Molvi' was blocked…";</li>
+        <li>click <b>"Open Anyway"</b> and confirm.</li>
+      </ul>
+      <div class="why">
+        <div class="t">Faster — with one Terminal command</div>
+        <p><code style="background:var(--ink-800); border:1px solid var(--ink-600); border-radius:6px; padding:1px 7px; font-size:14px">xattr -cr /Applications/Molvi.app</code> —
+          removes the quarantine flag; after that, Molvi opens with a plain double-click,
+          no warnings at all. On macOS 13–14, the old method still works too:
+          right-click Molvi → "Open" → "Open".</p>
+      </div>
+      <div class="why">
+        <div class="t">Why this dialog appears</div>
+        <p>Apple trusts apps that are notarized (a paid developer subscription,
+          $99 a year). Molvi is free and doesn't have that, so Gatekeeper plays it safe —
+          and in macOS 15 it got stricter and removed the "Open" option from the
+          right-click menu. Molvi's code is open — anyone can check what's inside.</p>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step">
+      <h2>Go through the first-run wizard</h2>
+      <p>Molvi walks you through setup itself — a few short screens.</p>
+      <ul class="choices">
+        <li class="pick"><span class="tag">Recommended</span><b>Maximum — large-v3-turbo</b> —
+          large-v3-level quality, but fast: Apple Silicon recognizes speech through Metal
+          (the mlx-whisper engine). ~1.6 GB download, enough even for an M1 with 8 GB of memory.</li>
+        <li><span class="tag opt">If you're really tight on space</span><b>small / base</b> —
+          smaller and faster to download, lower quality.</li>
+      </ul>
+      <ul class="substeps" style="margin-top:18px">
+        <li>on the "Downloading components" step, click <b>"Start download"</b> and wait for "Done!";</li>
+        <li>on the "Microphone" step, say something — the bar should move
+          (macOS will ask for microphone access — <b>allow it</b>);</li>
+        <li>the default dictation key is <b>right ⌘</b>; you don't have to change it,
+          and you can always do so later in Settings.</li>
+      </ul>
+      <p style="margin-top:14px">The model downloads from
+        <a href="https://huggingface.co/mlx-community/whisper-large-v3-turbo" style="color:var(--coral); text-decoration:underline; text-underline-offset:3px">Hugging Face (mlx-community)</a> —
+        an open conversion of OpenAI's Whisper. Saved to
+        <code style="background:var(--ink-800); border:1px solid var(--ink-600); border-radius:6px; padding:1px 7px; font-size:14px">~/.cache/huggingface</code>.</p>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="step">
+      <h2>Grant two macOS permissions</h2>
+      <p>Molvi listens for the dictation key and inserts text into the active window —
+        macOS requires explicit permission for both. The wizard shows a dedicated step
+        with "Grant…" buttons that open the right System Settings panes:</p>
+      <ul class="choices">
+        <li class="pick"><span class="tag">Required</span><b>Input Monitoring</b> —
+          without it, Molvi can't see the dictation key.</li>
+        <li class="pick"><span class="tag">Required</span><b>Accessibility</b> —
+          without it, Molvi can't insert the recognized text.</li>
+      </ul>
+      <ul class="substeps" style="margin-top:18px">
+        <li>turn on the <b>Molvi</b> checkbox in both panes;</li>
+        <li>after granting access, <b>restart Molvi</b> (menu bar icon → "Quit,"
+          then reopen it) — macOS applies permissions on startup.</li>
+      </ul>
+      <div class="why">
+        <div class="t">Why this is safe</div>
+        <p>Molvi uses these permissions only for the dictation key and inserting text —
+          the whole codebase is open, and recognition never leaves your computer: neither
+          audio nor text is ever sent anywhere.</p>
+      </div>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step">
+      <h2>Dictate your first phrase</h2>
+      <ul class="substeps">
+        <li>wait for the "Ready" notification (the Molvi icon lives in the menu bar, top right);</li>
+        <li>place your cursor in any text field — Notes, a browser, Terminal;</li>
+        <li>hold <span class="kbd">right ⌘</span> — a "Recording…" pill appears;</li>
+        <li>say: "Hi! This is Molvi typing with my voice";</li>
+        <li>release the key — within a second or two, the text appears at your cursor.</li>
+      </ul>
+      <div class="why">
+        <div class="t">If you want to change something</div>
+        <p>Molvi menu bar icon → "Settings…": key, microphone, language,
+          model quality, sounds, autostart.</p>
+      </div>
+    </section>
+
+    <!-- STEP 6: FAQ -->
+    <section class="step">
+      <h2>If something went wrong</h2>
+      <div class="faq">
+        <details>
+          <summary>I updated Molvi — the key or insertion stopped working</summary>
+          <p class="a">When you update an unsigned app, macOS resets the permissions
+            you granted. In System Settings → Privacy &amp; Security, toggle the Molvi
+            checkboxes off and back on in "Input Monitoring" and "Accessibility"
+            (or remove Molvi from the list and add it again) and restart the app.</p>
+        </details>
+        <details>
+          <summary>I got a notification: "no Accessibility permission"</summary>
+          <p class="a">The insertion failed, but the text isn't lost — it's still on
+            the clipboard, press <code>⌘V</code>. Grant the permission (step 4) and
+            restart Molvi — after that, text will insert itself.</p>
+        </details>
+        <details>
+          <summary>The first dictation after launch is slow</summary>
+          <p class="a">That's expected: on the first recognition, Metal compiles its
+            compute kernels (a few seconds). The second phrase already recognizes in
+            one to two seconds.</p>
+        </details>
+        <details>
+          <summary>Text doesn't appear</summary>
+          <p class="a">Check your microphone in Settings (menu bar icon) and make sure
+            your cursor is in a text field. Error log:
+            <code>~/Library/Application Support/Molvi/molvi.log</code>. Still stuck? —
+            <a href="https://github.com/artanov/molvi/issues" style="color:var(--coral)">open an issue</a>.</p>
+        </details>
+        <details>
+          <summary>I have an Intel Mac</summary>
+          <p class="a">Not supported yet: recognition runs through Apple's MLX engine,
+            which requires an M-series chip (M1 or newer).</p>
+        </details>
+        <details>
+          <summary>How to completely remove Molvi (or reinstall from scratch)</summary>
+          <div class="a">
+            <p>Molvi keeps everything in three places — the app, the data folder, and
+              the model cache. First quit Molvi (menu bar icon → "Quit"),
+              then run this in Terminal:</p>
+            <pre style="margin:12px 0; padding:14px 16px; background:var(--ink-900);
+              border:1px solid var(--ink-600); border-radius:10px; overflow-x:auto;
+              font-size:13px; line-height:1.7"><code># the app
+rm -rf /Applications/Molvi.app
+# settings and log
+rm -rf ~/Library/"Application Support"/Molvi
+# autostart (if enabled)
+rm -f ~/Library/LaunchAgents/tech.molvi.app.plist
+# downloaded model (~1.6 GB)
+rm -rf ~/.cache/huggingface/hub/models--mlx-community--whisper*
+# reset granted permissions (optional)
+tccutil reset ListenEvent tech.molvi.app
+tccutil reset Accessibility tech.molvi.app
+tccutil reset Microphone tech.molvi.app</code></pre>
+            <p>After this, nothing of Molvi remains on the system. To reinstall,
+              just go through this page's steps again — including Gatekeeper and
+              granting permissions. Without Terminal: drag the app to the Trash
+              from the Applications folder, and drag the
+              <code>~/Library/Application Support/Molvi</code> folder to the Trash
+              from Finder (Go → Go to Folder…).</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><a href="./index.html">← Back home</a> &nbsp;·&nbsp;
+      <a href="./install.html">Windows install guide</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi">GitHub</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi/blob/main/LICENSE">MIT License</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

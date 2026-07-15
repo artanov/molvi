@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Molvi — голосовой ввод для Windows и Mac, локально и бесплатно</title>
-<meta name="description" content="Molvi — локальный голосовой ввод для Windows и macOS, бесплатная альтернатива Wispr Flow и Aqua Voice. Диктуйте в любое окно и в терминал (Claude Code, Codex). Whisper на вашем компьютере: без облака и подписки.">
-<meta property="og:title" content="Molvi — говорите, а не печатайте">
-<meta property="og:description" content="Локальный голосовой ввод для Windows и macOS. Без облака, без подписки, с открытым кодом.">
+<title>Molvi — voice typing for Windows and Mac, local and free</title>
+<meta name="description" content="Molvi is local voice typing for Windows and macOS — a free alternative to Wispr Flow and Aqua Voice. Dictate into any window or terminal (Claude Code, Codex). Whisper runs on your computer: no cloud, no subscription.">
+<meta property="og:title" content="Molvi — speak, don't type">
+<meta property="og:description" content="Local voice typing for Windows and macOS. No cloud, no subscription, open source.">
 <meta property="og:type" content="website">
-<link rel="canonical" href="https://molvi.tech/">
+<meta property="og:locale" content="en_US">
+<link rel="canonical" href="https://molvi.tech/en/">
 <link rel="alternate" hreflang="ru" href="https://molvi.tech/">
 <link rel="alternate" hreflang="en" href="https://molvi.tech/en/">
 <link rel="alternate" hreflang="x-default" href="https://molvi.tech/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
-<!-- Кнопки «Скачать» ведут на github.com/artanov/molvi/releases/latest.
-     При переносе репозитория заменить «artanov/molvi» по всему файлу. -->
+<!-- Download buttons link to github.com/artanov/molvi/releases/latest.
+     If the repo ever moves, replace "artanov/molvi" throughout this file. -->
 <style>
   :root{
-    /* Палитра из логотипа Molvi (совпадает с molvi/theme.py) */
+    /* Molvi logo palette (matches molvi/theme.py) */
     --coral:#F04A3F; --coral-hover:#FF5C50; --coral-deep:#C63A30;
     --ink-900:#141316; --ink-800:#1C1A1F; --ink-700:#26232B; --ink-600:#332F38;
     --cream:#F3EEE3; --cream-dim:#B8B2A6; --cream-faint:#7C776E;
@@ -150,7 +151,7 @@
   .feature h3{font-size:18px}
   .feature p{color:var(--cream-dim); font-size:15px; margin-top:9px}
 
-  /* ai-coding: диктовка промптов в терминальные агенты */
+  /* ai-coding: dictating prompts into terminal agents */
   .ai{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center;
     background:var(--ink-700); border:1px solid var(--ink-600); border-radius:22px;
     padding:44px 46px}
@@ -228,17 +229,17 @@
 <header class="nav" id="nav">
   <div class="wrap nav-inner">
     <a class="brand" href="#top">
-      <img src="./assets/icon.png" alt="Логотип Molvi" width="32" height="32">Molvi
+      <img src="../assets/icon.png" alt="Molvi logo" width="32" height="32">Molvi
     </a>
-    <nav class="nav-menu-links" aria-label="Основная навигация">
+    <nav class="nav-menu-links" aria-label="Main navigation">
       <div class="nav-links">
-        <a href="/en/" lang="en" title="English version">EN</a>
-        <a href="#features">Возможности</a>
-        <a href="#how">Как работает</a>
-        <a href="./install.html">Установка</a>
+        <a href="/" lang="ru" title="Russian version">RU</a>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="./install.html">Install</a>
         <a href="https://github.com/artanov/molvi">GitHub</a>
       </div>
-      <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">Скачать</a>
+      <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">Download</a>
     </nav>
   </div>
 </header>
@@ -247,40 +248,40 @@
   <!-- HERO -->
   <section class="hero">
     <div class="wrap hero-inner">
-      <span class="eyebrow">Локально · Приватно · Бесплатно</span>
-      <h1>Не печатайте&nbsp;— <span class="accent">говорите</span></h1>
-      <p class="lede">Зажмите клавишу, продиктуйте — и текст появится там, где стоит курсор.
-        Распознавание Whisper large-v3 работает прямо на вашем компьютере: без облака,
-        без подписки, без утечек данных.</p>
+      <span class="eyebrow">Local · Private · Free</span>
+      <h1>Don't type&nbsp;— <span class="accent">speak</span></h1>
+      <p class="lede">Hold a key, say it out loud — and the text appears right where your cursor is.
+        Whisper large-v3 recognition runs right on your computer: no cloud,
+        no subscription, no data leaks.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-          Скачать для Windows
+          Download for Windows
         </a>
         <a class="btn btn-ghost" href="./install-mac.html">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.54c-.03-2.89 2.36-4.28 2.47-4.35-1.35-1.97-3.44-2.24-4.18-2.27-1.78-.18-3.47 1.05-4.37 1.05-.9 0-2.29-1.02-3.77-1-1.94.03-3.72 1.13-4.72 2.86-2.01 3.49-.51 8.66 1.45 11.49.96 1.39 2.1 2.95 3.6 2.89 1.44-.06 1.99-.93 3.73-.93s2.23.93 3.76.9c1.55-.03 2.53-1.41 3.48-2.8 1.09-1.61 1.54-3.17 1.57-3.25-.03-.02-3.01-1.16-3.02-4.59zM14.16 4.07c.79-.96 1.33-2.29 1.18-3.62-1.14.05-2.53.76-3.35 1.72-.73.85-1.38 2.21-1.21 3.51 1.28.1 2.58-.65 3.38-1.61z"/></svg>
-          Версия для Mac
+          Mac version
         </a>
         <a class="btn btn-ghost" href="https://github.com/artanov/molvi">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.36 9.36 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
-          Открыть на GitHub
+          View on GitHub
         </a>
       </div>
-      <p class="microcopy"><b>Windows 10/11 · macOS на любом M-чипе (M1, M2, M3, M4…)</b> · открытый код (MIT) · без регистрации ·
-        инструкция: <a href="./install.html" style="color:var(--cream-dim); text-decoration:underline">Windows</a> ·
+      <p class="microcopy"><b>Windows 10/11 · macOS on any M-chip (M1, M2, M3, M4…)</b> · open source (MIT) · no sign-up ·
+        guide: <a href="./install.html" style="color:var(--cream-dim); text-decoration:underline">Windows</a> ·
         <a href="./install-mac.html" style="color:var(--cream-dim); text-decoration:underline">Mac</a></p>
 
-      <!-- Signature: живое демо диктовки -->
+      <!-- Signature: live dictation demo -->
       <div class="demo" aria-hidden="true">
         <div class="demo-card">
           <div class="demo-topbar">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="kbd">удерживается Ctrl</span>
+            <span class="kbd">holding Ctrl</span>
           </div>
           <div class="demo-field" id="demoField"><span class="typed" id="typed"></span></div>
           <div class="pill">
             <span class="rec"></span>
-            <span class="rec-label">Запись…</span>
+            <span class="rec-label">Recording…</span>
             <span class="eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
           </div>
         </div>
@@ -293,20 +294,20 @@
     <div class="wrap">
       <div class="trust">
         <div class="trust-card">
-          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>100% локально</div>
-          <p>Голос обрабатывается на вашем ПК и никуда не отправляется.</p>
+          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>100% local</div>
+          <p>Your voice is processed on your PC and never sent anywhere.</p>
         </div>
         <div class="trust-card">
-          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="m9 12 2 2 4-4"/></svg>Без подписки</div>
-          <p>Бесплатно и с открытым кодом. Никаких аккаунтов и оплат.</p>
+          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="m9 12 2 2 4-4"/></svg>No subscription</div>
+          <p>Free and open source. No accounts, no payments.</p>
         </div>
         <div class="trust-card">
           <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>Whisper large-v3</div>
-          <p>Та же модель, что в топовых сервисах,— но целиком у вас.</p>
+          <p>The same model top-tier services use — but entirely yours.</p>
         </div>
         <div class="trust-card">
-          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>В любом окне</div>
-          <p>Печатает в редактор, браузер, мессенджер — куда угодно.</p>
+          <div class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>In any window</div>
+          <p>Types into an editor, browser, messenger — anywhere.</p>
         </div>
       </div>
     </div>
@@ -316,22 +317,22 @@
   <section class="section section-alt" id="how">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Как это работает</span>
-        <h2>Три движения — и готово</h2>
-        <p>Никаких окон и кнопок во время работы. Одна клавиша, ваш голос и текст.</p>
+        <span class="eyebrow">How it works</span>
+        <h2>Three moves, and you're done</h2>
+        <p>No windows or buttons while you work. One key, your voice, and text.</p>
       </div>
       <div class="steps">
         <div class="step">
-          <h3>Зажмите клавишу</h3>
-          <p>По умолчанию — левый Ctrl. Можно назначить любую комбинацию в настройках.</p>
+          <h3>Hold the key</h3>
+          <p>Left Ctrl by default. You can assign any combination in settings.</p>
         </div>
         <div class="step">
-          <h3>Говорите</h3>
-          <p>Оверлей-пилюля показывает, что идёт запись. Говорите естественно, в своём темпе.</p>
+          <h3>Speak</h3>
+          <p>A pill-shaped overlay shows a recording is in progress. Speak naturally, at your own pace.</p>
         </div>
         <div class="step">
-          <h3>Отпустите</h3>
-          <p>Molvi распознаёт речь и печатает текст прямо в активное окно, где стоит курсор.</p>
+          <h3>Release</h3>
+          <p>Molvi recognizes your speech and types it straight into the active window, wherever your cursor is.</p>
         </div>
       </div>
     </div>
@@ -341,40 +342,40 @@
   <section class="section" id="features">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Возможности</span>
-        <h2>Продумано до мелочей</h2>
-        <p>Всё нужное для повседневной диктовки — и ничего лишнего.</p>
+        <span class="eyebrow">Features</span>
+        <h2>Thought through down to the details</h2>
+        <p>Everything you need for everyday dictation — and nothing you don't.</p>
       </div>
       <div class="features">
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <h3>Приватность</h3>
-          <p>Аудио не покидает компьютер. Работает даже без интернета.</p>
+          <h3>Privacy</h3>
+          <p>Audio never leaves your computer. Works even without internet.</p>
         </div>
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div>
-          <h3>Любой хоткей</h3>
-          <p>Клавиша диктовки настраивается — от одного Ctrl до своей комбинации.</p>
+          <h3>Any hotkey</h3>
+          <p>The dictation key is configurable — from a single Ctrl to your own combination.</p>
         </div>
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg></div>
-          <h3>Микрофон и язык</h3>
-          <p>Выбор устройства записи и языка: русский, английский или авто.</p>
+          <h3>Microphone and language</h3>
+          <p>Choose your recording device and language: Russian, English, or auto-detect.</p>
         </div>
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg></div>
-          <h3>GPU и CPU</h3>
-          <p>На видеокарте NVIDIA — максимум качества; без неё — быстрая модель на процессоре.</p>
+          <h3>GPU and CPU</h3>
+          <p>With an NVIDIA GPU — maximum quality; without one — a fast model on the CPU.</p>
         </div>
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12s3-7 8-7 8 7 8 7-3 7-8 7-8-7-8-7Z"/><circle cx="12" cy="12" r="2.5"/></svg></div>
-          <h3>Оверлей и звуки</h3>
-          <p>Видно и слышно, когда идёт запись и когда текст распознаётся.</p>
+          <h3>Overlay and sounds</h3>
+          <p>See and hear when recording is happening and when text is being recognized.</p>
         </div>
         <div class="feature">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg></div>
-          <h3>Автозапуск с системой</h3>
-          <p>Одна галочка — и Molvi всегда наготове в трее после включения ПК.</p>
+          <h3>Launch at startup</h3>
+          <p>One checkbox, and Molvi is always ready in the tray once your PC boots.</p>
         </div>
       </div>
     </div>
@@ -385,27 +386,27 @@
     <div class="wrap">
       <div class="ai">
         <div class="txt">
-          <span class="eyebrow">Вайб-кодинг</span>
-          <h2>Создан для Claude Code и Codex</h2>
-          <p>Длинные промпты быстрее наговорить, чем напечатать. Зажмите клавишу,
-            опишите задачу своими словами — Molvi напечатает её агенту.</p>
-          <p><b>Работает прямо в терминале:</b> Molvi распознаёт консольное окно
-            и печатает текст посимвольно — даже там, где обычная вставка
-            через Ctrl+V ломается.</p>
+          <span class="eyebrow">Vibe coding</span>
+          <h2>Built for Claude Code and Codex</h2>
+          <p>Long prompts are faster to say than to type. Hold the key,
+            describe the task in your own words — Molvi types it for the agent.</p>
+          <p><b>Works right inside the terminal:</b> Molvi detects the console window
+            and types character by character — even where a regular Ctrl+V paste
+            breaks.</p>
         </div>
-        <div class="term" role="img" aria-label="Терминал с Claude Code: промпт надиктован голосом">
+        <div class="term" role="img" aria-label="A terminal with Claude Code: a prompt dictated by voice">
           <div class="term-bar">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             <span class="title">Claude Code</span>
           </div>
           <div class="term-body">
-            <span class="p">&gt;&nbsp;</span><span class="said">посмотри почему падает
-            тест авторизации, найди причину и почини, потом прогони весь сьют
-            и покажи что зелёное</span><span class="caret"></span>
+            <span class="p">&gt;&nbsp;</span><span class="said">check why the auth
+            test is failing, find the cause and fix it, then run the whole suite
+            and show me it's all green</span><span class="caret"></span>
           </div>
           <div class="term-note">
             <span class="eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
-            надиктовано за 6 секунд — вместо минуты печати
+            dictated in 6 seconds — instead of a minute of typing
           </div>
         </div>
       </div>
@@ -416,22 +417,22 @@
   <section class="section section-alt">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Сравнение</span>
-        <h2>Molvi против облачных диктовок</h2>
-        <p>Molvi делает то, за что Wispr Flow и Aqua Voice берут подписку, —
-          локально, приватно и бесплатно.</p>
+        <span class="eyebrow">Comparison</span>
+        <h2>Molvi vs. cloud dictation</h2>
+        <p>Molvi does what Wispr Flow and Aqua Voice charge a subscription for —
+          locally, privately, and for free.</p>
       </div>
       <div class="compare">
         <table>
           <thead>
-            <tr><th>Что важно</th><th class="col-molvi">Molvi</th><th>Wispr Flow, Aqua Voice</th></tr>
+            <tr><th>What matters</th><th class="col-molvi">Molvi</th><th>Wispr Flow, Aqua Voice</th></tr>
           </thead>
           <tbody>
-            <tr><td>Где обрабатывается голос</td><td class="col-molvi">На вашем ПК</td><td>На серверах компании</td></tr>
-            <tr><td>Цена</td><td class="col-molvi">Бесплатно</td><td>Подписка</td></tr>
-            <tr><td>Приватность аудио</td><td class="col-molvi">Никуда не уходит</td><td>Загружается в облако</td></tr>
-            <tr><td>Работа без интернета</td><td class="col-molvi"><span class="yes">Да</span></td><td><span class="no">Нет</span></td></tr>
-            <tr><td>Открытый код</td><td class="col-molvi"><span class="yes">Да, MIT</span></td><td><span class="no">Нет</span></td></tr>
+            <tr><td>Where voice is processed</td><td class="col-molvi">On your PC</td><td>On the company's servers</td></tr>
+            <tr><td>Price</td><td class="col-molvi">Free</td><td>Subscription</td></tr>
+            <tr><td>Audio privacy</td><td class="col-molvi">Never leaves your device</td><td>Uploaded to the cloud</td></tr>
+            <tr><td>Works offline</td><td class="col-molvi"><span class="yes">Yes</span></td><td><span class="no">No</span></td></tr>
+            <tr><td>Open source</td><td class="col-molvi"><span class="yes">Yes, MIT</span></td><td><span class="no">No</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -441,18 +442,18 @@
   <!-- FINAL CTA -->
   <section class="section">
     <div class="wrap final">
-      <h2>Начните диктовать за пару минут</h2>
-      <p class="req">Windows 10/11 x64 (максимальное качество — с видеокартой NVIDIA 6+ ГБ)
-        или Mac с любым чипом M-серии: M1, M2, M3, M4 и новее — распознавание через
-        Metal, хватает даже базового M1 с 8 ГБ. Intel-маки не поддерживаются.
-        Первый запуск сам определит железо и скачает модель.</p>
+      <h2>Start dictating in a couple of minutes</h2>
+      <p class="req">Windows 10/11 x64 (maximum quality with an NVIDIA GPU with 6+ GB)
+        or a Mac with any M-series chip: M1, M2, M3, M4 and newer — recognition runs
+        through Metal, even a base M1 with 8 GB is enough. Intel Macs are not supported.
+        First launch detects your hardware and downloads the model automatically.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
-          Скачать Molvi
+          Download Molvi
         </a>
-        <a class="btn btn-ghost" href="./install-mac.html">Инструкция для Mac</a>
-        <a class="btn btn-ghost" href="https://github.com/artanov/molvi">Исходный код</a>
+        <a class="btn btn-ghost" href="./install-mac.html">Mac guide</a>
+        <a class="btn btn-ghost" href="https://github.com/artanov/molvi">Source code</a>
       </div>
     </div>
   </section>
@@ -461,32 +462,32 @@
 <footer>
   <div class="wrap">
     <div class="foot-inner">
-      <a class="brand" href="#top"><img src="./assets/icon.png" alt="Логотип Molvi" width="28" height="28">Molvi</a>
-      <nav class="foot-links" aria-label="Ссылки в подвале">
-        <a href="#features">Возможности</a>
-        <a href="#how">Как работает</a>
-        <a href="./install.html">Установка</a>
+      <a class="brand" href="#top"><img src="../assets/icon.png" alt="Molvi logo" width="28" height="28">Molvi</a>
+      <nav class="foot-links" aria-label="Footer links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="./install.html">Install</a>
         <a href="https://github.com/artanov/molvi">GitHub</a>
-        <a href="https://github.com/artanov/molvi/blob/main/LICENSE">Лицензия MIT</a>
-        <a href="./geek/" title="версия для гиков">💾 geek</a>
+        <a href="https://github.com/artanov/molvi/blob/main/LICENSE">MIT License</a>
+        <a href="./geek/" title="geek version">💾 geek</a>
       </nav>
     </div>
-    <p class="foot-note">Molvi — локальный голосовой ввод для Windows и macOS. Открытый код под лицензией MIT.
-      Whisper — модель распознавания речи; Molvi не связан с OpenAI.</p>
+    <p class="foot-note">Molvi is local voice typing for Windows and macOS. Open source under the MIT license.
+      Whisper is a speech recognition model; Molvi is not affiliated with OpenAI.</p>
   </div>
 </footer>
 
 <script>
-  // Подсветка границы навбара при прокрутке
+  // Highlight the navbar border on scroll
   var nav = document.getElementById('nav');
   addEventListener('scroll', function(){ nav.classList.toggle('scrolled', scrollY > 8); }, {passive:true});
 
-  // Демо-диктовка: печать текста (с уважением к prefers-reduced-motion)
+  // Demo dictation: typing animation (respects prefers-reduced-motion)
   (function(){
     var el = document.getElementById('typed');
     var field = document.getElementById('demoField');
     if(!el) return;
-    var text = 'Запиши мысль, пока она не убежала,— Molvi напечатает её сам.';
+    var text = 'Capture the thought before it slips away—Molvi will type it for you.';
     var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if(reduce){ el.textContent = text; field.classList.add('demo-caret-done'); return; }
     var i = 0;

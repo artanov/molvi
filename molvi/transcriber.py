@@ -31,6 +31,8 @@ if sys.platform == "win32":
 
 from faster_whisper import WhisperModel  # noqa: E402
 
+from molvi.i18n import tr
+
 
 def _cuda_libs_loadable():
     """cuBLAS/cuDNN грузятся ctranslate2 лениво при первом encode(): без них
@@ -51,11 +53,7 @@ class Transcriber:
         self._language = None if language == "auto" else language
         if device in ("auto", "cuda") and not _cuda_libs_loadable():
             if device == "cuda":
-                raise RuntimeError(
-                    "Библиотеки NVIDIA (cublas64_12.dll/cudnn64_9.dll) не найдены — "
-                    "device=cuda невозможен. Пройдите загрузку в мастере или "
-                    "поставьте device=auto."
-                )
+                raise RuntimeError(tr("transcriber.cuda_missing"))
             log.warning("Библиотеки NVIDIA не найдены — распознавание на CPU")
             device = "cpu"
         if device in ("auto", "cuda"):

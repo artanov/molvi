@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>molvi(1) для Mac — голосовой ввод в терминале</title>
-<meta name="description" content="Гик-версия molvi.tech для macOS: zsh-сессия в Terminal.app, mlx-whisper на Metal, диктовка правым ⌘ в любое окно — локально и бесплатно.">
-<link rel="canonical" href="https://molvi.tech/geek/mac/">
+<title>molvi(1) for Mac — voice input in the terminal</title>
+<meta name="description" content="The geek version of molvi.tech for macOS: a zsh session in Terminal.app, mlx-whisper on Metal, dictation with the right ⌘ into any window — local and free.">
+<link rel="canonical" href="https://molvi.tech/en/geek/mac/">
 <link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/mac/">
 <link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/mac/">
 <link rel="alternate" hreflang="x-default" href="https://molvi.tech/geek/mac/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
 <style>
-  /* Страница — мир Apple (#F5F5F7, SF Pro); контент — внутри окна Terminal.app.
-     Токены терминала — тёмная тема Terminal.app + бренд-коралл Molvi. */
+  /* The page lives in Apple's world (#F5F5F7, SF Pro); the content sits inside
+     a Terminal.app window. Terminal tokens — Terminal.app's dark theme + Molvi's brand coral. */
   :root{
     --page:#F5F5F7; --ink:#1D1D1F; --sub:#6E6E73; --hair:#D2D2D7;
     --term:#1E1E1E; --tbar-top:#2C2C2E; --tbar-bot:#232325; --tborder:#3A3A3C;
@@ -30,7 +30,7 @@
   :focus-visible{outline:2px solid var(--coral-page); outline-offset:2px; border-radius:4px}
   a{color:inherit; text-decoration:none}
 
-  /* Менюбар macOS — настоящая навигация, не декорация */
+  /* macOS menu bar — real navigation, not decoration */
   .menubar{position:sticky; top:0; z-index:10; height:30px;
     display:flex; align-items:center; gap:22px; padding:0 16px;
     background:color-mix(in srgb, var(--page) 74%, transparent);
@@ -44,7 +44,7 @@
   .menubar .right{margin-left:auto; color:var(--sub); font-variant-numeric:tabular-nums}
   @media(max-width:560px){.menubar{gap:14px} .menubar .hide-sm{display:none}}
 
-  /* Герой в духе apple.com: коротко, крупно, с точкой */
+  /* Hero in the apple.com spirit: short, big, with a point */
   .hero{max-width:820px; margin:0 auto; padding:72px 24px 40px; text-align:center}
   .eyebrow{font-size:14px; font-weight:600; color:var(--sub); letter-spacing:.02em}
   h1{margin:10px 0 0; font-size:clamp(40px,7vw,72px); font-weight:700;
@@ -55,7 +55,7 @@
     background:#fff; border:1px solid var(--hair); border-bottom-width:2px;
     border-radius:6px; padding:1px 7px; color:var(--ink)}
 
-  /* Окно Terminal.app */
+  /* Terminal.app window */
   .window{max-width:800px; margin:34px auto 24px; border-radius:12px; overflow:hidden;
     background:var(--term); border:1px solid rgba(0,0,0,.55);
     box-shadow:0 0 0 .5px rgba(255,255,255,.14) inset, 0 24px 68px rgba(0,0,0,.28),
@@ -135,7 +135,7 @@
     color:var(--faint); font-size:12.5px}
   .term-footer a{color:var(--dim)}
 
-  /* Подвал страницы — снова мир Apple */
+  /* Page footer — back in Apple's world */
   .page-footer{max-width:820px; margin:0 auto; padding:8px 24px 56px;
     text-align:center; font-size:13px; color:var(--sub)}
   .page-footer a{color:var(--ink); opacity:.75}
@@ -149,25 +149,25 @@
 </head>
 <body>
 
-<nav class="menubar" aria-label="Навигация">
-  <a href="/en/geek/mac/" lang="en" title="English version">EN</a>
-  <span class="app"><img src="../../assets/icon.png" alt="" width="15" height="15">Molvi</span>
-  <a href="../../index.html#features">Возможности</a>
-  <a href="../../install-mac.html">Установка</a>
-  <a class="hide-sm" href="../index.html">Windows-гик</a>
+<nav class="menubar" aria-label="Navigation">
+  <a href="/geek/mac/" lang="ru" title="Russian version">RU</a>
+  <span class="app"><img src="../../../assets/icon.png" alt="" width="15" height="15">Molvi</span>
+  <a href="../../index.html#features">Features</a>
+  <a href="../../install-mac.html">Install</a>
+  <a class="hide-sm" href="../index.html">Windows geek</a>
   <a href="https://github.com/artanov/molvi">GitHub</a>
   <span class="right">v1.3.0</span>
 </nav>
 
 <header class="hero">
-  <p class="eyebrow">Molvi для Mac · Apple Silicon</p>
-  <h1>Терминал слушает.</h1>
-  <p>Зажмите <span class="kbd">правый ⌘</span>, скажите — текст напечатается
-    в активное окно. Whisper работает на <b>Metal</b>,
-    <b>ни&nbsp;один байт не&nbsp;покидает ваш&nbsp;Мак</b>.</p>
+  <p class="eyebrow">Molvi for Mac · Apple Silicon</p>
+  <h1>The terminal is listening.</h1>
+  <p>Hold <span class="kbd">right ⌘</span>, say it — the text types
+    into the active window. Whisper runs on <b>Metal</b>,
+    <b>not&nbsp;a&nbsp;single byte leaves your&nbsp;Mac</b>.</p>
 </header>
 
-<div class="window" role="group" aria-label="Сессия терминала">
+<div class="window" role="group" aria-label="Terminal session">
   <div class="titlebar">
     <div class="lights" aria-hidden="true"><span class="r"></span><span class="y"></span><span class="g"></span></div>
     <span class="t">artanov — molvi — zsh — 84×32</span>
@@ -182,8 +182,8 @@
 ██║╚██╔╝██║██║   ██║██║    ╚██╗ ██╔╝██║
 ██║ ╚═╝ ██║╚██████╔╝███████╗╚████╔╝ ██║
 ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚═╝</pre>
-    <p class="out">molvi <b>v1.3.0</b> — локальный голосовой ввод для macOS
-<span class="comment"># зажал правый ⌘ → сказал → текст напечатан. whisper large-v3-turbo на Metal</span></p>
+    <p class="out">molvi <b>v1.3.0</b> — local voice input for macOS
+<span class="comment"># hold right ⌘ → speak → text appears. whisper large-v3-turbo on Metal</span></p>
 
     <p class="cmd">asciinema play demo.cast</p>
     <p class="out rec">rec 0:03</p>
@@ -191,22 +191,22 @@
 
     <p class="cmd">man molvi | head</p>
     <dl class="kv">
-      <dt>NAME</dt><dd><b>molvi</b> — говоришь, а не печатаешь</dd>
-      <dt>SYNOPSIS</dt><dd>удерживай <b>правый ⌘</b> (настраивается) → говори → отпусти</dd>
-      <dt>ENGINE</dt><dd>mlx-whisper / large-v3-turbo на Metal: ~2 с на фразу даже на M1 c 8 ГБ</dd>
-      <dt>NETWORK</dt><dd><b>ноль байт наружу.</b> модель качается один раз, дальше офлайн</dd>
-      <dt>TELEMETRY</dt><dd>отсутствует как класс</dd>
-      <dt>LICENSE</dt><dd>MIT, исходники на <a href="https://github.com/artanov/molvi">github</a></dd>
+      <dt>NAME</dt><dd><b>molvi</b> — you speak, not type</dd>
+      <dt>SYNOPSIS</dt><dd>hold <b>right ⌘</b> (configurable) → speak → release</dd>
+      <dt>ENGINE</dt><dd>mlx-whisper / large-v3-turbo on Metal: ~2s per phrase even on an M1 with 8 GB</dd>
+      <dt>NETWORK</dt><dd><b>zero bytes out.</b> model downloads once, then fully offline</dd>
+      <dt>TELEMETRY</dt><dd>does not exist, period</dd>
+      <dt>LICENSE</dt><dd>MIT, source on <a href="https://github.com/artanov/molvi">github</a></dd>
     </dl>
 
     <p class="cmd">cat features.txt</p>
     <ul class="checks">
-      <li><b>не крадёт фокус</b>: пилюля появляется поверх, а курсор остаётся там, куда печатаем</li>
-      <li>идеален для <b>Claude Code / Codex</b>: длинный промпт за секунды, голосом</li>
-      <li>нативный Apple Silicon: движок MLX, unified memory, ноль ватт впустую</li>
-      <li>живой эквалайзер: волна ходит от твоего голоса — видно, что мик слышит</li>
-      <li>правый ⌘ по умолчанию; любой хоткей, любой микрофон, ru/en/auto</li>
-      <li>живёт в строке меню, ~0% CPU пока молчишь</li>
+      <li><b>doesn't steal focus</b>: the pill appears on top, and the cursor stays wherever we're typing</li>
+      <li>perfect for <b>Claude Code / Codex</b>: a long prompt in seconds, by voice</li>
+      <li>native Apple Silicon: the MLX engine, unified memory, zero wasted watts</li>
+      <li>live equalizer: the wave moves with your voice — you can see the mic is listening</li>
+      <li>right ⌘ by default; any hotkey, any microphone, ru/en/auto</li>
+      <li>lives in the menu bar, ~0% CPU while you're silent</li>
     </ul>
 
     <p class="cmd">diff --side-by-side wispr-flow molvi</p>
@@ -214,18 +214,18 @@
       <div class="pane pane-minus">
         <div class="ph">wispr-flow / aqua-voice</div>
         <ul>
-          <li>$12–15 в месяц, подписка</li>
-          <li>аудио уходит в облако</li>
-          <li>без интернета не работает</li>
-          <li>закрытый код — верь на слово</li>
+          <li>$12–15/mo, subscription</li>
+          <li>audio goes to the cloud</li>
+          <li>doesn't work offline</li>
+          <li>closed source — take their word for it</li>
         </ul>
       </div>
       <div class="pane pane-plus">
         <div class="ph">molvi</div>
         <ul>
-          <li>бесплатно навсегда, MIT</li>
-          <li>аудио не покидает машину</li>
-          <li>офлайн после загрузки модели</li>
+          <li>free forever, MIT</li>
+          <li>audio never leaves the machine</li>
+          <li>offline after the model downloads</li>
           <li><a href="https://github.com/artanov/molvi">github.com/artanov/molvi</a></li>
         </ul>
       </div>
@@ -233,38 +233,38 @@
 
     <p class="cmd">cat INSTALL.md</p>
     <ol class="steps">
-      <li>качаешь <b>Molvi.dmg</b> (~150 МБ) — кнопка ниже, перетаскиваешь в Applications</li>
-      <li>снимаешь карантин: <code>xattr -cr /Applications/Molvi.app</code> <span class="note"># нотаризации нет — есть исходники</span><br>
-        <span class="note">&nbsp;&nbsp;&nbsp;без терминала: запустить → «Готово» → System Settings → Privacy &amp; Security → «Открыть всё равно» (sequoia убрала правый-клик→Открыть)</span></li>
-      <li>мастер скачает модель (<code>large-v3-turbo</code> ≈ 1.6 ГБ) и попросит два разрешения: <b>Мониторинг ввода</b> + <b>Универсальный доступ</b></li>
-      <li>зажал <code>⌘</code> → сказал → готово</li>
+      <li>download <b>Molvi.dmg</b> (~150 MB) — button below, drag it into Applications</li>
+      <li>remove the quarantine flag: <code>xattr -cr /Applications/Molvi.app</code> <span class="note"># no notarization — but there's source code</span><br>
+        <span class="note">&nbsp;&nbsp;&nbsp;no terminal: launch → "Done" → System Settings → Privacy &amp; Security → "Open Anyway" (Sequoia removed right-click→Open)</span></li>
+      <li>the wizard downloads the model (<code>large-v3-turbo</code> ≈ 1.6 GB) and asks for two permissions: <b>Input Monitoring</b> + <b>Accessibility</b></li>
+      <li>hold <code>⌘</code> → speak → done</li>
     </ol>
     <a class="btn" href="https://github.com/artanov/molvi/releases/latest">⬇ Molvi.dmg</a>
-    <p class="note">macOS 13.5+ · любой M-чип: M1, M2, M3, M4… (Intel — нет) ·
-      <a href="../../install-mac.html">подробная инструкция</a></p>
+    <p class="note">macOS 13.5+ · any M-chip: M1, M2, M3, M4… (no Intel) ·
+      <a href="../../install-mac.html">full guide</a></p>
 
     <footer class="term-footer">
       molvi.tech © MIT ·
       <a href="https://github.com/artanov/molvi">git</a> ·
-      <a href="../../index.html">обычная версия сайта</a> ·
-      <a href="../index.html">гик-версия для windows</a> ·
+      <a href="../../index.html">regular version of the site</a> ·
+      <a href="../index.html">windows geek version</a> ·
       exit 0
     </footer>
   </div>
 </div>
 
 <footer class="page-footer">
-  <p>Распознавание — модель Whisper (OpenAI) в конвертации
-    <a href="https://huggingface.co/mlx-community/whisper-large-v3-turbo">mlx-community</a>,
-    исполняется движком <a href="https://github.com/ml-explore/mlx">MLX</a> от Apple.
-    Весь код Molvi открыт.</p>
+  <p>Recognition uses the Whisper model (OpenAI) in the
+    <a href="https://huggingface.co/mlx-community/whisper-large-v3-turbo">mlx-community</a>
+    conversion, run by Apple's <a href="https://github.com/ml-explore/mlx">MLX</a> engine.
+    All of Molvi's code is open.</p>
 </footer>
 
 <script>
 (function(){
   var el = document.getElementById('typed');
   if (!el) return;
-  var text = 'найди все места где мы парсим конфиг руками и вынеси в одну функцию с тестами';
+  var text = 'find every place where we parse the config by hand and pull it into one function with tests';
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = text; return; }
   var i = 0;
   (function tick(){

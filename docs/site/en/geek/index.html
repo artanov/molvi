@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>molvi(1) — голосовой ввод для терминала</title>
-<meta name="description" content="Гик-версия molvi.tech: man-страница, side-by-side diff с Wispr Flow и Aqua Voice, установка за 4 шага. Локальный голосовой ввод для Windows и Claude Code.">
-<link rel="canonical" href="https://molvi.tech/geek/">
+<title>molvi(1) — voice input for the terminal</title>
+<meta name="description" content="The geek version of molvi.tech: a man page, a side-by-side diff with Wispr Flow and Aqua Voice, a 4-step install. Local voice typing for Windows and Claude Code.">
+<link rel="canonical" href="https://molvi.tech/en/geek/">
 <link rel="alternate" hreflang="ru" href="https://molvi.tech/geek/">
 <link rel="alternate" hreflang="en" href="https://molvi.tech/en/geek/">
 <link rel="alternate" hreflang="x-default" href="https://molvi.tech/geek/">
@@ -31,7 +31,7 @@
   a:hover{color:var(--coral-hi); text-decoration:underline; text-underline-offset:3px}
   :focus-visible{outline:2px solid var(--coral); outline-offset:2px}
 
-  /* CRT: едва заметные скэнлайны + виньетка */
+  /* CRT: faint scanlines + vignette */
   body::before{content:""; position:fixed; inset:0; pointer-events:none; z-index:2;
     background:repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.13) 2px 4px)}
   body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:2;
@@ -78,7 +78,7 @@
   ul.checks li::before{content:"[x] "; color:var(--green); font-weight:700}
   ul.checks li b{color:var(--fg)}
 
-  /* split-diff: слева минусы конкурентов, справа плюсы molvi */
+  /* split-diff: competitor's minuses on the left, molvi's pluses on the right */
   .diff2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:10px 0}
   .pane{background:var(--bg); border:1px solid var(--border); border-radius:8px;
     overflow:hidden}
@@ -121,7 +121,7 @@
   <div class="tbar">
     <span class="d r"></span><span class="d"></span><span class="d"></span>
     <span class="title">geek@molvi: ~ — bash</span>
-    <a class="lang" href="/en/geek/" lang="en" title="English version">EN</a>
+    <a class="lang" href="/geek/" lang="ru" title="Russian version">RU</a>
   </div>
   <div class="body">
 
@@ -133,8 +133,8 @@
 ██║╚██╔╝██║██║   ██║██║    ╚██╗ ██╔╝██║
 ██║ ╚═╝ ██║╚██████╔╝███████╗╚████╔╝ ██║
 ╚═╝     ╚═╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚═╝</pre>
-    <p class="out">molvi <b>v1.3.0</b> — локальный голосовой ввод для Windows
-<span class="tag"># зажал клавишу → сказал → текст напечатан. whisper large-v3, 100% на твоём железе</span></p>
+    <p class="out">molvi <b>v1.3.0</b> — local voice input for Windows
+<span class="tag"># hold a key → speak → text appears. whisper large-v3, 100% on your own hardware</span></p>
 
     <p class="cmd">asciinema play demo.cast</p>
     <p class="out rec">rec 0:03</p>
@@ -142,22 +142,22 @@
 
     <p class="cmd">man molvi | head</p>
     <dl class="kv">
-      <dt>NAME</dt><dd><b>molvi</b> — говоришь, а не печатаешь</dd>
-      <dt>SYNOPSIS</dt><dd>удерживай <b>Ctrl</b> (настраивается) → говори → отпусти</dd>
-      <dt>ENGINE</dt><dd>faster-whisper / large-v3 на CUDA; CPU-fallback на base</dd>
-      <dt>NETWORK</dt><dd><b>ноль байт наружу.</b> модель качается один раз, дальше офлайн</dd>
-      <dt>TELEMETRY</dt><dd>отсутствует как класс</dd>
-      <dt>LICENSE</dt><dd>MIT, исходники на <a href="https://github.com/artanov/molvi">github</a></dd>
+      <dt>NAME</dt><dd><b>molvi</b> — you speak, not type</dd>
+      <dt>SYNOPSIS</dt><dd>hold <b>Ctrl</b> (configurable) → speak → release</dd>
+      <dt>ENGINE</dt><dd>faster-whisper / large-v3 on CUDA; CPU fallback to base</dd>
+      <dt>NETWORK</dt><dd><b>zero bytes out.</b> model downloads once, then fully offline</dd>
+      <dt>TELEMETRY</dt><dd>does not exist, period</dd>
+      <dt>LICENSE</dt><dd>MIT, source on <a href="https://github.com/artanov/molvi">github</a></dd>
     </dl>
 
     <p class="cmd">cat features.txt</p>
     <ul class="checks">
-      <li><b>печатает в терминал</b> — распознаёт консоль и шлёт посимвольно, где Ctrl+V мёртв</li>
-      <li>идеален для <b>Claude Code / Codex</b>: длинный промпт за секунды, голосом</li>
-      <li>живой эквалайзер: волна ходит от твоего голоса — видно, что мик слышит</li>
-      <li>любой хоткей, любой микрофон, ru/en/auto</li>
-      <li>оверлей на мониторе с активным окном (multi-monitor — так, как надо)</li>
-      <li>автозапуск в трее, ~0% CPU пока молчишь</li>
+      <li><b>types into the terminal</b> — detects the console and sends char by char, where Ctrl+V is dead</li>
+      <li>perfect for <b>Claude Code / Codex</b>: a long prompt in seconds, by voice</li>
+      <li>live equalizer: the wave moves with your voice — you can see the mic is listening</li>
+      <li>any hotkey, any microphone, ru/en/auto</li>
+      <li>overlay lands on the monitor with the active window (multi-monitor done right)</li>
+      <li>autostart in the tray, ~0% CPU while you're silent</li>
     </ul>
 
     <p class="cmd">diff --side-by-side wispr-flow molvi</p>
@@ -165,18 +165,18 @@
       <div class="pane pane-minus">
         <div class="ph">wispr-flow / aqua-voice</div>
         <ul>
-          <li>$12–15 в месяц, подписка</li>
-          <li>аудио уходит в облако</li>
-          <li>без интернета не работает</li>
-          <li>закрытый код — верь на слово</li>
+          <li>$12–15/mo, subscription</li>
+          <li>audio goes to the cloud</li>
+          <li>doesn't work offline</li>
+          <li>closed source — take their word for it</li>
         </ul>
       </div>
       <div class="pane pane-plus">
         <div class="ph">molvi</div>
         <ul>
-          <li>бесплатно навсегда, MIT</li>
-          <li>аудио не покидает машину</li>
-          <li>офлайн после загрузки модели</li>
+          <li>free forever, MIT</li>
+          <li>audio never leaves the machine</li>
+          <li>offline after the model downloads</li>
           <li><a href="https://github.com/artanov/molvi">github.com/artanov/molvi</a></li>
         </ul>
       </div>
@@ -184,19 +184,19 @@
 
     <p class="cmd">cat INSTALL.md</p>
     <ol class="steps">
-      <li>качаешь установщик (~70 МБ) — кнопка ниже</li>
-      <li>SmartScreen: <b>Подробнее → Выполнить в любом случае</b> <span class="note"># подписи нет — есть исходники</span></li>
-      <li>мастер сам найдёт GPU и скачает модель (<code>large-v3</code> ≈ 3 ГБ на NVIDIA 6+ГБ, иначе <code>base</code>)</li>
-      <li>зажал <code>Ctrl</code> → сказал → готово</li>
+      <li>download the installer (~70 MB) — button below</li>
+      <li>SmartScreen: <b>More info → Run anyway</b> <span class="note"># no signature — but there's source code</span></li>
+      <li>the wizard finds your GPU on its own and downloads the model (<code>large-v3</code> ≈ 3 GB on NVIDIA 6+GB, otherwise <code>base</code>)</li>
+      <li>hold <code>Ctrl</code> → speak → done</li>
     </ol>
     <a class="btn" href="https://github.com/artanov/molvi/releases/latest">▼ Molvi-Setup.exe</a>
-    <p class="note">windows 10/11 x64 · <a href="https://molvi.tech/install.html">подробная инструкция со скринами</a></p>
+    <p class="note">windows 10/11 x64 · <a href="https://molvi.tech/en/install.html">full guide with screenshots</a></p>
 
     <footer>
       molvi.tech © MIT ·
       <a href="https://github.com/artanov/molvi">git</a> ·
-      <a href="/">обычная версия сайта</a> ·
-      <a href="./mac/">mac-версия</a> ·
+      <a href="/en/">regular version of the site</a> ·
+      <a href="./mac/">mac version</a> ·
       exit 0
     </footer>
   </div>
@@ -206,7 +206,7 @@
 (function(){
   var el = document.getElementById('typed');
   if (!el) return;
-  var text = 'найди все места где мы парсим конфиг руками и вынеси в одну функцию с тестами';
+  var text = 'find every place where we parse the config by hand and pull it into one function with tests';
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = text; return; }
   var i = 0;
   (function tick(){

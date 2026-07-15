@@ -1,13 +1,37 @@
+import pytest
+
+from molvi import i18n
 from molvi.settings import (
-    LANGUAGES, QUALITY_PRESETS, _DEFAULT_DEVICE_LABEL,
-    dedupe_input_devices, device_choices, language_index, quality_index_for_model,
+    dedupe_input_devices, device_choices, language_choices, language_index,
+    quality_index_for_model, quality_presets, ui_language_choices, ui_language_index,
 )
+
+_DEFAULT_DEVICE_LABEL = "Системный по умолчанию"
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Тесты зависят от текущего языка i18n — фиксируем ru независимо
+    # от порядка запуска файлов.
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 def test_quality_presets_models():
     import sys
     top = "large-v3-turbo" if sys.platform == "darwin" else "large-v3"
-    assert [m for _, m in QUALITY_PRESETS] == [top, "small", "base"]
+    assert [m for _, m in quality_presets()] == [top, "small", "base"]
+
+
+def test_quality_presets_english():
+    from molvi import i18n
+    i18n.set_language("en")
+    try:
+        labels = [label for label, _ in quality_presets()]
+        assert any("Best" in l for l in labels)
+    finally:
+        i18n.set_language("ru")
 
 
 def test_quality_index_for_model():
@@ -16,9 +40,13 @@ def test_quality_index_for_model():
 
 
 def test_language_index():
-    assert [c for _, c in LANGUAGES] == ["auto", "ru", "en"]
+    assert [c for _, c in language_choices()] == ["auto", "ru", "en"]
     assert language_index("ru") == 1
     assert language_index("xx") == 0
+
+
+def test_ui_language_choices_codes():
+    assert [code for _, code in ui_language_choices()] == ["auto", "ru", "en"]
 
 
 def test_dedupe_input_devices():
@@ -55,3 +83,19 @@ def test_device_choices_unknown_value_kept_as_current():
         assert values[1] == label
         assert idx == 1
         assert mapping[label] == unknown
+
+
+def test_device_choices_english_default_label():
+    from molvi import i18n
+    i18n.set_language("en")
+    try:
+        values, idx, mapping = device_choices(["Mic A"], None)
+        assert values[0] == "System default"
+        assert mapping["System default"] is None
+    finally:
+        i18n.set_language("ru")
+
+
+def test_ui_language_index():
+    assert ui_language_index("ru") == 1
+    assert ui_language_index("xx") == 0

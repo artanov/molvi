@@ -31,6 +31,19 @@ def test_human_label():
     assert human_label(["ctrl_left", "alt_left", "x"]) == "Ctrl слева + Alt слева + X"
 
 
+def test_human_label_english():
+    from molvi import i18n
+    i18n.set_language("en")
+    try:
+        assert human_label(["ctrl_left", "space"]) == "Left Ctrl + Space"
+    finally:
+        i18n.set_language("ru")
+
+
+def test_human_label_russian_default():
+    assert human_label(["ctrl_left", "space"]) == "Ctrl слева + Пробел"
+
+
 def test_combo_fires_when_all_down_releases_on_any_up():
     hl, events = _make()
     hl._handle(WM_KEYDOWN, CTRL_L)
