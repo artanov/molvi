@@ -16,7 +16,7 @@ import sounddevice as sd
 from molvi import fetch, gpu, paths
 from molvi.platform import hotkey as hk
 from molvi.config import DEFAULTS
-from molvi.settings import QUALITY_PRESETS, dedupe_input_devices, quality_index_for_model
+from molvi.settings import dedupe_input_devices, quality_index_for_model, quality_presets
 
 log = logging.getLogger(__name__)
 
@@ -153,12 +153,12 @@ class Wizard:
         ttk.Label(self._body, text=found, wraplength=500, justify="left").pack(
             anchor="w", pady=(0, 10))
         self._quality_var = tk.IntVar(value=quality_index_for_model(self._cfg["model"]))
-        for i, (label, _model) in enumerate(QUALITY_PRESETS):
+        for i, (label, _model) in enumerate(quality_presets()):
             ttk.Radiobutton(self._body, text=label, variable=self._quality_var,
                             value=i, command=self._on_quality).pack(anchor="w", pady=2)
 
     def _on_quality(self):
-        model = QUALITY_PRESETS[self._quality_var.get()][1]
+        model = quality_presets()[self._quality_var.get()][1]
         self._cfg["model"] = model
         self._cfg["device"] = resolve_device(model, self._rec_device)
         self._need_cuda = self._cfg["device"] == "auto" and sys.platform == "win32"

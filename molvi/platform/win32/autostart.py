@@ -1,6 +1,6 @@
 import winreg
 
-LABEL = "Запускать вместе с Windows"
+LABEL_KEY = "autostart.windows"   # ключ i18n: подпись чекбокса в настройках
 
 _RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 _VALUE_NAME = "Molvi"

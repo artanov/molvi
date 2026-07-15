@@ -12,7 +12,7 @@ from molvi import paths
 
 log = logging.getLogger(__name__)
 
-LABEL = "Запускать при входе в систему"
+LABEL_KEY = "autostart.mac"   # ключ i18n: подпись чекбокса в настройках
 
 _PLIST_LABEL = "tech.molvi.app"
 
