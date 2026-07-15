@@ -3,7 +3,17 @@ import time
 import numpy as np
 import pytest
 
+from molvi import i18n
 from molvi.controller import Controller
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Уведомления идут через tr() — фиксируем язык, чтобы тесты не зависели
+    # от порядка запуска (другой файл мог оставить i18n в состоянии "en").
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 class FakeRecorder:
@@ -264,7 +274,7 @@ def test_transcribe_error_message_does_not_mention_clipboard():
     ctl.on_release()
     assert _wait_until(lambda: notes)
     ctl.shutdown()
-    assert "распознавания" in notes[0]
+    assert notes[0] == i18n.tr("controller.transcribe_error", exc=RuntimeError("boom"))
     assert "буфер" not in notes[0]
 
 
@@ -286,7 +296,9 @@ def test_insert_error_message_mentions_clipboard():
     ctl.on_release()
     assert _wait_until(lambda: notes)
     ctl.shutdown()
-    assert "буфере обмена" in notes[0]
+    assert notes[0] == i18n.tr(
+        "controller.paste_error", exc=OSError("SendInput failed"), paste_hint="Ctrl+V"
+    )
 
 
 def test_failed_recorder_start_leaves_not_recording():

@@ -4,15 +4,18 @@ import queue
 import tkinter as tk
 
 from molvi import theme
+from molvi.i18n import tr
 from molvi.platform import overlay as _plat
 
 log = logging.getLogger(__name__)
 
 _BASE_SIZE = (400, 128)   # логический размер пилюли; соответствует 192 DPI (200%)
 
+# Храним ключи, а не готовый текст: перевод берётся при показе — язык
+# интерфейса мог смениться в Настройках уже после старта приложения.
 _TEXT_STATES = {
-    "recording": ("●  Запись…", theme.RECORDING),
-    "transcribing": ("⏳  Распознаю…", theme.TRANSCRIBING),
+    "recording": ("overlay.recording", theme.RECORDING),
+    "transcribing": ("overlay.transcribing", theme.TRANSCRIBING),
 }
 
 N_BARS = 17
@@ -226,8 +229,8 @@ class Overlay:
                     self._place()  # монитор активного окна — куда и печатаем
                     _plat.show_window(self._root)
                 else:
-                    text, bg = _TEXT_STATES[state]
-                    self._label.config(text=text, bg=bg)
+                    key, bg = _TEXT_STATES[state]
+                    self._label.config(text=tr(key), bg=bg)
                     self._place()
                     _plat.show_window(self._root)
             except Exception:
