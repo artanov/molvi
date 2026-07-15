@@ -16,6 +16,15 @@ def test_default_hotkey_resolvable_and_labeled():
     assert dhk.human_label(dhk.DEFAULT_HOTKEY) == "⌘ Cmd справа"
 
 
+def test_human_label_english_darwin():
+    from molvi import i18n
+    i18n.set_language("en")
+    try:
+        assert dhk.human_label(["win_right", "space"]) == "⌘ Right Cmd + Space"
+    finally:
+        i18n.set_language("ru")
+
+
 def test_unknown_name_raises():
     with pytest.raises(ValueError):
         dhk.names_to_vks(["insert"])  # клавиши Insert на маке нет

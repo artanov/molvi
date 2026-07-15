@@ -49,7 +49,7 @@ MODIFIER_NAMES = {
     "alt_left", "alt_right", "win_left", "win_right",
 }
 
-_DISPLAY = {
+_DISPLAY_RU = {
     "ctrl_left": "⌃ Control слева", "ctrl_right": "⌃ Control справа",
     "shift_left": "⇧ Shift слева", "shift_right": "⇧ Shift справа",
     "alt_left": "⌥ Option слева", "alt_right": "⌥ Option справа",
@@ -59,6 +59,17 @@ _DISPLAY = {
     "delete": "Delete", "home": "Home", "end": "End",
     "pageup": "PageUp", "pagedown": "PageDown",
 }
+_DISPLAY_EN = {
+    "ctrl_left": "⌃ Left Control", "ctrl_right": "⌃ Right Control",
+    "shift_left": "⇧ Left Shift", "shift_right": "⇧ Right Shift",
+    "alt_left": "⌥ Left Option", "alt_right": "⌥ Right Option",
+    "win_left": "⌘ Left Cmd", "win_right": "⌘ Right Cmd",
+    "space": "Space", "tab": "Tab",
+    "backquote": "`", "left": "←", "up": "↑", "right": "→", "down": "↓",
+    "delete": "Delete", "home": "Home", "end": "End",
+    "pageup": "PageUp", "pagedown": "PageDown",
+}
+_DISPLAY = {"ru": _DISPLAY_RU, "en": _DISPLAY_EN}
 
 VK_ESCAPE = 0x35
 TABLE = KeyTable(VK_NAMES, MODIFIER_NAMES, _DISPLAY, VK_ESCAPE)
