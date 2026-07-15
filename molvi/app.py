@@ -40,9 +40,12 @@ def main():
     try:
         log.info("Запуск Molvi")
 
+        from molvi import i18n
+        from molvi.i18n import tr
         from molvi.config import load_config, save_config
         cfg_file = paths.config_path()
         if not cfg_file.exists():
+            i18n.set_language("auto")   # мастер стартует на языке системы
             log.info("config.json не найден — запускаю мастер первого запуска")
             try:
                 from molvi.wizard import Wizard
@@ -53,6 +56,7 @@ def main():
             save_config(cfg_file, cfg)
         else:
             cfg = load_config(cfg_file)
+        i18n.set_language(cfg.get("ui_language", "auto"))
 
         # Тяжёлые импорты — после логирования, чтобы ошибки попали в лог.
         # transcriber импортируется НИЖЕ — после докачки CUDA-DLL: его
@@ -99,7 +103,7 @@ def main():
                 and not any(paths.cuda_dir().glob("*.dll"))):
             from molvi import fetch, gpu
             if gpu.detect_nvidia() is not None:
-                tray.notify("Скачиваю библиотеки NVIDIA (~0.6 ГБ) — разовая загрузка…")
+                tray.notify(tr("app.notify.cuda_download"))
                 try:
                     import tempfile
                     paths.cuda_dir().mkdir(parents=True, exist_ok=True)
@@ -108,12 +112,9 @@ def main():
                     log.info("CUDA-библиотеки докачаны")
                 except Exception:
                     log.exception("Не удалось скачать библиотеки NVIDIA")
-                    tray.notify(
-                        "Не удалось скачать библиотеки NVIDIA — "
-                        "распознавание будет на процессоре."
-                    )
+                    tray.notify(tr("app.notify.cuda_failed"))
 
-        tray.notify("Загружаю модель распознавания…")
+        tray.notify(tr("app.notify.loading_model"))
         if sys.platform == "darwin":
             from molvi.platform.darwin.transcriber import Transcriber
         else:
@@ -159,7 +160,7 @@ def main():
             except Exception as exc:
                 listener.dead = True  # капчер в настройках не будет ждать вечно
                 log.exception("Хук клавиатуры не запустился")
-                tray.notify(f"Клавиша диктовки не работает: {exc}. Подробности в molvi.log")
+                tray.notify(tr("app.notify.hotkey_broken", exc=exc))
 
         hotkey_thread = threading.Thread(target=_run_listener, daemon=True)
         hotkey_thread.start()
@@ -177,7 +178,7 @@ def main():
                 if applied:
                     last_good["model"] = snapshot["model"]
                     last_good["language"] = snapshot["language"]
-                    tray.notify(f"Готов. Модель: {snapshot['model']}")
+                    tray.notify(tr("app.notify.model_ready", model=snapshot["model"]))
             except Exception as exc:
                 log.exception("Не удалось загрузить модель %s", snapshot["model"])
                 applied = controller.finish_model_reload(None, token)
@@ -185,9 +186,7 @@ def main():
                     with cfg_lock:
                         cfg["model"], cfg["language"] = last_good["model"], last_good["language"]
                         save_config(paths.config_path(), cfg)
-                    tray.notify(
-                        f"Не удалось загрузить модель: {exc}. Возвращены прежние настройки."
-                    )
+                    tray.notify(tr("app.notify.model_failed", exc=exc))
 
         def apply_settings(new_cfg, autostart_on):
             # вызывается в tk-потоке из SettingsWindow
@@ -200,8 +199,14 @@ def main():
                 with cfg_lock:
                     old_model = cfg["model"]
                     old_language = cfg["language"]
+                    old_ui_language = cfg["ui_language"]
                     cfg.update(new_cfg)
                     save_config(paths.config_path(), cfg)
+                    if cfg["ui_language"] != old_ui_language:
+                        # Меню трея перечитает подписи; открытые окна
+                        # перерисуются при следующем открытии.
+                        i18n.set_language(cfg["ui_language"])
+                        tray.refresh()
                     if cfg["model"] != old_model:
                         token = controller.begin_model_reload()
                         snapshot = {
@@ -227,16 +232,16 @@ def main():
                         autostart.disable()
                 except OSError as exc:
                     log.exception("Автозапуск: ошибка реестра")
-                    tray.notify(f"Не удалось изменить автозапуск: {exc}")
+                    tray.notify(tr("app.notify.autostart_failed", exc=exc))
                 if reload_args is not None:
-                    tray.notify("Загружаю модель… Диктовка временно недоступна.")
+                    tray.notify(tr("app.notify.model_reloading"))
                     threading.Thread(
                         target=_reload_model, args=reload_args, daemon=True
                     ).start()
                 log.info("Настройки применены: hotkey=%s", cfg["hotkey"])
             except Exception as exc:
                 log.exception("Не удалось применить настройки")
-                tray.notify(f"Не удалось применить настройки: {exc}")
+                tray.notify(tr("app.notify.settings_failed", exc=exc))
 
         settings_ref = {"win": None}
 
@@ -253,8 +258,9 @@ def main():
         overlay.set_settings_opener(open_settings_window)
 
         suffix = ("" if transcriber.device in ("cuda", "mlx")
-                  else " (CPU — медленный режим!)")
-        tray.notify(f"Готов. Зажмите {hk.human_label(cfg['hotkey'])} и говорите{suffix}")
+                  else tr("app.notify.cpu_suffix"))
+        tray.notify(tr("app.notify.ready",
+                       hotkey=hk.human_label(cfg["hotkey"]), suffix=suffix))
         overlay.run()  # блокирует главный поток до schedule_quit()
         log.info("Остановлен")
     except Exception as exc:
@@ -272,11 +278,13 @@ def _show_fatal_error(exc):
         import tkinter as tk
         from tkinter import messagebox
 
+        from molvi.i18n import tr
+
         root = tk.Tk()
         root.withdraw()
         messagebox.showerror(
             "Molvi",
-            f"Molvi не запустился: {exc}\n\nПодробности в журнале:\n{paths.log_path()}",
+            tr("app.fatal", exc=exc, log_path=paths.log_path()),
         )
         root.destroy()
     except Exception:
