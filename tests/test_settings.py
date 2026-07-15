@@ -1,9 +1,21 @@
+import pytest
+
+from molvi import i18n
 from molvi.settings import (
     dedupe_input_devices, device_choices, language_choices, language_index,
     quality_index_for_model, quality_presets, ui_language_choices, ui_language_index,
 )
 
 _DEFAULT_DEVICE_LABEL = "Системный по умолчанию"
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Тесты зависят от текущего языка i18n — фиксируем ru независимо
+    # от порядка запуска файлов.
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 def test_quality_presets_models():

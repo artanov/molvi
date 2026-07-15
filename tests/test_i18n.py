@@ -53,6 +53,12 @@ def test_tr_missing_format_arg_returns_raw():
     assert "{exc}" in raw
 
 
+def test_tr_wrong_format_arg_returns_raw():
+    # Неверное ИМЯ параметра доходит до .format() и не должно ронять UI.
+    raw = i18n.tr("controller.mic_unavailable", wrong="x")
+    assert raw == i18n.RU["controller.mic_unavailable"]
+
+
 def test_set_language_auto_uses_system(monkeypatch):
     monkeypatch.setattr(i18n, "system_language", lambda: "en")
     i18n.set_language("auto")

@@ -1,4 +1,16 @@
+import pytest
+
+from molvi import i18n
 from molvi.wizard import resolve_device, vram_label
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Тесты зависят от текущего языка i18n — фиксируем ru независимо
+    # от порядка запуска файлов.
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 def test_resolve_device_large_always_tries_gpu():
