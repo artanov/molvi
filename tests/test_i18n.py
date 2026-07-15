@@ -17,8 +17,15 @@ def test_ru_en_same_keys():
     assert set(i18n.RU) == set(i18n.EN)
 
 
+# wizard.language.title намеренно двуязычный («Язык / Language»):
+# шаг выбора языка виден ДО выбора — оба названия обязаны быть.
+_BILINGUAL_KEYS = {"wizard.language.title"}
+
+
 def test_en_has_no_cyrillic():
     for key, value in i18n.EN.items():
+        if key in _BILINGUAL_KEYS:
+            continue
         assert not re.search("[А-Яа-яЁё]", value), f"кириллица в EN[{key}]"
 
 

@@ -194,7 +194,7 @@ EN = {
     "wizard.back": "Back",
     "wizard.next": "Next",
     "wizard.finish": "Finish",
-    "wizard.step_failed": ("This step failed — click "Next"; you can finish "
+    "wizard.step_failed": ("This step failed — click “Next”; you can finish "
                            "setup later in Settings."),
     "wizard.confirm_quit": "A download is in progress. Abort and exit?",
     "wizard.language.title": "Язык / Language",
@@ -216,7 +216,7 @@ EN = {
     "wizard.dl.part_model": "the model ({size} GB)",
     "wizard.dl.part_cuda": "NVIDIA libraries (~0.6 GB)",
     "wizard.dl.start": "Start download",
-    "wizard.dl.skip_note": ("You can click "Next" to skip — anything missing will be "
+    "wizard.dl.skip_note": ("You can click “Next” to skip — anything missing will be "
                             "downloaded automatically the next time Molvi starts "
                             "(it will take a while)."),
     "wizard.dl.preparing": "Preparing…",
@@ -241,16 +241,16 @@ EN = {
     "wizard.hk.title": "Dictation key",
     "wizard.hk.hint": ("Hold this key (or combination) to record; release it and "
                        "the text will be typed. You can change it anytime in Settings."),
-    "wizard.hk.unavailable": ("Key unavailable: grant the "Input Monitoring" "
+    "wizard.hk.unavailable": ("Key unavailable: grant the “Input Monitoring” "
                               "permission and restart Molvi"),
     "wizard.done.title": "All set",
     "wizard.done.where_mac": "in the menu bar (top right)",
     "wizard.done.where_win": "in the tray (icon near the clock)",
-    "wizard.done.how_mac": "Settings anytime: menu bar icon → "Settings…".",
-    "wizard.done.how_win": "Settings anytime: right-click the tray icon → "Settings…".",
+    "wizard.done.how_mac": "Settings anytime: menu bar icon → “Settings…”.",
+    "wizard.done.how_win": "Settings anytime: right-click the tray icon → “Settings…”.",
     "wizard.done.body": (
-        "After you click "Finish", the recognition model will load — wait for "
-        "the "Ready" notification {where}.\n\n"
+        "After you click “Finish”, the recognition model will load — wait for "
+        "the “Ready” notification {where}.\n\n"
         "Then hold {hotkey} and speak — the text will appear where your "
         "cursor is.\n\n{how}"),
 }
