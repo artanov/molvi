@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бесплатный локальный аналог Wispr Flow — Molvi</title>
+<meta name="description" content="Ищете бесплатный аналог Wispr Flow? Molvi делает то же самое — зажал хоткей, сказал, текст напечатан — но бесплатно, с открытым кодом и полностью на вашем компьютере. Честное сравнение с ценами.">
+<meta property="og:title" content="Бесплатный локальный аналог Wispr Flow">
+<meta property="og:description" content="Molvi против Wispr Flow: та же диктовка по хоткею, но бесплатно, локально и с открытым кодом. Честное сравнение.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://molvi.tech/vs-wispr-flow.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Molvi",
+  "operatingSystem": "Windows 10, Windows 11, macOS",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "Локальный голосовой ввод для Windows и macOS: зажмите хоткей, продиктуйте — текст напечатан в активное окно. Распознавание Whisper работает на вашем компьютере, без облака и подписки.",
+  "url": "https://molvi.tech/",
+  "downloadUrl": "https://github.com/artanov/molvi/releases/latest",
+  "license": "https://github.com/artanov/molvi/blob/main/LICENSE",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<style>
+  /* Токены — копия index.html (общая дизайн-система сайта Molvi). */
+  :root{
+    --coral:#F04A3F; --coral-hover:#FF5C50; --coral-deep:#C63A30;
+    --ink-900:#141316; --ink-800:#1C1A1F; --ink-700:#26232B; --ink-600:#332F38;
+    --cream:#F3EEE3; --cream-dim:#B8B2A6; --cream-faint:#7C776E;
+    --warn:#E0A83E; --success:#3FB27F;
+    --maxw:800px;
+    --radius:18px;
+    --font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; font-family:var(--font); background:var(--ink-900); color:var(--cream);
+    -webkit-font-smoothing:antialiased; line-height:1.65; font-size:17px}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:700}
+  p{margin:0}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:9px;
+    font:inherit; font-weight:600; font-size:16px; cursor:pointer; border:0;
+    padding:14px 24px; border-radius:12px; min-height:48px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease}
+  .btn-primary{background:var(--coral); color:#fff}
+  .btn-primary:hover{background:var(--coral-hover); transform:translateY(-1px)}
+  .btn-primary:active{background:var(--coral-deep)}
+  .btn-ghost{background:transparent; color:var(--cream); border:1px solid var(--ink-600)}
+  .btn-ghost:hover{border-color:var(--cream-faint); background:var(--ink-700)}
+  .btn svg{width:19px; height:19px; flex:none}
+  :focus-visible{outline:2px solid var(--coral); outline-offset:3px; border-radius:6px}
+
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:color-mix(in srgb, var(--ink-900) 82%, transparent);
+    border-bottom:1px solid var(--ink-600)}
+  .nav-inner{display:flex; align-items:center; justify-content:space-between; height:66px;
+    max-width:1120px; margin:0 auto; padding:0 24px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; font-size:19px}
+  .brand img{width:32px; height:32px; border-radius:8px; display:block}
+  .nav-links{display:flex; align-items:center; gap:26px}
+  .nav-links a{color:var(--cream-dim); font-size:15px; font-weight:500}
+  .nav-links a:hover{color:var(--cream)}
+
+  header.page{padding:64px 0 20px; text-align:center}
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--cream-dim)}
+  .eyebrow::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--coral);
+    box-shadow:0 0 12px 2px var(--coral)}
+  header.page h1{font-size:clamp(32px,5.5vw,52px); margin-top:18px}
+  header.page .lede{color:var(--cream-dim); margin:16px auto 0; max-width:620px; font-size:18px}
+  header.page .lede b{color:var(--cream); font-weight:600}
+
+  main{padding:28px 0 80px}
+  section{margin-top:56px}
+  section h2{font-size:clamp(24px,3.5vw,32px)}
+  section > p{color:var(--cream-dim); margin-top:14px}
+  section p b{color:var(--cream); font-weight:600}
+
+  /* Сравнительная таблица — стиль .compare с главной */
+  .compare{margin-top:26px; border:1px solid var(--ink-600); border-radius:var(--radius); overflow-x:auto}
+  .compare table{width:100%; border-collapse:collapse; font-size:15.5px}
+  .compare th,.compare td{padding:16px 20px; text-align:left; border-bottom:1px solid var(--ink-600); vertical-align:top}
+  .compare thead th{font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--cream-faint); font-weight:600}
+  .compare tbody tr:last-child td{border-bottom:0}
+  .compare .col-molvi{background:color-mix(in srgb,var(--coral) 9%,transparent); color:var(--cream); font-weight:600}
+  .compare thead .col-molvi{color:var(--coral)}
+  .compare td:first-child{color:var(--cream-dim)}
+  .yes{color:var(--success); font-weight:600} .no{color:var(--cream-faint)}
+  .checked{margin-top:12px; font-size:13.5px; color:var(--cream-faint)}
+
+  /* Честный блок: когда Molvi не подойдёт */
+  .honest{margin-top:26px; border:1px solid color-mix(in srgb,var(--warn) 45%,var(--ink-600));
+    border-radius:var(--radius); padding:24px 26px; background:color-mix(in srgb,var(--warn) 5%,var(--ink-800))}
+  .honest h3{font-size:18px; color:var(--warn); display:flex; align-items:center; gap:9px}
+  .honest h3 svg{width:20px; height:20px; flex:none}
+  .honest ul{margin:14px 0 0; padding-left:22px; color:var(--cream-dim)}
+  .honest li{margin-top:10px}
+  .honest li b{color:var(--cream); font-weight:600}
+
+  .steps-mini{list-style:none; margin:18px 0 0; padding:0; counter-reset:s}
+  .steps-mini li{position:relative; padding:14px 16px 14px 58px; border:1px solid var(--ink-600);
+    border-radius:12px; margin-top:10px; color:var(--cream-dim)}
+  .steps-mini li::before{counter-increment:s; content:counter(s);
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb,var(--coral) 14%,transparent); color:var(--coral); font-weight:700; font-size:15px}
+  .steps-mini b{color:var(--cream); font-weight:600}
+  .kbd{font-size:13.5px; font-weight:600; color:var(--cream); background:var(--ink-800);
+    border:1px solid var(--ink-600); border-bottom-width:2px; border-radius:7px; padding:2px 9px}
+
+  .cta{margin-top:64px; text-align:center; border:1px solid var(--ink-600); border-radius:22px;
+    padding:44px 28px; background:linear-gradient(180deg,var(--ink-800),var(--ink-700))}
+  .cta h2{font-size:clamp(24px,3.5vw,32px)}
+  .cta p{color:var(--cream-dim); margin-top:12px}
+  .cta-row{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:26px}
+
+  footer{border-top:1px solid var(--ink-600); padding:36px 0; color:var(--cream-dim); font-size:14.5px}
+  footer a{text-decoration:underline; text-underline-offset:3px}
+  footer a:hover{color:var(--cream)}
+  footer .note{margin-top:14px; color:var(--cream-faint); font-size:13.5px}
+
+  @media(max-width:640px){
+    .compare table{min-width:520px}
+    .compare th,.compare td{padding:13px 14px; font-size:14px}
+    header.page{padding:48px 0 12px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="./index.html">
+      <img src="./assets/icon.png" alt="Логотип Molvi" width="32" height="32">Molvi
+    </a>
+    <nav class="nav-links" aria-label="Навигация">
+      <a href="./index.html#features">Возможности</a>
+      <a href="./install.html">Установка</a>
+      <a href="https://github.com/artanov/molvi">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<header class="page">
+  <div class="wrap">
+    <span class="eyebrow">Честное сравнение</span>
+    <h1>Бесплатный локальный аналог Wispr&nbsp;Flow</h1>
+    <p class="lede">Wispr Flow — $15 в месяц, и голос уходит в облако. Molvi делает то же самое:
+      <b>зажал хоткей → сказал → текст напечатан</b>. Только бесплатно, с открытым кодом
+      и полностью на вашем компьютере.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section>
+      <h2>Одинаковый сценарий, разная начинка</h2>
+      <p>Wispr Flow популярен заслуженно: диктовка по зажатой клавише в любое окно —
+        это действительно быстрее печати. Но за удобство вы платите дважды: подпиской
+        и тем, что каждая надиктованная фраза уезжает на чужие серверы.</p>
+      <p style="margin-top:12px">Molvi повторяет тот же сценарий работы, но распознаёт речь
+        моделью Whisper прямо на вашем ПК. Ничего не отправляется в интернет — диктовать
+        можно хоть пароли, хоть рабочие документы под NDA, хоть в самолёте без Wi-Fi.</p>
+      <ol class="steps-mini" aria-label="Как работает Molvi">
+        <li><b>Зажмите клавишу</b> — по умолчанию <span class="kbd">Ctrl</span>, можно назначить любую.</li>
+        <li><b>Говорите</b> — оверлей-пилюля показывает, что идёт запись.</li>
+        <li><b>Отпустите</b> — текст напечатан в активное окно, где стоит курсор.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Molvi против Wispr Flow</h2>
+      <div class="compare">
+        <table>
+          <thead>
+            <tr><th>Что важно</th><th class="col-molvi">Molvi</th><th>Wispr Flow</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Цена</td>
+              <td class="col-molvi">Бесплатно навсегда</td>
+              <td>$15/мес ($144 при оплате за год); бесплатно — только 2000 слов в неделю</td>
+            </tr>
+            <tr>
+              <td>Где обрабатывается голос</td>
+              <td class="col-molvi">Локально, на вашем ПК</td>
+              <td>В облаке, на серверах компании</td>
+            </tr>
+            <tr>
+              <td>Работа без интернета</td>
+              <td class="col-molvi"><span class="yes">Да</span></td>
+              <td><span class="no">Нет</span></td>
+            </tr>
+            <tr>
+              <td>Открытый код</td>
+              <td class="col-molvi"><span class="yes">Да, лицензия MIT</span></td>
+              <td><span class="no">Закрытый</span></td>
+            </tr>
+            <tr>
+              <td>Диктовка в терминал (Claude Code, Codex)</td>
+              <td class="col-molvi"><span class="yes">Да</span> — печатает посимвольно даже там, где вставка ломается</td>
+              <td>Ограниченно</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="checked">Цены и условия Wispr Flow проверены 16.07.2026 по официальному сайту wisprflow.ai.</p>
+    </section>
+
+    <section>
+      <h2>Когда выбрать не Molvi</h2>
+      <p>Сравнение честное, поэтому скажем прямо, где Wispr Flow пока выигрывает.</p>
+      <div class="honest">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Molvi не подойдёт, если…</h3>
+        <ul>
+          <li><b>Вам нужна диктовка на iPhone или Android.</b> Molvi работает только
+            на компьютере — Windows и Mac. У Wispr Flow есть мобильная клавиатура.</li>
+          <li><b>У вас Windows без видеокарты NVIDIA.</b> Molvi запустится и на процессоре,
+            но с моделью поменьше — максимальное качество распознавания на Windows
+            требует NVIDIA с 6+ ГБ видеопамяти. На Mac достаточно любого M-чипа,
+            даже базового M1; Intel-маки не поддерживаются.</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="cta">
+      <h2>Попробуйте — это ничего не стоит</h2>
+      <p>Скачали, установили, диктуете. Без регистрации, карты и триала,
+        который внезапно кончится.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Скачать Molvi
+        </a>
+        <a class="btn btn-ghost" href="./install.html">Инструкция для Windows</a>
+        <a class="btn btn-ghost" href="./install-mac.html">Инструкция для Mac</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><a href="./index.html">← На главную</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi">GitHub</a> &nbsp;·&nbsp;
+      <a href="https://github.com/artanov/molvi/blob/main/LICENSE">Лицензия MIT</a></p>
+    <p class="note">Wispr Flow — продукт Wispr AI, Inc.; Molvi с ним не связан.
+      Whisper — модель распознавания речи; Molvi не связан с OpenAI.</p>
+  </div>
+</footer>
+
+</body>
+</html>
