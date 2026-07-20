@@ -34,6 +34,7 @@ class Controller:
         self._paused = False
         self._reloading = False
         self._reload_token = 0
+        self._last_text = None  # последняя расшифровка — для «Скопировать последний текст»
         self._lock = threading.Lock()
 
     def start(self):
@@ -57,6 +58,11 @@ class Controller:
         """Сменить язык распознавания на лету — без перезагрузки модели."""
         with self._lock:
             self._transcriber.set_language(language)
+
+    def last_text(self):
+        """Последняя успешная расшифровка (для пункта трея); None — диктовок не было."""
+        with self._lock:
+            return self._last_text
 
     def begin_model_reload(self):
         with self._lock:
@@ -129,6 +135,10 @@ class Controller:
             if text is not None:
                 log.info("Распознано %d символов", len(text))
             if text:
+                # Сохраняем до вставки: если вставка упадёт или уйдёт не в то
+                # окно, текст можно забрать через трей.
+                with self._lock:
+                    self._last_text = text
                 try:
                     self._insert_fn(text, self._paste_mode)
                 except Exception as exc:

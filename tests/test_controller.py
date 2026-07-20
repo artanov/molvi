@@ -311,3 +311,52 @@ def test_failed_recorder_start_leaves_not_recording():
     ctl.shutdown()
     assert tr.calls == []
     assert ui.events[-1] == "hide"
+
+
+def test_last_text_none_before_first_dictation():
+    ctl, *_ = _make()
+    ctl.shutdown()
+    assert ctl.last_text() is None
+
+
+def test_last_text_saved_after_transcription():
+    ctl, rec, tr, ui, inserted, *_ = _make(text="привет мир")
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert ctl.last_text() == "привет мир"
+
+
+def test_last_text_saved_even_if_insert_fails():
+    # Смысл фичи: расшифровка не должна пропасть, даже когда вставка упала.
+    audio = np.zeros(16000, dtype=np.float32)
+    rec, tr, ui = FakeRecorder(audio), FakeTranscriber("важный текст"), FakeUI()
+    notes = []
+
+    def failing_insert(t, m):
+        raise OSError("SendInput failed")
+
+    ctl = Controller(
+        rec, tr, failing_insert, ui, min_duration_sec=0.3,
+        samplerate=16000, paste_mode="clipboard", notify=notes.append,
+    )
+    ctl.start()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert ctl.last_text() == "важный текст"
+
+
+def test_empty_transcription_keeps_previous_last_text():
+    ctl, rec, tr, ui, inserted, *_ = _make(text="привет мир")
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    tr.text = ""   # следующая диктовка распознана в пустоту
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: ui.events.count("hide") >= 2)
+    ctl.shutdown()
+    assert ctl.last_text() == "привет мир"
