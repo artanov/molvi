@@ -2,7 +2,17 @@ import math
 
 import pytest
 
-from molvi.overlay import N_BARS, bar_heights, compute_position
+from molvi import i18n
+from molvi.overlay import N_BARS, bar_heights, compute_position, eta_text
+
+
+@pytest.fixture(autouse=True)
+def _reset_language():
+    # Переводы идут через tr() — фиксируем язык, чтобы тесты не зависели
+    # от порядка запуска (другой файл мог оставить i18n в состоянии "en").
+    i18n.set_language("ru")
+    yield
+    i18n.set_language("ru")
 
 
 def test_position_centers_in_workarea_bottom():
@@ -50,3 +60,19 @@ def test_heights_clamped_to_unit():
         for t in range(0, 60, 7):
             for h in bar_heights(level=level, t=t):
                 assert 0.0 < h <= 1.0
+
+
+def test_eta_text_none_deadline_hidden():
+    assert eta_text(None, 100.0) is None
+
+
+def test_eta_text_counts_down():
+    i18n.set_language("ru")
+    assert eta_text(110.0, 100.0) == "~10 с"
+    assert eta_text(100.2, 100.0) == "~1 с"   # ceil: не обнуляем раньше времени
+
+
+def test_eta_text_floors_at_zero():
+    # Обработка затянулась дольше оценки — «~0 с», в минус не уходим.
+    i18n.set_language("ru")
+    assert eta_text(95.0, 100.0) == "~0 с"

@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 PASTE_HINT = "Ctrl+V"
 
 _user32 = ctypes.windll.user32
+_kernel32 = ctypes.windll.kernel32
 
 VK_CONTROL = 0x11
 VK_V = 0x56
@@ -116,6 +117,42 @@ def copy_to_clipboard(text):
     """Явное копирование по просьбе пользователя (пункт трея) —
     без вставки и без восстановления прежнего буфера."""
     _set_clipboard_text(text)
+
+
+def get_target():
+    """Цель вставки — активное окно в момент отпускания хоткея."""
+    return _user32.GetForegroundWindow() or None
+
+
+def target_is_foreground(target):
+    return target is not None and _user32.GetForegroundWindow() == target
+
+
+def activate_target(target, settle_delay=0.15):
+    """Вернуть фокус исходному окну; True — окно реально стало активным.
+
+    SetForegroundWindow из фонового процесса Windows может молча
+    проигнорировать (foreground lock) — цепляемся к потоку текущего
+    активного окна через AttachThreadInput и проверяем результат,
+    а не верим вызову. Пауза — чтобы окно успело принять фокус до Ctrl+V.
+    """
+    if target is None or not _user32.IsWindow(target):
+        return False
+    if _user32.GetForegroundWindow() == target:
+        return True
+    fg = _user32.GetForegroundWindow()
+    our_tid = _kernel32.GetCurrentThreadId()
+    fg_tid = _user32.GetWindowThreadProcessId(fg, None) if fg else 0
+    attached = False
+    try:
+        if fg_tid and fg_tid != our_tid:
+            attached = bool(_user32.AttachThreadInput(our_tid, fg_tid, True))
+        _user32.SetForegroundWindow(target)
+    finally:
+        if attached:
+            _user32.AttachThreadInput(our_tid, fg_tid, False)
+    time.sleep(settle_delay)
+    return _user32.GetForegroundWindow() == target
 
 
 def _utf16_units(ch):

@@ -115,8 +115,8 @@ _DEVICE_MASKS = {
 
 
 class HotkeyListener(_HotkeyCore):
-    def __init__(self, on_press, on_release, combo):
-        super().__init__(on_press, on_release, combo, table=TABLE)
+    def __init__(self, on_press, on_release, combo, on_esc=None):
+        super().__init__(on_press, on_release, combo, table=TABLE, on_esc=on_esc)
         self._tap = None
         self._runloop = None
 

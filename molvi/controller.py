@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+import time
 
 from molvi.i18n import tr
 
@@ -17,7 +18,7 @@ class Controller:
     def __init__(self, recorder, transcriber, insert_fn, ui, *,
                  min_duration_sec=0.3, samplerate=16000,
                  paste_mode="clipboard", notify=None, sounds=None,
-                 paste_hint="Ctrl+V"):
+                 paste_hint="Ctrl+V", target_fns=None):
         self._recorder = recorder
         self._transcriber = transcriber
         self._insert_fn = insert_fn
@@ -35,7 +36,16 @@ class Controller:
         self._reloading = False
         self._reload_token = 0
         self._last_text = None  # последняя расшифровка — для «Скопировать последний текст»
+        self._pending = 0        # заданий в очереди/обработке — гейт для Esc
+        self._cancelled = False  # Esc: пропустить вставку текущих заданий
+        self._rtf = None   # скорость распознавания (обработка/аудио) — для «~N с»
         self._lock = threading.Lock()
+        # Функции цели вставки (get, is_foreground, activate) — платформенные,
+        # передаются снаружи: контроллер не импортирует platform-модули.
+        if target_fns is not None:
+            self._get_target, self._target_is_foreground, self._activate_target = target_fns
+        else:
+            self._get_target = self._target_is_foreground = self._activate_target = None
 
     def start(self):
         self._worker = threading.Thread(target=self._run, daemon=True)
@@ -64,6 +74,31 @@ class Controller:
         with self._lock:
             return self._last_text
 
+    def cancel_pending(self):
+        """Esc: не вставлять результат идущей обработки.
+
+        Распознавание доводим до конца — текст останется в last_text
+        (Esc отменяет вставку, не работу). Вне обработки — no-op, чтобы
+        Esc в обычной жизни пользователя ни на что не влиял.
+        """
+        with self._lock:
+            if self._pending == 0:
+                return
+            self._cancelled = True
+
+    def _insert_allowed(self, target):
+        """Фокус там же — вставляем; ушёл — возвращаем; не вышло — не
+        вставляем вслепую в чужое окно (текст уже спасён в _last_text)."""
+        if target is None or self._target_is_foreground is None:
+            return True
+        try:
+            if self._target_is_foreground(target):
+                return True
+            return bool(self._activate_target(target))
+        except Exception:
+            log.exception("Не удалось вернуть фокус целевому окну")
+            return False
+
     def begin_model_reload(self):
         with self._lock:
             self._reloading = True
@@ -77,6 +112,7 @@ class Controller:
                 return False  # устаревший поток перезагрузки — игнорируем
             if transcriber is not None:
                 self._transcriber = transcriber
+                self._rtf = None  # у новой модели своя скорость
             self._reloading = False
             return True
 
@@ -116,16 +152,31 @@ class Controller:
             self._ui.hide()
             return
         log.info("Запись %.1f c", len(audio) / self._samplerate)
-        self._ui.show_transcribing()
-        self._jobs.put(audio)
+        with self._lock:
+            rtf = self._rtf
+        eta = (len(audio) / self._samplerate) * rtf if rtf is not None else None
+        self._ui.show_transcribing(eta_sec=eta)
+        target = None
+        if self._get_target is not None:
+            try:
+                target = self._get_target()
+            except Exception:
+                # Нет цели — работаем по-старому: вставка в текущее окно.
+                log.exception("Не удалось определить целевое окно")
+        with self._lock:
+            self._pending += 1
+            self._cancelled = False  # новая диктовка — новое намерение вставить
+        self._jobs.put((audio, target))
         if self._sounds is not None:
             self._sounds.play_stop()
 
     def _run(self):
         while True:
-            audio = self._jobs.get()
-            if audio is None:
+            job = self._jobs.get()
+            if job is None:
                 return
+            audio, target = job
+            started = time.monotonic()
             try:
                 text = self._transcriber.transcribe(audio)
             except Exception as exc:
@@ -133,19 +184,34 @@ class Controller:
                 self._notify(tr("controller.transcribe_error", exc=exc))
                 text = None
             if text is not None:
+                duration = len(audio) / self._samplerate
+                if duration > 0:
+                    sample = (time.monotonic() - started) / duration
+                    with self._lock:
+                        # Вес нового 0.5: быстро сходится, но одиночный
+                        # выброс (кэш прогрелся, GC) не ломает оценку.
+                        self._rtf = (sample if self._rtf is None
+                                     else 0.5 * self._rtf + 0.5 * sample)
                 log.info("Распознано %d символов", len(text))
             if text:
                 # Сохраняем до вставки: если вставка упадёт или уйдёт не в то
                 # окно, текст можно забрать через трей.
                 with self._lock:
                     self._last_text = text
-                try:
-                    self._insert_fn(text, self._paste_mode)
-                except Exception as exc:
-                    log.exception("Ошибка вставки текста")
-                    self._notify(tr("controller.paste_error",
-                                    exc=exc, paste_hint=self._paste_hint))
+                    cancelled = self._cancelled
+                if cancelled:
+                    self._notify(tr("controller.paste_cancelled"))
+                elif self._insert_allowed(target):
+                    try:
+                        self._insert_fn(text, self._paste_mode)
+                    except Exception as exc:
+                        log.exception("Ошибка вставки текста")
+                        self._notify(tr("controller.paste_error",
+                                        exc=exc, paste_hint=self._paste_hint))
+                else:
+                    self._notify(tr("controller.target_lost"))
             with self._lock:
+                self._pending -= 1
                 still_recording = self._recording
             if not still_recording:
                 self._ui.hide()

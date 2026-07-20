@@ -48,10 +48,12 @@ class FakeTranscriber:
 class FakeUI:
     def __init__(self):
         self.events = []
+        self.etas = []
     def show_recording(self):
         self.events.append("recording")
-    def show_transcribing(self):
+    def show_transcribing(self, eta_sec=None):
         self.events.append("transcribing")
+        self.etas.append(eta_sec)
     def hide(self):
         self.events.append("hide")
 
@@ -74,7 +76,8 @@ class FakeSounds:
         self.events.append("stop")
 
 
-def _make(audio_sec=1.0, text="привет мир", error=None, sounds=None):
+def _make(audio_sec=1.0, text="привет мир", error=None, sounds=None,
+          target_fns=None):
     audio = np.zeros(int(16000 * audio_sec), dtype=np.float32)
     rec, tr, ui = FakeRecorder(audio), FakeTranscriber(text, error), FakeUI()
     inserted = []
@@ -82,7 +85,7 @@ def _make(audio_sec=1.0, text="привет мир", error=None, sounds=None):
     ctl = Controller(
         rec, tr, lambda t, m: inserted.append((t, m)), ui,
         min_duration_sec=0.3, samplerate=16000, paste_mode="clipboard",
-        notify=notes.append, sounds=sounds,
+        notify=notes.append, sounds=sounds, target_fns=target_fns,
     )
     ctl.start()
     return ctl, rec, tr, ui, inserted, notes, sounds
@@ -360,3 +363,163 @@ def test_empty_transcription_keeps_previous_last_text():
     assert _wait_until(lambda: ui.events.count("hide") >= 2)
     ctl.shutdown()
     assert ctl.last_text() == "привет мир"
+
+
+class FakeTarget:
+    """Функции цели: журнал вызовов + управляемое поведение фокуса."""
+    def __init__(self, target="win1", foreground=True, activate_ok=True):
+        self.target = target
+        self.foreground = foreground
+        self.activate_ok = activate_ok
+        self.calls = []
+
+    def get_target(self):
+        self.calls.append("get")
+        return self.target
+
+    def is_foreground(self, t):
+        self.calls.append(("is_fg", t))
+        return self.foreground
+
+    def activate(self, t):
+        self.calls.append(("activate", t))
+        return self.activate_ok
+
+    @property
+    def fns(self):
+        return (self.get_target, self.is_foreground, self.activate)
+
+
+def test_target_unchanged_inserts_without_activate():
+    ft = FakeTarget(foreground=True)
+    ctl, rec, tr, ui, inserted, notes, _ = _make(target_fns=ft.fns)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert "get" in ft.calls
+    assert ("is_fg", "win1") in ft.calls
+    assert ("activate", "win1") not in ft.calls
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def test_focus_changed_activates_then_inserts():
+    ft = FakeTarget(foreground=False, activate_ok=True)
+    ctl, rec, tr, ui, inserted, notes, _ = _make(target_fns=ft.fns)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert ("activate", "win1") in ft.calls
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def test_activate_failed_skips_insert_and_notifies():
+    ft = FakeTarget(foreground=False, activate_ok=False)
+    ctl, rec, tr, ui, inserted, notes, _ = _make(target_fns=ft.fns)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert inserted == []
+    assert notes[0] == i18n.tr("controller.target_lost")
+    assert ctl.last_text() == "привет мир"  # текст спасает трей
+
+
+def test_get_target_error_degrades_to_old_behavior():
+    ft = FakeTarget()
+    ft.get_target = lambda: (_ for _ in ()).throw(OSError("no window"))
+    ctl, rec, tr, ui, inserted, notes, _ = _make(target_fns=ft.fns)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def test_no_target_fns_keeps_old_behavior():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def _make_slow(text="текст", delay=0.3):
+    audio = np.zeros(16000, dtype=np.float32)
+    rec, tr, ui = FakeRecorder(audio), FakeTranscriber(text, delay=delay), FakeUI()
+    inserted, notes = [], []
+    ctl = Controller(
+        rec, tr, lambda t, m: inserted.append((t, m)), ui,
+        min_duration_sec=0.3, samplerate=16000, paste_mode="clipboard",
+        notify=notes.append,
+    )
+    ctl.start()
+    return ctl, tr, ui, inserted, notes
+
+
+def test_cancel_pending_skips_insert_keeps_text():
+    ctl, tr, ui, inserted, notes = _make_slow()
+    ctl.on_press()
+    ctl.on_release()
+    time.sleep(0.05)          # распознавание началось (delay=0.3)
+    ctl.cancel_pending()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert inserted == []
+    assert ctl.last_text() == "текст"
+    assert notes[0] == i18n.tr("controller.paste_cancelled")
+
+
+def test_cancel_outside_processing_is_noop():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.cancel_pending()      # заданий нет — Esc в обычной работе безвреден
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert notes == []
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def test_next_dictation_after_cancel_inserts():
+    ctl, tr, ui, inserted, notes = _make_slow()
+    ctl.on_press()
+    ctl.on_release()
+    time.sleep(0.05)
+    ctl.cancel_pending()
+    assert _wait_until(lambda: notes)
+    ctl.on_press()            # новая диктовка — новое намерение вставить
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("текст", "clipboard")]
+
+
+def test_first_dictation_has_no_eta_then_estimated():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: len(inserted) == 2)
+    ctl.shutdown()
+    assert ui.etas[0] is None            # скорость ещё неизвестна
+    assert ui.etas[1] is not None        # оценка от первого прогона
+    assert ui.etas[1] >= 0
+
+
+def test_eta_reset_on_model_reload():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    token = ctl.begin_model_reload()
+    ctl.finish_model_reload(FakeTranscriber(text="новая"), token)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: len(inserted) == 2)
+    ctl.shutdown()
+    assert ui.etas[1] is None            # новая модель — старый RTF не годится
