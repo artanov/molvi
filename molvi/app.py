@@ -89,10 +89,26 @@ def main():
             tray.stop()
             overlay.schedule_quit()
 
+        def copy_last_to_clipboard():
+            # Получаем последний распознанный текст; защита от гонки — controller
+            # может быть ещё None в момент, когда пользователь кликнул пункт меню.
+            text = controller.last_text() if controller is not None else None
+            if text is None:
+                return  # гонка: пункт кликнули до первой диктовки
+            try:
+                typer.copy_to_clipboard(text)
+            except Exception as exc:
+                log.exception("Не удалось скопировать текст в буфер")
+                tray.notify(tr("app.notify.copy_failed", exc=exc))
+                return
+            tray.notify(tr("app.notify.copied"))
+
         tray = Tray(
             on_toggle_pause=lambda: controller.toggle_pause() if controller is not None else False,
             on_exit=shutdown,
             on_settings=overlay.open_settings,
+            on_copy_last=copy_last_to_clipboard,
+            has_last_text=lambda: controller is not None and controller.last_text() is not None,
         )
         tray.start()
 
