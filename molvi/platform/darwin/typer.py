@@ -73,6 +73,12 @@ def paste_text(text, restore_delay=0.3):
         log.info("paste: буфер восстановлен")
 
 
+def copy_to_clipboard(text):
+    """Явное копирование по просьбе пользователя (пункт трея) —
+    без вставки и без восстановления прежнего буфера."""
+    _set_clipboard_text(text)
+
+
 def type_text_direct(text):
     _require_post_access()
     for ch in text:
