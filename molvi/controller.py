@@ -35,6 +35,8 @@ class Controller:
         self._reloading = False
         self._reload_token = 0
         self._last_text = None  # последняя расшифровка — для «Скопировать последний текст»
+        self._pending = 0        # заданий в очереди/обработке — гейт для Esc
+        self._cancelled = False  # Esc: пропустить вставку текущих заданий
         self._lock = threading.Lock()
         # Функции цели вставки (get, is_foreground, activate) — платформенные,
         # передаются снаружи: контроллер не импортирует platform-модули.
@@ -69,6 +71,18 @@ class Controller:
         """Последняя успешная расшифровка (для пункта трея); None — диктовок не было."""
         with self._lock:
             return self._last_text
+
+    def cancel_pending(self):
+        """Esc: не вставлять результат идущей обработки.
+
+        Распознавание доводим до конца — текст останется в last_text
+        (Esc отменяет вставку, не работу). Вне обработки — no-op, чтобы
+        Esc в обычной жизни пользователя ни на что не влиял.
+        """
+        with self._lock:
+            if self._pending == 0:
+                return
+            self._cancelled = True
 
     def _insert_allowed(self, target):
         """Фокус там же — вставляем; ушёл — возвращаем; не вышло — не
@@ -143,6 +157,9 @@ class Controller:
             except Exception:
                 # Нет цели — работаем по-старому: вставка в текущее окно.
                 log.exception("Не удалось определить целевое окно")
+        with self._lock:
+            self._pending += 1
+            self._cancelled = False  # новая диктовка — новое намерение вставить
         self._jobs.put((audio, target))
         if self._sounds is not None:
             self._sounds.play_stop()
@@ -166,7 +183,10 @@ class Controller:
                 # окно, текст можно забрать через трей.
                 with self._lock:
                     self._last_text = text
-                if self._insert_allowed(target):
+                    cancelled = self._cancelled
+                if cancelled:
+                    self._notify(tr("controller.paste_cancelled"))
+                elif self._insert_allowed(target):
                     try:
                         self._insert_fn(text, self._paste_mode)
                     except Exception as exc:
@@ -176,6 +196,7 @@ class Controller:
                 else:
                     self._notify(tr("controller.target_lost"))
             with self._lock:
+                self._pending -= 1
                 still_recording = self._recording
             if not still_recording:
                 self._ui.hide()

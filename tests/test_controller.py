@@ -442,3 +442,54 @@ def test_no_target_fns_keeps_old_behavior():
     assert _wait_until(lambda: inserted)
     ctl.shutdown()
     assert inserted == [("привет мир", "clipboard")]
+
+
+def _make_slow(text="текст", delay=0.3):
+    audio = np.zeros(16000, dtype=np.float32)
+    rec, tr, ui = FakeRecorder(audio), FakeTranscriber(text, delay=delay), FakeUI()
+    inserted, notes = [], []
+    ctl = Controller(
+        rec, tr, lambda t, m: inserted.append((t, m)), ui,
+        min_duration_sec=0.3, samplerate=16000, paste_mode="clipboard",
+        notify=notes.append,
+    )
+    ctl.start()
+    return ctl, tr, ui, inserted, notes
+
+
+def test_cancel_pending_skips_insert_keeps_text():
+    ctl, tr, ui, inserted, notes = _make_slow()
+    ctl.on_press()
+    ctl.on_release()
+    time.sleep(0.05)          # распознавание началось (delay=0.3)
+    ctl.cancel_pending()
+    assert _wait_until(lambda: notes)
+    ctl.shutdown()
+    assert inserted == []
+    assert ctl.last_text() == "текст"
+    assert notes[0] == i18n.tr("controller.paste_cancelled")
+
+
+def test_cancel_outside_processing_is_noop():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.cancel_pending()      # заданий нет — Esc в обычной работе безвреден
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert notes == []
+    assert inserted == [("привет мир", "clipboard")]
+
+
+def test_next_dictation_after_cancel_inserts():
+    ctl, tr, ui, inserted, notes = _make_slow()
+    ctl.on_press()
+    ctl.on_release()
+    time.sleep(0.05)
+    ctl.cancel_pending()
+    assert _wait_until(lambda: notes)
+    ctl.on_press()            # новая диктовка — новое намерение вставить
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.shutdown()
+    assert inserted == [("текст", "clipboard")]
