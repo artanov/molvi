@@ -93,7 +93,7 @@ def main():
             # Получаем последний распознанный текст; controller может быть ещё
             # None, если кликнули до конца загрузки модели — тот же случай,
             # что и «диктовок ещё не было»: пункт меню всегда активен (pystray
-            # не перечитывает enabled после update_menu()), поэтому клик без
+            # перечитывает enabled только при update_menu()), поэтому клик без
             # текста — штатная ветка с подсказкой, а не тихий no-op.
             text = controller.last_text() if controller is not None else None
             if text is None:
