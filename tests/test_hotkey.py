@@ -194,3 +194,39 @@ def test_cancel_capture_discards_callback_and_restores_hotkey():
     for vk in (CTRL_L, ALT_L, X):
         hl._handle(WM_KEYDOWN, vk)
     assert events == ["press"]
+
+
+def test_esc_keydown_calls_on_esc_once():
+    events = []
+    listener = HotkeyListener(lambda: None, lambda: None, [0xA2],
+                              on_esc=lambda: events.append("esc"))
+    listener._handle(WM_KEYDOWN, VK_ESCAPE)
+    listener._handle(WM_KEYUP, VK_ESCAPE)   # keyup колбэк не дёргает
+    assert events == ["esc"]
+
+
+def test_esc_without_callback_is_noop():
+    listener = HotkeyListener(lambda: None, lambda: None, [0xA2])
+    listener._handle(WM_KEYDOWN, VK_ESCAPE)  # не бросает и не ломает автомат
+    listener._handle(WM_KEYDOWN, 0xA2)
+    listener._handle(WM_KEYUP, 0xA2)
+
+
+def test_esc_during_capture_cancels_capture_not_on_esc():
+    # Захват комбинации в настройках использует Esc как «отмена» —
+    # приоритет у захвата, on_esc молчит.
+    events, captured = [], []
+    listener = HotkeyListener(lambda: None, lambda: None, [0xA2],
+                              on_esc=lambda: events.append("esc"))
+    listener.start_capture(captured.append)
+    listener._handle(WM_KEYDOWN, VK_ESCAPE)
+    assert captured == [None]
+    assert events == []
+
+
+def test_esc_injected_ignored():
+    events = []
+    listener = HotkeyListener(lambda: None, lambda: None, [0xA2],
+                              on_esc=lambda: events.append("esc"))
+    listener._handle(WM_KEYDOWN, VK_ESCAPE, injected=True)
+    assert events == []

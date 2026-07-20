@@ -124,9 +124,10 @@ class HotkeyListener:
     run()/stop() — в платформенных подклассах (molvi/platform/*/hotkey.py).
     """
 
-    def __init__(self, on_press, on_release, combo, table=TABLE):
+    def __init__(self, on_press, on_release, combo, table=TABLE, on_esc=None):
         self._on_press = on_press
         self._on_release = on_release
+        self._on_esc = on_esc
         self._combo = frozenset(combo)
         self._table = table
         # Выставляется обвязкой, если run() умер (на маке — нет разрешения
@@ -178,6 +179,12 @@ class HotkeyListener:
         with self._lock:
             if self._capture_cb is not None:
                 self._handle_capture(msg, vk)
+                return
+            if (self._on_esc is not None and vk == self._table.escape_vk
+                    and msg in (WM_KEYDOWN, WM_SYSKEYDOWN)):
+                # Esc-отмена вставки: репортим всегда, фильтрует по своему
+                # состоянию Controller — хук не знает, идёт ли обработка.
+                self._on_esc()
                 return
             if vk not in self._combo:
                 return
