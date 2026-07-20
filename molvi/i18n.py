@@ -19,6 +19,7 @@ RU = {
     # --- оверлей (текстовый fallback) ---
     "overlay.recording": "●  Запись…",
     "overlay.transcribing": "⏳  Распознаю…",
+    "overlay.eta": "~{sec} с",
     # --- controller ---
     "controller.mic_unavailable": "Микрофон недоступен: {exc}",
     "controller.record_error": "Ошибка записи: {exc}",
@@ -152,6 +153,7 @@ EN = {
     "tray.quit": "Quit",
     "overlay.recording": "●  Recording…",
     "overlay.transcribing": "⏳  Transcribing…",
+    "overlay.eta": "~{sec}s",
     "controller.mic_unavailable": "Microphone unavailable: {exc}",
     "controller.record_error": "Recording error: {exc}",
     "controller.transcribe_error": "Recognition error: {exc}",

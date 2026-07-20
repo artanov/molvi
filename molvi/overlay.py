@@ -1,6 +1,7 @@
 import logging
 import math
 import queue
+import time
 import tkinter as tk
 
 from molvi import theme
@@ -51,6 +52,16 @@ def bar_heights(level, t, n=N_BARS):
     return heights
 
 
+def eta_text(deadline, now):
+    """Текст счётчика остатка обработки; None — не показывать.
+
+    Оценка может соврать в меньшую сторону — при просрочке показываем
+    «~0 с», а не отрицательные числа."""
+    if deadline is None:
+        return None
+    return tr("overlay.eta", sec=max(0, math.ceil(deadline - now)))
+
+
 class Overlay:
     """Мини-окно поверх всех окон. Не забирает фокус (платформенный трюк:
     WS_EX_NOACTIVATE / activationPolicy) — иначе вставка ушла бы в оверлей,
@@ -65,6 +76,7 @@ class Overlay:
         self._anim_running = False
         self._env = 0.0                # огибающая громкости (атака/спад)
         self._t = 0                    # счётчик кадров
+        self._eta_deadline = None      # monotonic-дедлайн счётчика «~N с»
         self._root = tk.Tk()
         self._root.withdraw()
         self._root.overrideredirect(True)
@@ -150,6 +162,11 @@ class Overlay:
         self._cy = h / 2
         self._dot = self._canvas.create_oval(0, 0, 0, 0, width=0,
                                              fill=theme.CORAL)
+        # Счётчик «~N с» — на месте точки: в жёлтом состоянии точка
+        # малоинформативна, а места справа от баров нет.
+        self._eta_item = self._canvas.create_text(
+            h * 0.55, self._cy, text="", anchor="center",
+            fill=theme.WARN, font=("Segoe UI", max(8, int(h * 0.18)), "bold"))
         x0 = h * 0.92
         x1 = w - h * 0.42
         step = (x1 - x0) / N_BARS
@@ -191,8 +208,11 @@ class Overlay:
                                       bar_heights(level, self._t)):
             half = max(2.0, h * self._max_half)
             self._canvas.coords(bar, bx0, self._cy - half, bx1, self._cy + half)
+        show_eta = state == "transcribing" and self._eta_deadline is not None
+        txt = eta_text(self._eta_deadline, time.monotonic()) if show_eta else None
+        self._canvas.itemconfigure(self._eta_item, text=txt or "")
         pulse = 1.0 + (0.18 * math.sin(self._t * 0.16) if state == "recording" else 0.0)
-        r = self._dot_r * pulse
+        r = 0.0 if show_eta else self._dot_r * pulse   # счётчик вместо точки
         self._canvas.coords(self._dot, self._dot_cx - r, self._cy - r,
                             self._dot_cx + r, self._cy + r)
         self._root.after(_FRAME_MS, self._animate)
@@ -211,6 +231,9 @@ class Overlay:
                 state = self._queue.get_nowait()
             except queue.Empty:
                 break
+            eta_sec = None
+            if isinstance(state, tuple):
+                state, eta_sec = state
             if state == "quit":
                 self._root.destroy()
                 return
@@ -223,9 +246,12 @@ class Overlay:
                         self._on_open_settings()
                 elif state == "hide":
                     self._anim_state = None
+                    self._eta_deadline = None
                     _plat.hide_window(self._root)
                 elif self._canvas is not None:
                     self._start_anim(state)
+                    self._eta_deadline = (None if eta_sec is None
+                                          else time.monotonic() + eta_sec)
                     self._place()  # монитор активного окна — куда и печатаем
                     _plat.show_window(self._root)
                 else:
@@ -241,8 +267,8 @@ class Overlay:
     def show_recording(self):
         self._queue.put("recording")
 
-    def show_transcribing(self):
-        self._queue.put("transcribing")
+    def show_transcribing(self, eta_sec=None):
+        self._queue.put(("transcribing", eta_sec))
 
     def hide(self):
         self._queue.put("hide")
