@@ -25,6 +25,8 @@ RU = {
     "controller.transcribe_error": "Ошибка распознавания: {exc}",
     "controller.paste_error": ("Не удалось вставить текст: {exc}. Распознанный "
                                "текст — в буфере обмена ({paste_hint})."),
+    "controller.target_lost": ("Не удалось вернуться в исходное окно — "
+                               "текст в трее («Скопировать последний текст»)."),
     # --- transcriber ---
     "transcriber.cuda_missing": (
         "Библиотеки NVIDIA (cublas64_12.dll/cudnn64_9.dll) не найдены — "
@@ -153,6 +155,8 @@ EN = {
     "controller.transcribe_error": "Recognition error: {exc}",
     "controller.paste_error": ("Couldn't paste the text: {exc}. The recognized "
                                "text is in the clipboard ({paste_hint})."),
+    "controller.target_lost": ("Couldn't switch back to the original window — "
+                               "the text is in the tray (\"Copy last transcript\")."),
     "transcriber.cuda_missing": (
         "NVIDIA libraries (cublas64_12.dll/cudnn64_9.dll) not found — "
         "device=cuda is impossible. Run the download in the setup wizard or "

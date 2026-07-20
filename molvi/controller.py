@@ -17,7 +17,7 @@ class Controller:
     def __init__(self, recorder, transcriber, insert_fn, ui, *,
                  min_duration_sec=0.3, samplerate=16000,
                  paste_mode="clipboard", notify=None, sounds=None,
-                 paste_hint="Ctrl+V"):
+                 paste_hint="Ctrl+V", target_fns=None):
         self._recorder = recorder
         self._transcriber = transcriber
         self._insert_fn = insert_fn
@@ -36,6 +36,12 @@ class Controller:
         self._reload_token = 0
         self._last_text = None  # последняя расшифровка — для «Скопировать последний текст»
         self._lock = threading.Lock()
+        # Функции цели вставки (get, is_foreground, activate) — платформенные,
+        # передаются снаружи: контроллер не импортирует platform-модули.
+        if target_fns is not None:
+            self._get_target, self._target_is_foreground, self._activate_target = target_fns
+        else:
+            self._get_target = self._target_is_foreground = self._activate_target = None
 
     def start(self):
         self._worker = threading.Thread(target=self._run, daemon=True)
@@ -63,6 +69,19 @@ class Controller:
         """Последняя успешная расшифровка (для пункта трея); None — диктовок не было."""
         with self._lock:
             return self._last_text
+
+    def _insert_allowed(self, target):
+        """Фокус там же — вставляем; ушёл — возвращаем; не вышло — не
+        вставляем вслепую в чужое окно (текст уже спасён в _last_text)."""
+        if target is None or self._target_is_foreground is None:
+            return True
+        try:
+            if self._target_is_foreground(target):
+                return True
+            return bool(self._activate_target(target))
+        except Exception:
+            log.exception("Не удалось вернуть фокус целевому окну")
+            return False
 
     def begin_model_reload(self):
         with self._lock:
@@ -117,15 +136,23 @@ class Controller:
             return
         log.info("Запись %.1f c", len(audio) / self._samplerate)
         self._ui.show_transcribing()
-        self._jobs.put(audio)
+        target = None
+        if self._get_target is not None:
+            try:
+                target = self._get_target()
+            except Exception:
+                # Нет цели — работаем по-старому: вставка в текущее окно.
+                log.exception("Не удалось определить целевое окно")
+        self._jobs.put((audio, target))
         if self._sounds is not None:
             self._sounds.play_stop()
 
     def _run(self):
         while True:
-            audio = self._jobs.get()
-            if audio is None:
+            job = self._jobs.get()
+            if job is None:
                 return
+            audio, target = job
             try:
                 text = self._transcriber.transcribe(audio)
             except Exception as exc:
@@ -139,12 +166,15 @@ class Controller:
                 # окно, текст можно забрать через трей.
                 with self._lock:
                     self._last_text = text
-                try:
-                    self._insert_fn(text, self._paste_mode)
-                except Exception as exc:
-                    log.exception("Ошибка вставки текста")
-                    self._notify(tr("controller.paste_error",
-                                    exc=exc, paste_hint=self._paste_hint))
+                if self._insert_allowed(target):
+                    try:
+                        self._insert_fn(text, self._paste_mode)
+                    except Exception as exc:
+                        log.exception("Ошибка вставки текста")
+                        self._notify(tr("controller.paste_error",
+                                        exc=exc, paste_hint=self._paste_hint))
+                else:
+                    self._notify(tr("controller.target_lost"))
             with self._lock:
                 still_recording = self._recording
             if not still_recording:
