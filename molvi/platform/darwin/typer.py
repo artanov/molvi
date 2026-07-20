@@ -9,7 +9,9 @@ import logging
 import time
 
 import Quartz
-from AppKit import NSPasteboard, NSPasteboardTypeString
+from AppKit import (NSPasteboard, NSPasteboardTypeString, NSWorkspace,
+                    NSRunningApplication,
+                    NSApplicationActivateIgnoringOtherApps)
 
 from molvi.platform.darwin.hotkey import INJECT_MAGIC
 
@@ -77,6 +79,33 @@ def copy_to_clipboard(text):
     """Явное копирование по просьбе пользователя (пункт трея) —
     без вставки и без восстановления прежнего буфера."""
     _set_clipboard_text(text)
+
+
+def _frontmost_pid():
+    app = NSWorkspace.sharedWorkspace().frontmostApplication()
+    return None if app is None else app.processIdentifier()
+
+
+def get_target():
+    """Цель вставки. Точность macOS — приложение (pid), не окно:
+    конкретное окно внутри приложения восстанавливает само приложение."""
+    return _frontmost_pid()
+
+
+def target_is_foreground(target):
+    return target is not None and _frontmost_pid() == target
+
+
+def activate_target(target, settle_delay=0.15):
+    """Вернуть фокус исходному приложению; True — оно реально активно."""
+    if target is None:
+        return False
+    app = NSRunningApplication.runningApplicationWithProcessIdentifier_(target)
+    if app is None or app.isTerminated():
+        return False
+    app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+    time.sleep(settle_delay)
+    return _frontmost_pid() == target
 
 
 def type_text_direct(text):

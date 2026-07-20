@@ -114,3 +114,76 @@ def test_copy_to_clipboard_sets_without_paste_or_restore(fake_env):
     typer.copy_to_clipboard("спасённый текст")
     assert clipboard["text"] == "спасённый текст"
     assert calls == [("set", "спасённый текст")]  # ни ctrl_v, ни восстановления
+
+
+class FakeUser32:
+    """WinAPI-заглушка для функций цели: журнал вызовов + управляемый фокус."""
+    def __init__(self, foreground=100, valid=True, activate_switches=True):
+        self.foreground = foreground
+        self.valid = valid
+        self.activate_switches = activate_switches
+        self.calls = []
+
+    def GetForegroundWindow(self):
+        return self.foreground
+
+    def IsWindow(self, hwnd):
+        return 1 if self.valid else 0
+
+    def GetWindowThreadProcessId(self, hwnd, ref):
+        return 42  # чужой поток — ветка AttachThreadInput
+
+    def AttachThreadInput(self, a, b, attach):
+        self.calls.append(("attach", bool(attach)))
+        return 1
+
+    def SetForegroundWindow(self, hwnd):
+        self.calls.append(("set_fg", hwnd))
+        if self.activate_switches:
+            self.foreground = hwnd
+        return 1
+
+
+@pytest.fixture
+def fake_user32(monkeypatch):
+    fake = FakeUser32()
+    monkeypatch.setattr(typer, "_user32", fake)
+    monkeypatch.setattr(typer.time, "sleep", lambda s: None)
+    return fake
+
+
+def test_get_target_returns_foreground_or_none(fake_user32):
+    assert typer.get_target() == 100
+    fake_user32.foreground = 0
+    assert typer.get_target() is None
+
+
+def test_target_is_foreground(fake_user32):
+    assert typer.target_is_foreground(100) is True
+    assert typer.target_is_foreground(200) is False
+    assert typer.target_is_foreground(None) is False
+
+
+def test_activate_target_invalid_window_false(fake_user32):
+    fake_user32.valid = False
+    assert typer.activate_target(200) is False
+    assert fake_user32.calls == []  # до SetForegroundWindow не дошли
+
+
+def test_activate_target_already_foreground_true(fake_user32):
+    assert typer.activate_target(100) is True
+    assert fake_user32.calls == []
+
+
+def test_activate_target_switches_and_verifies(fake_user32):
+    assert typer.activate_target(200) is True
+    assert ("set_fg", 200) in fake_user32.calls
+    # AttachThreadInput отцеплен после активации
+    assert fake_user32.calls.count(("attach", True)) == 1
+    assert fake_user32.calls.count(("attach", False)) == 1
+
+
+def test_activate_target_verifies_result_not_call(fake_user32):
+    # SetForegroundWindow «сработал», но фокус не сменился (foreground lock)
+    fake_user32.activate_switches = False
+    assert typer.activate_target(200) is False

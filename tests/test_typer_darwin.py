@@ -137,3 +137,14 @@ def test_copy_to_clipboard_sets_without_paste_or_restore(fake_env):
     typer.copy_to_clipboard("спасённый текст")
     assert clipboard["text"] == "спасённый текст"
     assert calls == [("set", "спасённый текст")]  # ни cmd_v, ни восстановления
+
+
+def test_target_is_foreground_darwin(monkeypatch):
+    monkeypatch.setattr(typer, "_frontmost_pid", lambda: 777)
+    assert typer.target_is_foreground(777) is True
+    assert typer.target_is_foreground(1) is False
+    assert typer.target_is_foreground(None) is False
+
+
+def test_activate_target_none_is_false():
+    assert typer.activate_target(None) is False
