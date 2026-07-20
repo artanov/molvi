@@ -154,6 +154,8 @@ def main():
             notify=tray.notify,
             sounds=sounds,
             paste_hint=typer.PASTE_HINT,
+            target_fns=(typer.get_target, typer.target_is_foreground,
+                        typer.activate_target),
         )
         controller.start()
 
@@ -169,6 +171,7 @@ def main():
             on_press=controller.on_press,
             on_release=controller.on_release,
             combo=_combo_from_cfg(),
+            on_esc=controller.cancel_pending,
         )
 
         def _run_listener():
