@@ -48,10 +48,12 @@ class FakeTranscriber:
 class FakeUI:
     def __init__(self):
         self.events = []
+        self.etas = []
     def show_recording(self):
         self.events.append("recording")
-    def show_transcribing(self):
+    def show_transcribing(self, eta_sec=None):
         self.events.append("transcribing")
+        self.etas.append(eta_sec)
     def hide(self):
         self.events.append("hide")
 
@@ -493,3 +495,31 @@ def test_next_dictation_after_cancel_inserts():
     assert _wait_until(lambda: inserted)
     ctl.shutdown()
     assert inserted == [("текст", "clipboard")]
+
+
+def test_first_dictation_has_no_eta_then_estimated():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: len(inserted) == 2)
+    ctl.shutdown()
+    assert ui.etas[0] is None            # скорость ещё неизвестна
+    assert ui.etas[1] is not None        # оценка от первого прогона
+    assert ui.etas[1] >= 0
+
+
+def test_eta_reset_on_model_reload():
+    ctl, rec, tr, ui, inserted, notes, _ = _make()
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: inserted)
+    token = ctl.begin_model_reload()
+    ctl.finish_model_reload(FakeTranscriber(text="новая"), token)
+    ctl.on_press()
+    ctl.on_release()
+    assert _wait_until(lambda: len(inserted) == 2)
+    ctl.shutdown()
+    assert ui.etas[1] is None            # новая модель — старый RTF не годится

@@ -1,6 +1,7 @@
 import logging
 import queue
 import threading
+import time
 
 from molvi.i18n import tr
 
@@ -37,6 +38,7 @@ class Controller:
         self._last_text = None  # последняя расшифровка — для «Скопировать последний текст»
         self._pending = 0        # заданий в очереди/обработке — гейт для Esc
         self._cancelled = False  # Esc: пропустить вставку текущих заданий
+        self._rtf = None   # скорость распознавания (обработка/аудио) — для «~N с»
         self._lock = threading.Lock()
         # Функции цели вставки (get, is_foreground, activate) — платформенные,
         # передаются снаружи: контроллер не импортирует platform-модули.
@@ -110,6 +112,7 @@ class Controller:
                 return False  # устаревший поток перезагрузки — игнорируем
             if transcriber is not None:
                 self._transcriber = transcriber
+                self._rtf = None  # у новой модели своя скорость
             self._reloading = False
             return True
 
@@ -149,7 +152,10 @@ class Controller:
             self._ui.hide()
             return
         log.info("Запись %.1f c", len(audio) / self._samplerate)
-        self._ui.show_transcribing()
+        with self._lock:
+            rtf = self._rtf
+        eta = (len(audio) / self._samplerate) * rtf if rtf is not None else None
+        self._ui.show_transcribing(eta_sec=eta)
         target = None
         if self._get_target is not None:
             try:
@@ -170,6 +176,7 @@ class Controller:
             if job is None:
                 return
             audio, target = job
+            started = time.monotonic()
             try:
                 text = self._transcriber.transcribe(audio)
             except Exception as exc:
@@ -177,6 +184,14 @@ class Controller:
                 self._notify(tr("controller.transcribe_error", exc=exc))
                 text = None
             if text is not None:
+                duration = len(audio) / self._samplerate
+                if duration > 0:
+                    sample = (time.monotonic() - started) / duration
+                    with self._lock:
+                        # Вес нового 0.5: быстро сходится, но одиночный
+                        # выброс (кэш прогрелся, GC) не ломает оценку.
+                        self._rtf = (sample if self._rtf is None
+                                     else 0.5 * self._rtf + 0.5 * sample)
                 log.info("Распознано %d символов", len(text))
             if text:
                 # Сохраняем до вставки: если вставка упадёт или уйдёт не в то
