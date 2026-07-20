@@ -17,15 +17,22 @@ def _make_icon_image(color=theme.CORAL):
 
 
 class Tray:
-    def __init__(self, on_toggle_pause, on_exit, on_settings=None):
+    def __init__(self, on_toggle_pause, on_exit, on_settings=None,
+                 on_copy_last=None, has_last_text=None):
         self._on_toggle_pause = on_toggle_pause
         self._on_exit = on_exit
         self._on_settings = on_settings or (lambda: None)
+        self._on_copy_last = on_copy_last or (lambda: None)
+        self._has_last_text = has_last_text or (lambda: False)
         self._paused = False
         self._icon = pystray.Icon(
             "Molvi", _make_icon_image(), "Molvi",
             menu=pystray.Menu(
                 pystray.MenuItem(lambda item: tr("tray.settings"), self._settings),
+                pystray.MenuItem(
+                    lambda item: tr("tray.copy_last"), self._copy_last,
+                    enabled=lambda item: self._has_last_text(),
+                ),
                 pystray.MenuItem(
                     lambda item: tr("tray.resume") if self._paused else tr("tray.pause"),
                     self._toggle,
@@ -36,6 +43,9 @@ class Tray:
 
     def _settings(self, icon, item):
         self._on_settings()
+
+    def _copy_last(self, icon, item):
+        self._on_copy_last()
 
     def _toggle(self, icon, item):
         self._paused = self._on_toggle_pause()
