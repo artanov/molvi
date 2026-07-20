@@ -90,11 +90,15 @@ def main():
             overlay.schedule_quit()
 
         def copy_last_to_clipboard():
-            # Получаем последний распознанный текст; защита от гонки — controller
-            # может быть ещё None в момент, когда пользователь кликнул пункт меню.
+            # Получаем последний распознанный текст; controller может быть ещё
+            # None, если кликнули до конца загрузки модели — тот же случай,
+            # что и «диктовок ещё не было»: пункт меню всегда активен (pystray
+            # не перечитывает enabled после update_menu()), поэтому клик без
+            # текста — штатная ветка с подсказкой, а не тихий no-op.
             text = controller.last_text() if controller is not None else None
             if text is None:
-                return  # гонка: пункт кликнули до первой диктовки
+                tray.notify(tr("app.notify.nothing_to_copy"))
+                return
             try:
                 typer.copy_to_clipboard(text)
             except Exception as exc:
@@ -108,7 +112,6 @@ def main():
             on_exit=shutdown,
             on_settings=overlay.open_settings,
             on_copy_last=copy_last_to_clipboard,
-            has_last_text=lambda: controller is not None and controller.last_text() is not None,
         )
         tray.start()
 
