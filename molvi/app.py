@@ -89,10 +89,29 @@ def main():
             tray.stop()
             overlay.schedule_quit()
 
+        def copy_last_to_clipboard():
+            # Получаем последний распознанный текст; controller может быть ещё
+            # None, если кликнули до конца загрузки модели — тот же случай,
+            # что и «диктовок ещё не было»: пункт меню всегда активен (pystray
+            # перечитывает enabled только при update_menu()), поэтому клик без
+            # текста — штатная ветка с подсказкой, а не тихий no-op.
+            text = controller.last_text() if controller is not None else None
+            if text is None:
+                tray.notify(tr("app.notify.nothing_to_copy"))
+                return
+            try:
+                typer.copy_to_clipboard(text)
+            except Exception as exc:
+                log.exception("Не удалось скопировать текст в буфер")
+                tray.notify(tr("app.notify.copy_failed", exc=exc))
+                return
+            tray.notify(tr("app.notify.copied"))
+
         tray = Tray(
             on_toggle_pause=lambda: controller.toggle_pause() if controller is not None else False,
             on_exit=shutdown,
             on_settings=overlay.open_settings,
+            on_copy_last=copy_last_to_clipboard,
         )
         tray.start()
 

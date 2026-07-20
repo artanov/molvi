@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 RU = {
     # --- трей ---
     "tray.settings": "Настройки…",
+    "tray.copy_last": "Скопировать последний текст",
     "tray.pause": "Пауза",
     "tray.resume": "Возобновить",
     "tray.quit": "Выход",
@@ -40,6 +41,9 @@ RU = {
     "app.notify.model_reloading": "Загружаю модель… Диктовка временно недоступна.",
     "app.notify.autostart_failed": "Не удалось изменить автозапуск: {exc}",
     "app.notify.settings_failed": "Не удалось применить настройки: {exc}",
+    "app.notify.copied": "Текст скопирован в буфер обмена",
+    "app.notify.copy_failed": "Не удалось скопировать: {exc}",
+    "app.notify.nothing_to_copy": "Пока нечего копировать — продиктуйте что-нибудь",
     "app.notify.ready": "Готов. Зажмите {hotkey} и говорите{suffix}",
     "app.notify.cpu_suffix": " (CPU — медленный режим!)",
     "app.fatal": "Molvi не запустился: {exc}\n\nПодробности в журнале:\n{log_path}",
@@ -138,6 +142,7 @@ RU = {
 
 EN = {
     "tray.settings": "Settings…",
+    "tray.copy_last": "Copy last transcript",
     "tray.pause": "Pause",
     "tray.resume": "Resume",
     "tray.quit": "Quit",
@@ -162,6 +167,9 @@ EN = {
     "app.notify.model_reloading": "Loading the model… Dictation is temporarily unavailable.",
     "app.notify.autostart_failed": "Couldn't change autostart: {exc}",
     "app.notify.settings_failed": "Couldn't apply the settings: {exc}",
+    "app.notify.copied": "Text copied to clipboard",
+    "app.notify.copy_failed": "Copy failed: {exc}",
+    "app.notify.nothing_to_copy": "Nothing to copy yet — dictate something first",
     "app.notify.ready": "Ready. Hold {hotkey} and speak{suffix}",
     "app.notify.cpu_suffix": " (CPU — slow mode!)",
     "app.fatal": "Molvi failed to start: {exc}\n\nDetails in the log:\n{log_path}",

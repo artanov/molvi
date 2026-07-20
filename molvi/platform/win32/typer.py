@@ -112,6 +112,12 @@ def paste_text(text, restore_delay=0.3):
         log.info("paste: буфер восстановлен")
 
 
+def copy_to_clipboard(text):
+    """Явное копирование по просьбе пользователя (пункт трея) —
+    без вставки и без восстановления прежнего буфера."""
+    _set_clipboard_text(text)
+
+
 def _utf16_units(ch):
     """Символ → его UTF-16 code units: wScan в KEYEVENTF_UNICODE 16-битный,
     поэтому символы вне BMP (эмодзи) шлются суррогатной парой, а не обрезаются."""

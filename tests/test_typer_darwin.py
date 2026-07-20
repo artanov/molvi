@@ -130,3 +130,10 @@ def test_type_text_requires_accessibility(monkeypatch):
     monkeypatch.setattr(typer.Quartz, "CGPreflightPostEventAccess", lambda: False)
     with pytest.raises(OSError, match="Универсальный доступ"):
         typer.type_text_direct("a")
+
+
+def test_copy_to_clipboard_sets_without_paste_or_restore(fake_env):
+    calls, clipboard = fake_env
+    typer.copy_to_clipboard("спасённый текст")
+    assert clipboard["text"] == "спасённый текст"
+    assert calls == [("set", "спасённый текст")]  # ни cmd_v, ни восстановления

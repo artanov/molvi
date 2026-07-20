@@ -107,3 +107,10 @@ def test_insert_text_auto_mode(monkeypatch):
     monkeypatch.setattr(typer, "_foreground_is_console", lambda: False)
     typer.insert_text("b", "auto")
     assert called == {"type": "a", "paste": "b"}
+
+
+def test_copy_to_clipboard_sets_without_paste_or_restore(fake_env):
+    calls, clipboard = fake_env
+    typer.copy_to_clipboard("спасённый текст")
+    assert clipboard["text"] == "спасённый текст"
+    assert calls == [("set", "спасённый текст")]  # ни ctrl_v, ни восстановления
