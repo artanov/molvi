@@ -148,6 +148,15 @@ class FakeUser32:
 def fake_user32(monkeypatch):
     fake = FakeUser32()
     monkeypatch.setattr(typer, "_user32", fake)
+
+    # Мокуем _kernel32.GetCurrentThreadId() — возвращаем сентинель != fg_tid (42).
+    # Это гарантирует срабатывание ветки AttachThreadInput в activate_target(),
+    # не полагаясь на случайное совпадение реального thread id с 42.
+    class FakeKernel32:
+        def GetCurrentThreadId(self):
+            return 7
+
+    monkeypatch.setattr(typer, "_kernel32", FakeKernel32())
     monkeypatch.setattr(typer.time, "sleep", lambda s: None)
     return fake
 
