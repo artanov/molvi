@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Molvi — вопросы, ответы и решение проблем (FAQ)</title>
+<meta name="description" content="FAQ по Molvi: почему распознаёт медленно и работает ли без видеокарты NVIDIA, что делать если не видит микрофон, как пройти SmartScreen и Gatekeeper, поддержка Intel Mac, где лежит журнал ошибок и как полностью удалить Molvi.">
+<link rel="canonical" href="https://molvi.tech/faq.html">
+<meta property="og:title" content="Molvi — частые вопросы и решение проблем">
+<meta property="og:description" content="Ответы на частые вопросы про бесплатный локальный голосовой ввод Molvi: видеокарта, микрофон, SmartScreen, Gatekeeper, Intel Mac, журнал ошибок.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://molvi.tech/faq.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231C1A1F'/><rect x='42' y='26' width='16' height='30' rx='8' fill='%23F3EEE3'/><path d='M35 48a15 15 0 0 0 30 0' fill='none' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M50 63v11M40 74h20' stroke='%23F3EEE3' stroke-width='5' stroke-linecap='round'/><path d='M30 30a28 28 0 0 1 40 0' fill='none' stroke='%23F04A3F' stroke-width='5' stroke-linecap='round'/></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Molvi бесплатный? Нужна ли подписка?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Да, Molvi бесплатен навсегда, код открыт под лицензией MIT. Нет подписки, нет лимита слов и обязательного аккаунта." }
+    },
+    {
+      "@type": "Question",
+      "name": "Мой голос уходит в облако?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Нет. Распознавание идёт локально моделью Whisper на вашем компьютере, аудио не покидает устройство. После первой загрузки модели интернет не нужен." }
+    },
+    {
+      "@type": "Question",
+      "name": "Нужна ли видеокарта NVIDIA? Работает ли на CPU?",
+      "acceptedAnswer": { "@type": "Answer", "text": "На Windows для максимальной скорости нужна видеокарта NVIDIA с 6+ ГБ видеопамяти и свежим драйвером. Без неё Molvi работает на процессоре, но медленнее — в Настройках выберите качество «Быстрое». На Mac с чипом Apple Silicon используется нативный движок MLX, отдельная видеокарта не нужна." }
+    },
+    {
+      "@type": "Question",
+      "name": "Molvi распознаёт медленно — что делать?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Скорее всего работает процессор вместо видеокарты. Откройте журнал %APPDATA%\\Molvi\\molvi.log и найдите строку «Модель загружена, устройство: …» — там должно быть cuda. Если cpu — в Настройках выберите качество «Быстрое» либо проверьте, что у вас NVIDIA с 6+ ГБ видеопамяти и обновлён драйвер." }
+    },
+    {
+      "@type": "Question",
+      "name": "Molvi не видит микрофон, текст не появляется",
+      "acceptedAnswer": { "@type": "Answer", "text": "Проверьте микрофон: в журнале после «Запись … c» строка «Распознано 0 символов» означает, что микрофон молчит — в Настройках выберите другое устройство записи. Также убедитесь, что курсор стоит в текстовом поле: Molvi печатает туда, где стоит курсор." }
+    },
+    {
+      "@type": "Question",
+      "name": "Windows защитил компьютер (SmartScreen) или антивирус ругается на установщик",
+      "acceptedAnswer": { "@type": "Answer", "text": "Причина — отсутствие платной цифровой подписи, а не вирус. Код Molvi открыт, каждый релиз собирается публично на GitHub из исходников и его можно сверить с кодом. На экране SmartScreen нажмите «Подробнее» → «Выполнить в любом случае»; антивирусу добавьте Molvi в исключения." }
+    },
+    {
+      "@type": "Question",
+      "name": "На Mac приложение не открывается (Gatekeeper)",
+      "acceptedAnswer": { "@type": "Answer", "text": "Так как приложение не подписано платным сертификатом, при первом запуске macOS показывает предупреждение. Откройте Molvi через контекстное меню (правый клик → «Открыть») или в System Settings → Privacy & Security нажмите «Open Anyway». Затем выдайте Molvi два разрешения: «Мониторинг ввода» и «Универсальный доступ»." }
+    },
+    {
+      "@type": "Question",
+      "name": "После обновления на Mac перестала работать клавиша или вставка",
+      "acceptedAnswer": { "@type": "Answer", "text": "При обновлении неподписанного приложения macOS сбрасывает выданные разрешения. В System Settings → Privacy & Security выключите-включите галочки Molvi в «Мониторинге ввода» и «Универсальном доступе» (или удалите и добавьте заново) и перезапустите приложение." }
+    },
+    {
+      "@type": "Question",
+      "name": "Работает ли Molvi на Mac с процессором Intel?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Пока нет. Распознавание на Mac работает через движок Apple MLX, которому нужен чип M-серии (M1 и новее)." }
+    },
+    {
+      "@type": "Question",
+      "name": "Какие языки поддерживает Molvi?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Русский и английский из коробки, а также другие языки, которые понимает модель Whisper." }
+    },
+    {
+      "@type": "Question",
+      "name": "Где лежит журнал ошибок Molvi?",
+      "acceptedAnswer": { "@type": "Answer", "text": "На Windows — %APPDATA%\\Molvi\\molvi.log, на Mac — ~/Library/Application Support/Molvi/molvi.log. При ошибке в журнале будет её причина; с ним удобно создавать issue на GitHub." }
+    }
+  ]
+}
+</script>
+<style>
+  :root{
+    --coral:#F04A3F; --coral-hover:#FF5C50; --coral-deep:#C63A30;
+    --ink-900:#141316; --ink-800:#1C1A1F; --ink-700:#26232B; --ink-600:#332F38;
+    --cream:#F3EEE3; --cream-dim:#B8B2A6; --cream-faint:#7C776E;
+    --warn:#E0A83E; --success:#3FB27F;
+    --maxw:900px; --radius:18px;
+    --font:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; font-family:var(--font); background:var(--ink-900); color:var(--cream);
+    -webkit-font-smoothing:antialiased; line-height:1.6; font-size:17px}
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{line-height:1.15; margin:0; letter-spacing:-.02em; font-weight:700}
+  h1{font-size:clamp(32px,5.5vw,52px)}
+  h1 .accent{color:var(--coral)}
+  h2{font-size:clamp(22px,3.2vw,30px); margin:48px 0 8px}
+  p{margin:14px 0}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--cream-dim)}
+  .eyebrow::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--coral);
+    box-shadow:0 0 12px 2px var(--coral)}
+  .lede{font-size:clamp(17px,2.2vw,21px); color:var(--cream-dim); max-width:640px}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:9px; font:inherit;
+    font-weight:600; font-size:16px; cursor:pointer; border:0; padding:14px 24px; border-radius:12px;
+    transition:transform .15s ease, background .15s ease; min-height:48px}
+  .btn-primary{background:var(--coral); color:#fff}
+  .btn-primary:hover{background:var(--coral-hover); transform:translateY(-1px)}
+  .btn-ghost{background:transparent; color:var(--cream); border:1px solid var(--ink-600)}
+  .btn-ghost:hover{border-color:var(--cream-faint); background:var(--ink-700)}
+  :focus-visible{outline:2px solid var(--coral); outline-offset:3px; border-radius:6px}
+  .nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:color-mix(in srgb, var(--ink-900) 82%, transparent); border-bottom:1px solid var(--ink-600)}
+  .nav-inner{display:flex; align-items:center; justify-content:space-between; height:66px;
+    max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; font-size:19px}
+  .brand img{width:32px; height:32px; border-radius:8px; display:block}
+  .hero{padding:56px 0 8px}
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap; margin:28px 0}
+  .toc{background:var(--ink-800); border:1px solid var(--ink-600); border-radius:var(--radius);
+    padding:20px 24px; margin:28px 0}
+  .toc h2{font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--cream-dim);
+    margin:0 0 12px}
+  .toc ul{list-style:none; padding:0; margin:0; columns:2; column-gap:28px; color:var(--cream-dim)}
+  .toc li{margin:7px 0; break-inside:avoid}
+  .toc a{border-bottom:1px solid transparent}
+  .toc a:hover{color:var(--cream); border-bottom-color:var(--coral)}
+  .qa{border-top:1px solid var(--ink-600); padding:26px 0}
+  .qa:first-of-type{border-top:0}
+  .qa h3{font-size:21px; margin:0 0 8px}
+  .qa p{color:var(--cream-dim); margin:10px 0}
+  code{background:var(--ink-700); padding:2px 7px; border-radius:6px; font-size:14px;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; color:var(--cream)}
+  .callout{background:var(--ink-800); border:1px solid var(--ink-600); border-left:3px solid var(--coral);
+    border-radius:12px; padding:18px 20px; margin:22px 0; color:var(--cream-dim)}
+  .callout strong{color:var(--cream)}
+  footer{border-top:1px solid var(--ink-600); margin-top:56px; padding:32px 0; color:var(--cream-faint); font-size:14px}
+  .foot-links{display:flex; gap:22px; flex-wrap:wrap; margin-bottom:14px}
+  .foot-links a{color:var(--cream-dim)}
+  .foot-links a:hover{color:var(--cream)}
+</style>
+</head>
+<body id="top">
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><img src="./assets/icon.png" alt="Логотип Molvi" width="32" height="32">Molvi</a>
+    <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">Скачать бесплатно</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Вопросы и ответы</span>
+    <h1>Molvi: частые вопросы и <span class="accent">решение проблем</span></h1>
+    <p class="lede">Коротко о главном: видеокарта, микрофон, предупреждения Windows
+      и macOS, поддержка Intel Mac и где искать журнал ошибок. Если ответа нет —
+      создайте issue на GitHub, приложив журнал.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <nav class="toc" aria-label="Содержание">
+    <h2>О чём здесь</h2>
+    <ul>
+      <li><a href="#free">Бесплатно ли и нужна ли подписка</a></li>
+      <li><a href="#cloud">Уходит ли голос в облако</a></li>
+      <li><a href="#gpu">Нужна ли видеокарта NVIDIA</a></li>
+      <li><a href="#slow">Распознаёт медленно</a></li>
+      <li><a href="#mic">Не видит микрофон</a></li>
+      <li><a href="#smartscreen">SmartScreen и антивирус</a></li>
+      <li><a href="#gatekeeper">Mac не открывает приложение</a></li>
+      <li><a href="#mac-update">Mac: после обновления сбросились разрешения</a></li>
+      <li><a href="#intel">Mac на Intel</a></li>
+      <li><a href="#lang">Языки</a></li>
+      <li><a href="#log">Где журнал ошибок</a></li>
+    </ul>
+  </nav>
+
+  <section class="qa" id="free">
+    <h3>Molvi бесплатный? Нужна ли подписка?</h3>
+    <p>Да, Molvi бесплатен навсегда, код открыт под лицензией MIT. Нет подписки,
+      нет лимита слов и обязательного аккаунта. Это бесплатный аналог платных
+      сервисов диктовки — подробнее на странице
+      <a href="/vs-wispr-flow.html" style="text-decoration:underline">Molvi vs Wispr&nbsp;Flow</a>.</p>
+  </section>
+
+  <section class="qa" id="cloud">
+    <h3>Мой голос уходит в облако?</h3>
+    <p>Нет. Распознавание идёт локально моделью Whisper на вашем компьютере — аудио
+      не покидает устройство. После первой загрузки модели интернет не нужен.</p>
+  </section>
+
+  <section class="qa" id="gpu">
+    <h3>Нужна ли видеокарта NVIDIA? Работает ли на CPU?</h3>
+    <p>На Windows для максимальной скорости нужна видеокарта NVIDIA с 6+ ГБ
+      видеопамяти и свежим драйвером. Без неё Molvi работает на процессоре, но
+      медленнее — в Настройках выберите качество «Быстрое». На Mac с чипом
+      Apple&nbsp;Silicon работает нативный движок MLX, отдельная видеокарта не нужна.</p>
+  </section>
+
+  <section class="qa" id="slow">
+    <h3>Molvi распознаёт медленно — что делать?</h3>
+    <p>Скорее всего работает процессор вместо видеокарты. Откройте журнал
+      <code>%APPDATA%\Molvi\molvi.log</code> и найдите строку «Модель загружена,
+      устройство: …» — там должно быть <code>cuda</code>. Если <code>cpu</code> —
+      в Настройках выберите качество «Быстрое» либо проверьте, что у вас NVIDIA
+      с 6+ ГБ видеопамяти и обновлён драйвер.</p>
+  </section>
+
+  <section class="qa" id="mic">
+    <h3>Molvi не видит микрофон, текст не появляется</h3>
+    <p>Проверьте микрофон: в журнале после «Запись … c» строка «Распознано 0
+      символов» означает, что микрофон молчит — в Настройках выберите другое
+      устройство записи. Также убедитесь, что курсор стоит в текстовом поле:
+      Molvi печатает туда, где стоит курсор.</p>
+  </section>
+
+  <section class="qa" id="smartscreen">
+    <h3>«Система Windows защитила ваш компьютер» или антивирус ругается</h3>
+    <p>Причина — отсутствие платной цифровой подписи, а не вирус. Код Molvi открыт,
+      каждый релиз собирается публично на GitHub из исходников и его можно сверить
+      с кодом. На экране SmartScreen нажмите «Подробнее» → «Выполнить в любом
+      случае»; антивирусу добавьте Molvi в исключения.</p>
+    <div class="callout"><strong>Почему так.</strong> Платный сертификат подписи
+      кода стоит денег и не делает программу безопаснее — он лишь убирает
+      предупреждение. Molvi проверяем иначе: открытый исходник и публичная сборка.</div>
+  </section>
+
+  <section class="qa" id="gatekeeper">
+    <h3>На Mac приложение не открывается (Gatekeeper)</h3>
+    <p>Приложение не подписано платным сертификатом, поэтому при первом запуске
+      macOS показывает предупреждение. Откройте Molvi через правый клик →
+      «Открыть» или в System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security нажмите
+      «Open&nbsp;Anyway». Затем выдайте Molvi два разрешения: «Мониторинг ввода»
+      и «Универсальный доступ» — без них не сработают клавиша диктовки и вставка.</p>
+  </section>
+
+  <section class="qa" id="mac-update">
+    <h3>После обновления на Mac перестала работать клавиша или вставка</h3>
+    <p>При обновлении неподписанного приложения macOS сбрасывает выданные
+      разрешения. В System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security
+      выключите-включите галочки Molvi в «Мониторинге ввода» и «Универсальном
+      доступе» (или удалите и добавьте заново) и перезапустите приложение.</p>
+  </section>
+
+  <section class="qa" id="intel">
+    <h3>Работает ли Molvi на Mac с процессором Intel?</h3>
+    <p>Пока нет. Распознавание на Mac работает через движок Apple&nbsp;MLX,
+      которому нужен чип M-серии (M1 и новее).</p>
+  </section>
+
+  <section class="qa" id="lang">
+    <h3>Какие языки поддерживает Molvi?</h3>
+    <p>Русский и английский из коробки, а также другие языки, которые понимает
+      модель Whisper.</p>
+  </section>
+
+  <section class="qa" id="log">
+    <h3>Где лежит журнал ошибок?</h3>
+    <p>На Windows — <code>%APPDATA%\Molvi\molvi.log</code>, на Mac —
+      <code>~/Library/Application Support/Molvi/molvi.log</code>. При ошибке в
+      журнале будет её причина; приложите его, когда
+      <a href="https://github.com/artanov/molvi/issues" style="text-decoration:underline">создаёте issue</a>.</p>
+  </section>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">Скачать Molvi бесплатно</a>
+    <a class="btn btn-ghost" href="/install.html">Инструкция по установке</a>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav class="foot-links" aria-label="Ссылки в подвале">
+      <a href="/">Главная</a>
+      <a href="/install.html">Установка (Windows)</a>
+      <a href="/install-mac.html">Установка (Mac)</a>
+      <a href="/vs-wispr-flow.html">Molvi vs Wispr Flow</a>
+      <a href="https://github.com/artanov/molvi">GitHub</a>
+      <a href="https://github.com/artanov/molvi/blob/main/LICENSE">Лицензия MIT</a>
+    </nav>
+    <p>Molvi — бесплатный локальный голосовой ввод для Windows и macOS.
+      Открытый код под лицензией MIT. Whisper — модель распознавания речи; Molvi
+      не связан с OpenAI.</p>
+  </div>
+</footer>
+
+</body>
+</html>
