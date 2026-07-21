@@ -37,7 +37,16 @@
   .btn-primary:hover{background:var(--coral-hover); transform:translateY(-1px)}
   .btn-primary:active{background:var(--coral-deep)}
   .btn svg{width:19px; height:19px; flex:none}
+  .btn-ghost{background:transparent; color:var(--cream); border:1px solid var(--ink-600)}
+  .btn-ghost:hover{border-color:var(--cream-faint); background:var(--ink-700)}
   :focus-visible{outline:2px solid var(--coral); outline-offset:3px; border-radius:6px}
+  /* support / donate */
+  .donate{max-width:560px; margin:8px auto 72px; padding:34px 28px; text-align:center;
+    border:1px solid var(--ink-600); border-radius:18px; background:var(--ink-800)}
+  .donate h2{font-size:24px}
+  .donate p{color:var(--cream-dim); margin-top:12px}
+  .donate-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:24px}
+  .donate-note{margin-top:16px; color:var(--cream-faint); font-size:13.5px}
 
   .nav{position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
     background:color-mix(in srgb, var(--ink-900) 82%, transparent);
@@ -386,11 +395,29 @@
     </section>
 
   </div>
+
+  <!-- SUPPORT / DONATE -->
+  <section class="donate">
+    <h2>Molvi помог? Поддержите проект</h2>
+    <p>Molvi бесплатный и без телеметрии. Донат помогает выпускать обновления.</p>
+    <div class="donate-row">
+      <a class="btn btn-primary" href="https://t.me/tribute/app?startapp=dNwy" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+        Поддержать в Telegram
+      </a>
+      <a class="btn btn-ghost" href="https://web.tribute.tg/d/Nwy" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Картой на сайте
+      </a>
+    </div>
+    <p class="donate-note">Оплата через Tribute · разово или ежемесячно</p>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
     <p><a href="./index.html">← На главную</a> &nbsp;·&nbsp;
+      <a href="./index.html#support">Поддержать</a> &nbsp;·&nbsp;
       <a href="https://github.com/artanov/molvi">GitHub</a> &nbsp;·&nbsp;
       <a href="https://github.com/artanov/molvi/blob/main/LICENSE">Лицензия MIT</a></p>
   </div>

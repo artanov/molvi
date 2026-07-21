@@ -193,6 +193,16 @@
   .final .req{margin-top:18px; color:var(--cream-dim); font-size:15px}
   .final .cta-row{margin-top:30px}
 
+  /* support / donate */
+  .support{text-align:center; max-width:620px; margin:0 auto}
+  .support-heart{width:56px; height:56px; border-radius:16px; margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb,var(--coral) 14%,transparent); color:var(--coral)}
+  .support-heart svg{width:28px; height:28px}
+  .support p{color:var(--cream-dim); margin-top:16px; font-size:17px}
+  .support .cta-row{margin-top:30px}
+  .support-note{margin-top:16px; color:var(--cream-faint); font-size:14px}
+
   /* footer */
   footer{border-top:1px solid var(--ink-600); padding:44px 0; background:var(--ink-900)}
   .foot-inner{display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap}
@@ -239,6 +249,7 @@
         <a href="./install.html">Install</a>
         <a href="https://github.com/artanov/molvi">GitHub</a>
       </div>
+      <a class="btn btn-ghost" href="#support">Donate</a>
       <a class="btn btn-primary" href="https://github.com/artanov/molvi/releases/latest">Download</a>
     </nav>
   </div>
@@ -457,6 +468,31 @@
       </div>
     </div>
   </section>
+
+  <!-- SUPPORT / DONATE -->
+  <section class="section section-alt" id="support">
+    <div class="wrap">
+      <div class="support">
+        <div class="support-heart">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.5 8.2 2.3 4.5 6 4.5c2 0 3.3 1.1 4 2.3.7-1.2 2-2.3 4-2.3 3.7 0 5.5 3.7 4 7.2-2.5 4.7-10 9.3-10 9.3z"/></svg>
+        </div>
+        <h2>Molvi runs on enthusiasm</h2>
+        <p>The project is free — no ads, no subscriptions, no fees. If Molvi saves you
+          time, support its development with a donation: it helps ship updates.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://t.me/tribute/app?startapp=dNwy" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+            Donate via Telegram
+          </a>
+          <a class="btn btn-ghost" href="https://web.tribute.tg/d/Nwy" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            Pay by card
+          </a>
+        </div>
+        <p class="support-note">Payments via Tribute · one-time or monthly</p>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -468,6 +504,7 @@
         <a href="#how">How it works</a>
         <a href="./install.html">Install</a>
         <a href="https://github.com/artanov/molvi">GitHub</a>
+        <a href="#support">Support</a>
         <a href="https://github.com/artanov/molvi/blob/main/LICENSE">MIT License</a>
         <a href="./geek/" title="geek version">💾 geek</a>
       </nav>
